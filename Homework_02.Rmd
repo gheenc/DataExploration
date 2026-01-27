@@ -1,10 +1,10 @@
 ---
 title: "Homework 02 Data Handling, Graphics, More R"
 output:
-  word_document: 
+  pdf_document: 
      fig_height: 5
      fig_width : 7
-  pdf_document: 
+  word_document: 
      fig_height: 5
      fig_width : 7
   html_document: default
@@ -72,15 +72,22 @@ str(okcupidQ)
 dim(okcupid)
 
 # count n/as
-missing_values <- colSums(is.na(okcupid))
+missing_values <- colSums(is.na(okcupid)) # counts NA in each column
 sorted_missing_values <- sort(missing_values, decreasing = T)
-head(sorted_missing_values, 10)
+head(sorted_missing_values, 10) # these are the top 10 columns with missing values 
 
+# unique values of Type
+unique(okcupidQ$Type)
+
+# return a row of each value 
+okcupidQ[okcupidQ$Type == "", ]
+okcupidQ[okcupidQ$Type == "N", ]
+okcupidQ[okcupidQ$Type == "M", ]
+okcupidQ[okcupidQ$Type == "O", ]
 ```
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
-*Results were of the sexual nature *
-
+*Type is classified as either N, O, M or a space. I think the O is when an answer can be yes or no. N is when there are differing answers a respondant can choose from. M is when there are different answers they can choose from and they are more of a scalar nature. And nothing is not for questions but rather for profile/classification variables collected from the user.*
+*The dataset is very long and very interesting. It is dating-natured questions asked to respondants build their profile that was scraped and parsed from OkCupid. Lots of people did not answer many of the questions so there are lots of missing values.*
 
 1.2)  Write exactly three questions that you are curious to answer using this dataset.
 
@@ -154,7 +161,7 @@ income_bins <- cut(
   breaks = c(0, 20000, 30000, 40000, 50000, 1000000),  # cuts the data at these ranges making 5 bins
   right = FALSE,   # left end included, right end excluded ex: 0-19,999
   include.lowest = TRUE, # very lowest value is included 
-  labels = c("$0-19,999", "$20,000-29,000", "$30,000-39,000", "$40,000-49,000", "$50,000-59,000", "$1,000,000+")
+  labels = c("$0-\n$19,999", "$20,000-\n$29,000", "$30,000-\n$39,000", "$40,000-\n$49,000", "$50,000+") # adds desired labels to bins
 )
 
 # see how many responses are in each level with new binning
@@ -167,7 +174,7 @@ barplot(table(income_bins),
         ylim = c(0,6000))
 ```
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*The majority of respondants (53,434) either did not answer or chose 'prefer not to say.' Of respondants who gave an answer, the majority of respondants had an over $50,000 income. The next most frequent group was $20,000-29,000. Both $30,000-39,000 and $40,000-49,000 had less than 3000 respondants. Very, very few respondants made less than $20,000.*
 
 (1.4) Pick any variable EXCEPT q30458 that starts with `q` that has four possible outcomes (options).
 
@@ -177,7 +184,10 @@ barplot(table(income_bins),
 
 *  Write a line of code to use paste() to make a statement like "x% of respondents responded (response) to question (text of the question pulled from okcupidQ)."
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+
+```
+
        
 (1.5) Create a barplot using the `barplot()` function for whatever question you chose in part (1.4). 
 
@@ -187,7 +197,10 @@ barplot(table(income_bins),
 
 *  Change the margins using par(mar = ...) if your labels are being cut off, and change the character size if necessary.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+
+```
+
 
 (1.6) Choose any variable that has a Yes/No response.
 
