@@ -99,7 +99,7 @@ unique(income) # this returns the unique values; allowing you to see what the ra
 
 parse_income <- function(x) { # this is creating a new variable that stores a new function
   if (is.na(x) || x == "Rather not say") { # if it has an na or says rather not say
-    return(NA_real_) # returns NA_real
+    return(NA_real_) # returns NA
   } else if (x == "More than $1,000,000") { # if the value is "more than 1,000,000
     return(1000000) # return the number 1,000,000
   } else if (x == "Less than $20,000") { # if the value is less than $20,000
@@ -111,13 +111,14 @@ parse_income <- function(x) { # this is creating a new variable that stores a ne
   }
   return(NA_real_)
 }
-# this is looking through the income variable and parsing it so it is easier to use and understand. if it is na or rather not say it makes them all NA_real. if it's more than 1,000,000 they are all 1,000,000. if they are less than 20,000,000 it returns 20,000. It then deals with the harder income brackets, like 20,000-35,000 by substituting the dollar sign and commas with a dollar then splitting them on the - between the values and storing both values in parts. The mean of parts is then taken and returns as a number. 
+# this is looking through the income variable and parsing it so it is easier to use and understand. if it is na or rather not say it makes them all NA_real. if it's more than 1,000,000 they are all 1,000,000. if they are less than 20,000,000 it returns 20,000. It then deals with the harder income brackets, like 20,000-35,000 by substituting the dollar sign and commas with a dollar then splitting them on the - between the values and storing both values in parts. The mean of parts is then taken and returns as a number. So for example, 20,000-35,000 would now be ((20,000+35,000)/2) = 27,500.
 
 okcupid$income_numeric <- as.numeric(sapply(income, parse_income))# a column is added to okcupid that is income_numeric. it then applies the parse_income function that was created and outlined above, to all columns with income which is column 1469
+# we can then see in the income_numeric column of okcupid there is only 1 value in each row: NA, 1,000,000, or the mean of the range. 
 
 ```
 
-Admittedly, much of the code above is things we have not yet discussed.  
+Admittedly, much of the code above is things we have not yet discussed.
 
 Run the code to see what it does.  You may want to run individual lines or subsections.  Feel free to ask AI specific questions about functions.
 
@@ -127,7 +128,44 @@ Putting the code into AI will do this for you - that said, you'll ultimately wan
 
 Finally - make any plot you like to examine the distribution of income and discuss what you observe.
 
-*REPLACE THIS TEXT WITH YOUR UPDATED R-chunk Code*
+```{r}
+# look at how many unique numbers there are in income to determine range of graph 
+unique(okcupid$income_numeric)
+sort(unique(okcupid$income_numeric))
+# there are 14 unique values, including NA, spanning 20,000 - 1,000,000
+# there is basically a $10,000 increase with each but it's not steady every increase
+table_income_numeric <- (table(okcupid$income_numeric))
+table_income_numeric
+# table to see how many frequencies aree in each answer 
+# this will help me check my graph is showing what is actually in the variable 
+
+# see how many are na
+sum_na_income_numeric <- sum(is.na(okcupid$income_numeric))
+sum_na_income_numeric
+
+# I want to keep the N/As to show how many people did not answer or preferred not to say but 53,000 is a lot
+# this will skew th appearance of the rest of the values so I am going to drop them 
+# A barplot comes to mind but I want the bins to be even step which is better done by a histogram...
+# If I make a barplot I need to make specific bins rather than what is the default
+
+# Create a new variable of the bins
+income_bins <- cut(
+  okcupid$income_numeric, 
+  breaks = c(0, 20000, 30000, 40000, 50000, 1000000),  # cuts the data at these ranges making 5 bins
+  right = FALSE,   # left end included, right end excluded ex: 0-19,999
+  include.lowest = TRUE, # very lowest value is included 
+  labels = c("$0-19,999", "$20,000-29,000", "$30,000-39,000", "$40,000-49,000", "$50,000-59,000", "$1,000,000+")
+)
+
+# see how many responses are in each level with new binning
+table(income_bins)
+
+barplot(table(income_bins),
+        main = "Distribution of Desired Income",
+        ylab = "Frequency of Response",
+        xlab = "Income Amount",
+        ylim = c(0,6000))
+```
 
 *REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
 
