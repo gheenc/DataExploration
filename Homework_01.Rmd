@@ -1,10 +1,10 @@
 ---
 title: "Homework 01 R Basics"
 output:
-  word_document: default
   pdf_document: 
      fig_height: 5
      fig_width : 7
+  word_document: default
   html_document: default
 subtitle: Due by 11:59pm, Tuesday, 1.27.26
 author: S&DS 2300/5300/ENV 757
@@ -16,18 +16,6 @@ author: S&DS 2300/5300/ENV 757
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This homework assignment contains 5 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file either as a .pdf or .doc file. To make a pdf file, knit to .doc or .html and then convert to .pdf in either Word or your browser.
-
-Our intent is to help you
-
-1.  Practice basic R coding
-2.  Practice basic R markdown
-3.  Start dealing with data
-
-Don't panic, don't be surprised if you're frustrated. Come to office hours with JDRS or our excellent TAs/ULAs. You can also post questions through ED Discussion on CANVAS. You are welcome to work with each other - however, you **MUST** submit your own assignment that represents your own solutions.
-
-*Before submitting, delete the instructions on lines 19 through 30*
-
 **(1) RMarkdown Practice** Change the markdown code below as indicated.
 
 **Make this line bold**
@@ -38,7 +26,7 @@ Don't panic, don't be surprised if you're frustrated. Come to office hours with 
 
 -   Make this line a bullet point
 
--   Make this line an indented (or level two) bullet point
+    -   Make this line an indented (or level two) bullet point
 
 [**LINK**](https://www.nytimes.com/) (make the word LINK at left link to the New York Times home page AND make it bold)
 
@@ -51,10 +39,10 @@ xvec <- (c(5:9))
 xvec
 ```
 
-**(2) R Syntax Practice** Modify the R code below to follow good R Syntax practices
+**(2) R Syntax Practice** Modify the R code below to follow good R Syntax practices 
 
 ```{r, eval = FALSE}
-x = 5
+x <- 5
 
 x <= c(1, 2, 3)
 
@@ -64,7 +52,8 @@ for (i in 1:10) {
   x <- 1 + 1 
 }
 
-x <- 1 ; y <- c(3, 4) #doable, but not advised m
+x <- 1 
+y <- c(3, 4) 
 
 ```
 
@@ -128,23 +117,21 @@ wb_Stats
 length(wb_Stats)
 ```
 
-(3.11) Get r to show the following elements of `wb_Stats` : 1,2,3,5,6 AND round the result to 1 decimal place.
+(3.11) Get r to show the following elements of `wb_Stats` : 1,2,3,5,6 AND round the result to 1 decimal place. **#What does this mean**
 
 ```{r}
-
+round(wb_Stats[c(1, 2, 3, 5, 6)], 1)
 ```
 
 **(4) Plots**
 
 (4.1) Using the WB dataset loaded above, make a scatterplot of "Rural" on the x axis and "Measles" on the y axis. Include a main title, axis titles, and a non-default symbol color and symbol type. *Hint: check out ?par or see examples from class 1 or class 3*.
 
-```{r}
-summary(wb$Rural)
-```
+**#CHECK IF THIS IS RIGHT**
 
 ```{r}
 plot(wb$Rural, wb$Measles,
-     main = "",
+     main = "Percent of Rural Population vs Measles",
      xlab = "Rural",
      ylab = "Measles",
      type = "h",
@@ -152,10 +139,14 @@ plot(wb$Rural, wb$Measles,
      )
 ```
 
-(4.2) Make a boxplot of the the following `wb` variables that are all percentages: `Measles`, `Military`, `Renewable`, `Rural`. You want all four variables on one plot. Ensure the plot has a main title, axis labels, and a unique color for each variable.
+(4.2) Make a boxplot of the the following `wb` variables that are all percentages: `Measles`, `Military`, `Renewable`, `Rural`. You want all four variables on one plot. Ensure the plot has a main title, axis labels, and a unique color for each variable. **#CHECK IF THIS IS RIGHT**
 
 ```{r}
-
+boxplot(wb[, c("Measles", "Military", "Renewable", "Rural")],
+        xlab = "World Bank Measures",
+        ylab = "Percentage",
+        main = "Percent of Countries",
+        col = c("blue", "green", "red", "yellow"))
 
 ```
 
@@ -164,8 +155,7 @@ plot(wb$Rural, wb$Measles,
 (5.1) Compute the sum of the second element of the list's third element. Store the result into an object named `mySum`. You'll want to use the `sum()` function.
 
 ```{r}
-aList <- list(c(1, 5, 4), letters[c(1, 6, 4, 9, 22, 3)], list(c(1, 1, 1), 
-                        c(14, 13, 12), c(3, 2, 1)), c(runif(8)))
+aList <- list(c(1, 5, 4), letters[c(1, 6, 4, 9, 22, 3)], list(c(1, 1, 1), c(14, 13, 12), c(3, 2, 1)), c(runif(8)))
 aList
 
 mySum <- sum(aList[[3]][[2]][1:3])
@@ -181,14 +171,10 @@ str(aList[[3]][2])
 str(aList[[3]][[2]])
 ```
 
-*They are both returning the same characters in that it is the 2nd element of the variable third elemebt, but the first one ([[3]] [2]) returns it as a list of numbers and the second ([[3]][[2]]) returns it as a number vector. This is like the first one being delivered as an Amazon box with three tennis balls and the second being the unpacked three tennis balls - it will affect latter on how the variable can be used.*
+*They are both returning the same characters in that it is the 2nd element of the variable third element, but the first one ([[3]] [2]) returns it as a list of numbers and the second ([[3]][[2]]) returns it as a number vector. This is like the first one being delivered as an Amazon box with three tennis balls and the second being the unpacked three tennis balls - it will affect latter on how the variable can be used.*
 
 **(6) Pseudo-Coding** Your boss at the comes to you to tell you that the mayor wants a report that analyzes various data the city government has collected across multiple departments over the last 35 years. This data was created by an army of summer undergraduate interns, and has a mix of numeric, character, and categorical/factor data. The spreadsheet you are given has one row per neighborhood. For each neighborhood, there are measurements of crime statistics, housing prices, number of parks, number of grocery stores, number of driveways, residence types, tax amount, tax burden, past evictions, and so on. Each row has measurements for one year, so there are 35 rows per neighborhood (and of course, lots of missing data).
 
 Using only the tools you've learned so far, your job is to clean, process, and begin to wrangle this data in R and present some preliminary plots of the data you have observed. Write out in words the steps you would take to better understand the spreadsheet, learn what data it contains, and some graphs you might generate based on the tools used in the homework above. DO NOT INCLUDE ANY R-CODE.
 
-*replace this text with your answer AND your answer should be in italics when knitted*
-```{r}
-#adding 
-```
-
+*First I would import the data. It would be good to familiarize myself with the variables and amount of data, so I would look at dim(data), names(data), length(data), str(data). I might also look at the head and tail of the data to really visualize and understand the values better. I would convert any variables that are in the incorrect/unnecessary format. For example I would ensure that residence types is a factor variable and that I understand the codebook. I would also check length of each variable to hopefully understand where any data is missing and how many neighborhoods there are. I would also do summary on each variable to better understand missing data, as well as the range of each variable. If the range is at all not within what was expected, (ex: 10,000 grocery stores in one neighborhood) I would investigate further and re-code as necessary. I would then generate a graph of each variable and how it has changed throughout the last 35 years. I believe for crime statistics, housing prices, tax amount, tax burden, and past evictions the best graph to showcase this would be a line graph - each neighborhood would have a line; the y axis would be the range of the values; and the x axis would be the 35 years of data represented. For residence types, a stacked bar chart for each year might be a better way to represent it given it is likely categorical rather than continuous like the other variables. Depending on the numbers of neighborhoods being analyzed, this could become very messy and unreadable to the audience, so more parsing of neighborhoods of interest or other ways to divide the plots may need to be considered. But these graphs could be a beneficial place to start.*
