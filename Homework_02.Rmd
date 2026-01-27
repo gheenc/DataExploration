@@ -1,0 +1,239 @@
+---
+title: "Homework 02 Data Handling, Graphics, More R"
+output:
+  word_document: 
+     fig_height: 5
+     fig_width : 7
+  pdf_document: 
+     fig_height: 5
+     fig_width : 7
+  html_document: default
+subtitle: Due by 11:59pm, Tuesday 2.3.26
+author: S&DS 2300/5300/ENV 757
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Submission Details
+
+This homework assignment contains 1 long problem. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file either as a .pdf file.
+
+Your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
+
+**CRITICAL 1 - for every included chunk below, remove `eval = F` before knitting!!!!**
+
+**CRITICAL 2 - Please submit knitted version of this assignment as a PDF file on GRADESCOPE  You can knit directly to a DOC and then convert to PDF in Word (choose SAVE AS), or you can knit directly to PDF if that works for you.**
+
+**DELETE LINES 19 THROUGH 29 (INCLUSIVE) BEFORE KNITTING AND SUBMITTING!**
+
+
+**(1) OK Cupid Dataset**  This is a dataset first discussed by [Kirkegaard and Bjerrekaer](https://openpsych.net/paper/46/).  We'll use this dataset several times this semester.
+
+The data itself is stored as a parquet.  This is a format where each column is stored separately (rather than as a giant array or matrix).  It is more efficient to quickly access are search data.  We will create a the usual dataframe.
+
+Run the code below to get the dataset itself and then to get a dataset that is the list of variables in the dataset.
+
+```{r}
+#Run the line below one time only
+#install.packages("arrow")
+#install.packages("tzdb")
+library(arrow)
+
+
+#get the data - this takes a moment to load
+okcupid <- data.frame(read_parquet("https://github.com/jreuning/sds230_data/raw/refs/heads/main/OKCupid/parsed_data_public.parquet", col_select = NULL, as_tibble = FALSE))
+
+#get the dataset of questions
+okcupidQ <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/OKCupid/question_data.csv", sep = ";")
+
+```
+
+1.1)  Write a few lines of code to get a sense of both the dataset and the variables in contains.  Include whatever code you use below. Be sure to calculate the size of the dataset. For all code you write, always include a comment line on what you are doing.
+
+As a part of this, you may want to open `okcupidQ` in the Environment (upper right quadrant of RStudio, click on Environment, double click on the dataset.) and browse throught the questions.   DO NOT INCLUDE OUTPUT AS A RESULT OF USING head() or tail().
+
+Write code to get the unique values of `Type` in `okcupidQ`.  What do you think these values mean?
+
+Next, write not more than three sentences about what you observe about the dataset.  Comment on missing values, the types of questions being asked, and whatever else you might notice.
+
+```{r}
+# display head of both datasets in addition to opening the data in environment 
+#head(okcupid)
+#head(okcupidQ)
+
+# understand structure of both
+str(okcupid)
+str(okcupidQ)
+
+# get the dimensions of the original dataset - there are 68371 rows and 2626 
+# columns meaning 68371 responses on potentially 2626 questions
+dim(okcupid)
+
+# count n/as
+missing_values <- colSums(is.na(okcupid))
+sorted_missing_values <- sort(missing_values, decreasing = T)
+head(sorted_missing_values, 10)
+
+```
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*Results were of the sexual nature *
+
+
+1.2)  Write exactly three questions that you are curious to answer using this dataset.
+
+*What are most answered questions (what has the highest response percentage). What is the least answered question (what has the lowest response percentage).*
+
+1.3)  We are going to calculate a numeric value of income. I did this in the code below.
+
+```{r}
+
+grep("income", names(okcupid)) # this looks the word income in the column names of okcupid; this allows you to see what columns might have to do with income
+okcupid[, 1469][1:100] # this  returns the first 100 items of column 1469; this gives an idea of the data and see if it looks like it has to do with income based on the range and use of $
+names(okcupid)[1469] # this returns the name of the 1469th column of okcupid; it is d_income, so you can confirm it has something to do with income 
+
+income <- okcupid[, 1469] # this creates a variable called income that stores the data from all rows of column 1469; this allows you to isolate the column that has to do with income
+unique(income) # this returns the unique values; allowing you to see what the range and how variable the answers were 
+
+parse_income <- function(x) { # this is creating a new variable that stores a new function
+  if (is.na(x) || x == "Rather not say") { # if it has an na or says rather not say
+    return(NA_real_) # returns NA_real
+  } else if (x == "More than $1,000,000") { # if the value is "more than 1,000,000
+    return(1000000) # return the number 1,000,000
+  } else if (x == "Less than $20,000") { # if the value is less than $20,000
+    return(20000) # return the number 20,000
+  } else if (grepl("-", x)) { # otherwise, see if the elements have - 
+    nums <- gsub("[\\$,]", "", x) # if they have \\$, it replaces it with a space and stores in num
+    parts <- strsplit(nums, "-")[[1]] # this splits the new, stripped down number at the -
+    return(mean(as.numeric(parts))) # this returns the mean of the parts as a numeric vector 
+  }
+  return(NA_real_)
+}
+# this is looking through the income variable and parsing it so it is easier to use and understand. if it is na or rather not say it makes them all NA_real. if it's more than 1,000,000 they are all 1,000,000. if they are less than 20,000,000 it returns 20,000. It then deals with the harder income brackets, like 20,000-35,000 by substituting the dollar sign and commas with a dollar then splitting them on the - between the values and storing both values in parts. The mean of parts is then taken and returns as a number. 
+
+okcupid$income_numeric <- as.numeric(sapply(income, parse_income))# a column is added to okcupid that is income_numeric. it then applies the parse_income function that was created and outlined above, to all columns with income which is column 1469
+
+```
+
+Admittedly, much of the code above is things we have not yet discussed.  
+
+Run the code to see what it does.  You may want to run individual lines or subsections.  Feel free to ask AI specific questions about functions.
+
+Your main job is to add comments to the code to describe what each part does.  Furthermore, in your comments indicate the thought process behind the code (i.e. what question prompted the code?).  
+
+Putting the code into AI will do this for you - that said, you'll ultimately want to make sure that if I or others gave you the code without comments that you could read the code for yourself.
+
+Finally - make any plot you like to examine the distribution of income and discuss what you observe.
+
+*REPLACE THIS TEXT WITH YOUR UPDATED R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+(1.4) Pick any variable EXCEPT q30458 that starts with `q` that has four possible outcomes (options).
+
+*  Create and display a table called `table1` that shows how many of instances there were of each level. 
+
+*  Write a line that calculates the percentage of values that were from the fourth level of the question, rounded to the nearest whole percent.
+
+*  Write a line of code to use paste() to make a statement like "x% of respondents responded (response) to question (text of the question pulled from okcupidQ)."
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+       
+(1.5) Create a barplot using the `barplot()` function for whatever question you chose in part (1.4). 
+
+*  The labels of the barplot should also contain the whole number percentages for each possible outcome. 
+
+*  Format your graph, and make sure the bars are horizontal.
+
+*  Change the margins using par(mar = ...) if your labels are being cut off, and change the character size if necessary.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(1.6) Choose any variable that has a Yes/No response.
+
+*  Make a two-way table between this new question and your question in 1.4.
+
+*  Calculate the percent of people for each level of your 1.4 question that answered 'Yes' to your new question.
+
+*  Following the example in Class 4, create a barplot akin to that in lines 431-442 with similar percentages displayed.This will take some adjusting.  You can make horizontal or vertical.  Make sure no labels are cut off.
+
+*  Does it seem like these variables might be related?
+
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+
+(1.7) Choose any two variables that start with the letter `p`.  These are questions that are calculated scales.
+
+*  Calculate summary statistics using summary() and also the standard deviaion for each variable (rounded to 2 decimal places).
+
+*  Make histograms for each variable.  Format your histogram.
+
+*  Describe the shape of each histogram (use words like 'symmetric' or 'skewed') and discuss what you observe.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+(1.8) Choose either of the variables you used in 1.7 AND the Yes/No variable you choose in 1.6.
+
+*  Get summary statistics for the p_ variable by each level of your Yes/No variable. Compare the medians and means of these two distributions - what do you observe?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+
+(1.9)  Make a scatterplot of your two p_ variables from from 1.7).
+
+* Set a non-default plot character.
+
+* Create the plot using different colors for each level of your binary variable from 1.6.
+
+* Add a legend to your plot
+
+* Format and label your plot
+
+* Discuss any trends you see as well as any differences between groups.
+
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+
+(1.10) Create a subset of the original dataset that meets the following conditions:
+
+*  It includes ONLY the following variables:  all five of the variables you have examined so far (income_num, your four level variable, your two p_ indices, and your binary variable) as well as the variable `d_astrology_sign`)
+
+*  It has complete data for the variables listed above
+
+*  You only want people who have `Ca` or `Sa` as the first two letters of their astrological sign.
+
+Use both the `%in%` operator and the `substr()` function to complete this task.  You'll need to look up information about how these work.
+
+Get the dimension of your final dataset. Comment on the reduction in size from the original dataset.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+(1.11)  For any one of the questions you wrote in 1.2), investigate this BRIEFLY with some combination of a plot and basic summary statistics (or a table).
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+
+(2.1)  Your work at a social research nonprofit puts you in touch with a large, multi-year survey called the National Civic Life Survey. Each row is one respondent; columns include demographics (age, education), civic behaviors (voting frequency, volunteering hours), and attitude questions. Many questions were optional, so missing values are common. The data arrive as a Parquet file, plus a small CSV with question metadata.
+
+Using only the tools you’ve learned so far, write out in words the steps you would take to explore this dataset and generate a few simple plots. Do not include any R code, but you're welcome to mention R functions you might use.
+
+*Hint: In this HW, you worked with parquet/CSV files, inspected structure and summaries, examined unique values for categorical variables, and noted missingness.*
+
+*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
