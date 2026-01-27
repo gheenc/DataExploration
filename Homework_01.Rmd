@@ -39,17 +39,17 @@ xvec <- (c(5:9))
 xvec
 ```
 
-**(2) R Syntax Practice** Modify the R code below to follow good R Syntax practices 
+**(2) R Syntax Practice** Modify the R code below to follow good R Syntax practices
 
 ```{r, eval = FALSE}
 x <- 5
 
-x <= c(1, 2, 3)
+x <- c(1, 2, 3)
 
 length(x)
 
 for (i in 1:10) { 
-  x <- 1 + 1 
+    x <- 1 + 1 
 }
 
 x <- 1 
@@ -93,9 +93,10 @@ wb[1:5, ]
 
 ```{r}
 str(wb)
+# GNI type is int
 ```
 
-(3.7) In your code, insert a comment that gives the data type of the variable `GNI`? #The data type of GNI is int
+(3.7) In your code, insert a comment that gives the data type of the variable `GNI`?
 
 (3.8) Create a new object called `wb_Subset` that has only the variables Country, GNI, EnergyUse, and Measles (in that order) AND only for countries where GNI is greater than 70000. Make sure you show the value of `wb_Subset`.
 
@@ -117,7 +118,7 @@ wb_Stats
 length(wb_Stats)
 ```
 
-(3.11) Get r to show the following elements of `wb_Stats` : 1,2,3,5,6 AND round the result to 1 decimal place. **#What does this mean**
+(3.11) Get r to show the following elements of `wb_Stats` : 1,2,3,5,6 AND round the result to 1 decimal place.
 
 ```{r}
 round(wb_Stats[c(1, 2, 3, 5, 6)], 1)
@@ -127,25 +128,23 @@ round(wb_Stats[c(1, 2, 3, 5, 6)], 1)
 
 (4.1) Using the WB dataset loaded above, make a scatterplot of "Rural" on the x axis and "Measles" on the y axis. Include a main title, axis titles, and a non-default symbol color and symbol type. *Hint: check out ?par or see examples from class 1 or class 3*.
 
-**#CHECK IF THIS IS RIGHT**
-
 ```{r}
 plot(wb$Rural, wb$Measles,
-     main = "Percent of Rural Population vs Measles",
-     xlab = "Rural",
-     ylab = "Measles",
-     type = "h",
+     main = "Measles Immunization Rates \n vs Rural Population Percentage",
+     xlab = "Rural Population (% of total population)",
+     ylab = "Percent Immunized for Measles (12-23 months)",
+     type = "h", 
      col = "blue"
      )
 ```
 
-(4.2) Make a boxplot of the the following `wb` variables that are all percentages: `Measles`, `Military`, `Renewable`, `Rural`. You want all four variables on one plot. Ensure the plot has a main title, axis labels, and a unique color for each variable. **#CHECK IF THIS IS RIGHT**
+(4.2) Make a boxplot of the the following `wb` variables that are all percentages: `Measles`, `Military`, `Renewable`, `Rural`. You want all four variables on one plot. Ensure the plot has a main title, axis labels, and a unique color for each variable.
 
 ```{r}
 boxplot(wb[, c("Measles", "Military", "Renewable", "Rural")],
-        xlab = "World Bank Measures",
+        xlab = "World Bank Indicators",
         ylab = "Percentage",
-        main = "Percent of Countries",
+        main = "Distribution of Selected \n World Bank Indicators Across Countries",
         col = c("blue", "green", "red", "yellow"))
 
 ```
@@ -171,10 +170,10 @@ str(aList[[3]][2])
 str(aList[[3]][[2]])
 ```
 
-*They are both returning the same characters in that it is the 2nd element of the variable third element, but the first one ([[3]] [2]) returns it as a list of numbers and the second ([[3]][[2]]) returns it as a number vector. This is like the first one being delivered as an Amazon box with three tennis balls and the second being the unpacked three tennis balls - it will affect latter on how the variable can be used.*
+*They are both returning the same characters in that it is the 2nd element of the variable's 3rd element, but the first one ([[3]] [2]) returns it as a list of numbers and the second ([[3]][[2]]) returns it as a vector. This is like the first one being delivered as an Amazon box with three tennis balls and the second being the unpacked three tennis balls - it will affect how the variable can be used later.*
 
 **(6) Pseudo-Coding** Your boss at the comes to you to tell you that the mayor wants a report that analyzes various data the city government has collected across multiple departments over the last 35 years. This data was created by an army of summer undergraduate interns, and has a mix of numeric, character, and categorical/factor data. The spreadsheet you are given has one row per neighborhood. For each neighborhood, there are measurements of crime statistics, housing prices, number of parks, number of grocery stores, number of driveways, residence types, tax amount, tax burden, past evictions, and so on. Each row has measurements for one year, so there are 35 rows per neighborhood (and of course, lots of missing data).
 
 Using only the tools you've learned so far, your job is to clean, process, and begin to wrangle this data in R and present some preliminary plots of the data you have observed. Write out in words the steps you would take to better understand the spreadsheet, learn what data it contains, and some graphs you might generate based on the tools used in the homework above. DO NOT INCLUDE ANY R-CODE.
 
-*First I would import the data. It would be good to familiarize myself with the variables and amount of data, so I would look at dim(data), names(data), length(data), str(data). I might also look at the head and tail of the data to really visualize and understand the values better. I would convert any variables that are in the incorrect/unnecessary format. For example I would ensure that residence types is a factor variable and that I understand the codebook. I would also check length of each variable to hopefully understand where any data is missing and how many neighborhoods there are. I would also do summary on each variable to better understand missing data, as well as the range of each variable. If the range is at all not within what was expected, (ex: 10,000 grocery stores in one neighborhood) I would investigate further and re-code as necessary. I would then generate a graph of each variable and how it has changed throughout the last 35 years. I believe for crime statistics, housing prices, tax amount, tax burden, and past evictions the best graph to showcase this would be a line graph - each neighborhood would have a line; the y axis would be the range of the values; and the x axis would be the 35 years of data represented. For residence types, a stacked bar chart for each year might be a better way to represent it given it is likely categorical rather than continuous like the other variables. Depending on the numbers of neighborhoods being analyzed, this could become very messy and unreadable to the audience, so more parsing of neighborhoods of interest or other ways to divide the plots may need to be considered. But these graphs could be a beneficial place to start.*
+*First I would import the data and store it in a variable. It would be good to familiarize myself with the variables and amount of data, so I would look at dim(data), names(data), length(data), str(data). I might also look at the head and tail of the data to really visualize and understand the values better. I would convert any variables that are in the incorrect/unnecessary format. For example, I would ensure that residence types is a factor variable and that I understand the codebook. I would also check length of each variable to hopefully understand where any data is missing and how many neighborhoods there are. I would also do summary on each variable to better understand missing data, as well as the range of each variable. If the range is at all not within what was expected, (ex: 10,000 grocery stores in one neighborhood) I would investigate further and re-code as necessary. I would then generate a graph of each variable to show how it has changed throughout the last 35 years. I believe for crime statistics, housing prices, tax amount, tax burden, and past evictions the best graph to showcase this would be a line graph for each variable - each neighborhood would have uniquely colored line; the y axis would be the range of the values; and the x axis would be the 35 years of data represented. For residence types, a stacked bar chart for each year might be a better way to represent it given it is likely categorical rather than continuous like the other variables. Depending on the numbers of neighborhoods being analyzed, this could become very messy and unreadable to the audience, so more parsing of neighborhoods or years of interest or other ways to divide the plots may need to be considered. But these graphs could be a beneficial place to start.*
