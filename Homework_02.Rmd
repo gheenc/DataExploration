@@ -185,7 +185,12 @@ barplot(table(income_bins),
 *  Write a line of code to use paste() to make a statement like "x% of respondents responded (response) to question (text of the question pulled from okcupidQ)."
 
 ```{r}
-
+table1 <- table(okcupid$q54) # create table of q54
+str(table1) # analyze structure/options for q54
+percent <- round(table1["Your wallet"]/sum(table1) *100) 
+percent
+#FIX THIS IS NOT DONE NEED TO FINISH PASTE STATEMENT
+paste(percent, "%", "of respondant responded", (response), "to question", (text pulled from okcupid)) 
 ```
 
        
@@ -198,7 +203,12 @@ barplot(table(income_bins),
 *  Change the margins using par(mar = ...) if your labels are being cut off, and change the character size if necessary.
 
 ```{r}
-
+barplot((table1), 
+        horiz = T, # makes bars horizontal
+        main = "Response to Question 54 on OkCupid",
+        xlab = "Number of Responses",
+        ylab = "Response Options",
+        names.arg = names(table1)) # ADDING PERCENT TO THE LABELS IS NOT DONE
 ```
 
 
@@ -213,28 +223,82 @@ barplot(table(income_bins),
 *  Does it seem like these variables might be related?
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# two way table of q53 and q54
+two_questions <- table(okcupid$q53, okcupid$q54)
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+# calculate percent of people for each response that answered yes
+# numerator = yes to q53/denominator = everyone who answered that level aka the column total
+two_questions_label <- paste(round(two_questions[2,]/apply(two_questions, 2, sum)*100), "%", sep = "") # round to nearest percent, paste adds the % sign
+
+# create barplot
+barplot((two_questions),
+        beside = T, # makes besides not stacked 
+        xlab = "Responses to Question 53 and 54",
+        ylab = "Frequency of Responses",
+        main = "Responses to Questions 53 and 54", 
+        col = c("tomato", "darkolivegreen3"),
+        legend = T, # adds legend
+        ylim = c(0, 4000)) # extends y limit to 3500 to see full responses 
+text(c(2, 5, 8, 11), c(500, 3500, 3500, 500), two_questions_label)
+```
+
+
+*I looked at question 53 which asked "when telling stories do you like to exaggerate" (yes/no) and question 54 which asked "Which, on you, is closest to perfection?" (Your body, your mind, your soul, or your wallet). It does not appear these are connected, although it does seem more people do not like to exaggerate when telling stories than people who do as more people answered no in every category. Additionally, more people felt like their mind and soul were closer to perfection than their wallet or body.  *
 
 
 (1.7) Choose any two variables that start with the letter `p`.  These are questions that are calculated scales.
 
-*  Calculate summary statistics using summary() and also the standard deviaion for each variable (rounded to 2 decimal places).
+*  Calculate summary statistics using summary() and also the standard deviation for each variable (rounded to 2 decimal places).
 
 *  Make histograms for each variable.  Format your histogram.
 
 *  Describe the shape of each histogram (use words like 'symmetric' or 'skewed') and discuss what you observe.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# summary of each 
+summary(okcupid$p_exer)
+summary(okcupid$p_conf)
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+# standard deviation of each rounded to 2 decimal places 
+round(sd(okcupid$p_exer, na.rm = TRUE), 2) # na.rm=TRUE means NA shoudl be removed
+round(sd(okcupid$p_conf, na.rm = TRUE), 2)
+
+# histogram for Into Exercise
+exercise_histogram <- hist((okcupid$p_exer), 
+     xlab = "Scale of 'Into Exercise'",
+     ylab = "Frequency of Response",
+     main = "Responses to 'Into Exercise'",
+     ylim = c(0, 2000),
+     col = "navajowhite")
+
+# histogram for Confident
+confidence_histogram <- hist((okcupid$p_conf), 
+     xlab = "Scale of 'Confident'",
+     ylab = "Frequency of Response",
+     main = "Responses to 'Confident'",
+     ylim = c(0, 2000),
+     col = "navajowhite")
+
+exercise_histogram
+confidence_histogram
+
+```
+
+
+*The responses to 'Into Exercise' are much more normal or symetric in that the majority of the answers are in the middle range, but it has a very wide range with all bins having at least one respondant. *
+*The responses to 'Confident' are skewed to the right. More people identify with being low on the scale of condience.*
 
 (1.8) Choose either of the variables you used in 1.7 AND the Yes/No variable you choose in 1.6.
 
 *  Get summary statistics for the p_ variable by each level of your Yes/No variable. Compare the medians and means of these two distributions - what do you observe?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+table(okcupid$q53, okcupid$p_conf)
+
+```
+
 
 *REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
 
