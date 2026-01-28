@@ -356,7 +356,21 @@ Get the dimension of your final dataset. Comment on the reduction in size from t
 
 (1.11)  For any one of the questions you wrote in 1.2), investigate this BRIEFLY with some combination of a plot and basic summary statistics (or a table).
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+*What is the least most answered question of the q questions.*
+```{r}
+# I need to sum all of the questions aka columns and then sort them 
+
+#isolate only the q columns
+q_columns <- grep("q", names(okcupid), value = TRUE)
+
+# sort to find least answered 
+least_answer <- sort(head(q_columns))
+
+# questions associated with these
+# so now i need to go into okcupidq and find the long word answer associated with these numbers
+# find x in okcupidq and return text
+
+```
 
 *REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
 
