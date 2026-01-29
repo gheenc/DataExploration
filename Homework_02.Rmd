@@ -57,6 +57,11 @@ As a part of this, you may want to open `okcupidQ` in the Environment (upper rig
 Write code to get the unique values of `Type` in `okcupidQ`.  What do you think these values mean?
 
 Next, write not more than three sentences about what you observe about the dataset.  Comment on missing values, the types of questions being asked, and whatever else you might notice.
+```{r}
+
+```
+
+
 
 ```{r}
 # display head of both datasets in addition to opening the data in environment 
@@ -205,7 +210,7 @@ percent_4
 ```{r}
 #create percentages and add to names 
 percents_all <- round(table1/sum(table1) *100) # creates percents of all levels 
-names(table1) <- paste(names(table1)," (",percents_all,"%)" ) # adds (%) after each name for graphing using paste0 then reinserts it as the names 
+names(table1) <- paste0(names(table1)," (",percents_all,"%)" ) # adds (%) after each name for graphing using paste0 then reinserts it as the names 
 ```
 
 ``` {r}
@@ -328,10 +333,13 @@ tapply(okcupid$p_conf, okcupid$q53, summary) # why does tapply work
 * Discuss any trends you see as well as any differences between groups.
 
 ```{r}
+re
+```
+
+```{r}
 # plot for p_conf compared to p_exer and based on q53 (binary)
 confidence_plot <- plot(okcupid$p_conf, okcupid$p_exer,
-                        pch = 16,
-                        col = okcupid$q53)
+                        pch = 16)
 ```
 
 
