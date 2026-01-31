@@ -88,41 +88,45 @@ okcupidQ[okcupidQ$Type == "M", ]
 okcupidQ[okcupidQ$Type == "O", ]
 ```
 
-*Type is classified as either N, O, M or a space. I think the O is when an answer can be yes or no. N is when there are differing answers a respondant can choose from. M is when there are different answers they can choose from and they are more of a scalar nature. And nothing is not for questions but rather for profile/classification variables collected from the user.*
-*The dataset is very long and very interesting. It is dating-natured questions asked to respondants build their profile that was scraped and parsed from OkCupid. Lots of people did not answer many of the questions so there are lots of missing values.*
+*Type is classified as either N, O, M or blank. I think the O is when an answer can be yes or no. N is when there are differing answers a respondant can choose from. M is when there are different answers they can choose from and they are more of a scalar nature. And nothing is not for questions but rather for profile/classification variables collected from the user.*
+*The dataset is very long and very interesting. It is dating-natured questions asked to respondants to build their profile that was scraped and parsed from OkCupid. Lots of people did not answer many of the questions so there are lots of missing values. It is a very long dataset with a lot of questions that were presented to respondants that can be analyzed,*
 
 1.2)  Write exactly three questions that you are curious to answer using this dataset.
 
-*What are most answered questions (what has the highest response percentage). What is the least answered question (what has the lowest response percentage). How many people completed the entire survey. *
+*What are most answered questions. What is the least answered question. How many people, if any, completed the entire survey. *
 
 1.3)  We are going to calculate a numeric value of income. I did this in the code below.
 
 ```{r}
 
-grep("income", names(okcupid)) # this looks the word income in the column names of okcupid; this allows you to see what columns might have to do with income
+grep("income", names(okcupid)) # this looks for the word income in the column names of okcupid; this allows you to see what columns might have to do with income
+
 okcupid[, 1469][1:100] # this  returns the first 100 items of column 1469; this gives an idea of the data and see if it looks like it has to do with income based on the range and use of $
+
 names(okcupid)[1469] # this returns the name of the 1469th column of okcupid; it is d_income, so you can confirm it has something to do with income 
 
 income <- okcupid[, 1469] # this creates a variable called income that stores the data from all rows of column 1469; this allows you to isolate the column that has to do with income
-unique(income) # this returns the unique values; allowing you to see what the range and how variable the answers were 
 
-parse_income <- function(x) { # this is creating a new variable that stores a new function
-  if (is.na(x) || x == "Rather not say") { # if it has an na or says rather not say
+unique(income) # this returns the unique values; allowing you to see what the range and answer options were 
+
+parse_income <- function(x) { # this is creating a  new function 
+  if (is.na(x) || x == "Rather not say") { # if it has an na or says rather not say, 
     return(NA_real_) # returns NA
   } else if (x == "More than $1,000,000") { # if the value is "more than 1,000,000
     return(1000000) # return the number 1,000,000
   } else if (x == "Less than $20,000") { # if the value is less than $20,000
     return(20000) # return the number 20,000
   } else if (grepl("-", x)) { # otherwise, see if the elements have - 
-    nums <- gsub("[\\$,]", "", x) # if they have \\$, it replaces it with a space and stores in num
-    parts <- strsplit(nums, "-")[[1]] # this splits the new, stripped down number at the -
+    nums <- gsub("[\\$,]", "", x) # if it has a $ or ,, it replaces that character with a space and stores in nums
+    parts <- strsplit(nums, "-")[[1]] # this splits anything in nums at the - and stores the entire vector in parts 
     return(mean(as.numeric(parts))) # this returns the mean of the parts as a numeric vector 
   }
-  return(NA_real_)
+  return(NA_real_) # if nothing matches the criteria above, return NA_real_
 }
-# this is looking through the income variable and parsing it so it is easier to use and understand. if it is na or rather not say it makes them all NA_real. if it's more than 1,000,000 they are all 1,000,000. if they are less than 20,000,000 it returns 20,000. It then deals with the harder income brackets, like 20,000-35,000 by substituting the dollar sign and commas with a dollar then splitting them on the - between the values and storing both values in parts. The mean of parts is then taken and returns as a number. So for example, 20,000-35,000 would now be ((20,000+35,000)/2) = 27,500.
 
-okcupid$income_numeric <- as.numeric(sapply(income, parse_income))# a column is added to okcupid that is income_numeric. it then applies the parse_income function that was created and outlined above, to all columns with income which is column 1469
+# this is looking through the income variable and parsing it so it is easier to use and understand. if it is na or rather not say it makes them all NA_real. if it's more than 1,000,000 they are all 1,000,000. if they are less than 20,000,000 it returns 20,000. It then deals with the harder income brackets, like 20,000-35,000 by removing the dollar sign and comma, splitting them on the - between the values, and returning the mean of the range as a number. So, for example, if $20,000-35,000 was encountered, it would return 27,500.
+
+okcupid$income_numeric <- as.numeric(sapply(income, parse_income))# a column is added to okcupid that is income_numeric. it then applies the parse_income function that was created and outlined above, to the variable income, which is column 1469
 # we can then see in the income_numeric column of okcupid there is only 1 value in each row: NA, 1,000,000, or the mean of the range. 
 
 ```
@@ -144,11 +148,10 @@ sort(unique(okcupid$income_numeric))
 
 # there are 14 unique values, including NA, spanning 20,000 - 1,000,000
 # there is basically a $10,000 increase with each but it's not steady every increase
+# make a table to see how many frequencies are in each answer 
+# this will help me check my graph is showing what is actually in the variable 
 table_income_numeric <- (table(okcupid$income_numeric))
 table_income_numeric
-
-# table to see how many frequencies aree in each answer 
-# this will help me check my graph is showing what is actually in the variable 
 
 # see how many are na
 sum_na_income_numeric <- sum(is.na(okcupid$income_numeric))
@@ -156,7 +159,6 @@ sum_na_income_numeric
 
 # I want to keep the N/As to show how many people did not answer or preferred not to say but 53,000 is a lot
 # this will skew th appearance of the rest of the values so I am going to drop them 
-# A barplot comes to mind but I want the bins to be even step which is better done by a histogram...
 # If I make a barplot I need to make specific bins rather than what is the default
 
 # Create a new variable of the bins
@@ -171,6 +173,7 @@ income_bins <- cut(
 # see how many responses are in each level with new binning
 table(income_bins)
 
+# plot the barplot
 barplot(table(income_bins),
         main = "Distribution of Desired Income",
         ylab = "Frequency of Response",
@@ -178,7 +181,7 @@ barplot(table(income_bins),
         ylim = c(0,6000))
 ```
 
-*The majority of respondants (53,434) either did not answer or chose 'prefer not to say.' Of respondants who gave an answer, the majority of respondants had an over $50,000 income. The next most frequent group was $20,000-29,000. Both $30,000-39,000 and $40,000-49,000 had less than 3000 respondants. Very, very few respondants made less than $20,000.*
+*The majority of respondants (53,434) either did not answer or chose 'prefer not to say.' Of respondants who gave an answer, the majority of respondants had an over $50,000 income. The next most frequent group was $20,000-29,000. Both $30,000-39,000 and $40,000-49,000 had less than 3000 respondants. Very, very few respondants said less than $20,000.*
 
 (1.4) Pick any variable EXCEPT q30458 that starts with `q` that has four possible outcomes (options).
 
@@ -189,12 +192,25 @@ barplot(table(income_bins),
 *  Write a line of code to use paste() to make a statement like "x% of respondents responded (response) to question (text of the question pulled from okcupidQ)."
 
 ```{r}
-table1 <- table(okcupid$q54) # create table of q54
-str(table1) # analyze structure/options for q54
-percent_4 <- round(table1["Your wallet"]/sum(table1) *100) 
+# I need to pull this question line from okcupidQ to get the text of the question and repsonses
+okcupidQ[okcupidQ$X == "q54", ]
+# the fourth option or level is 'Your soul'
+
+# create table of q54
+table1 <- table(okcupid$q54)
+
+# create percent that responded to 4th option
+percent_4 <- round(table1["Your soul"]/sum(table1) *100) 
 percent_4
-#FIX THIS IS NOT DONE NEED TO FINISH PASTE STATEMENT
-#paste(percent, "%", "of respondant responded", (response), "to question", (text pulled from okcupid)) 
+
+
+# return text aka question from row
+question_q54 <- okcupidQ[okcupidQ$X == "q54", "text"] # returns as character
+
+# return 4th option from row
+response_q54 <- okcupidQ[okcupidQ$X == "q54", "option_4"]
+
+paste(percent_4, "% of respondant responded", response_q54, "to question:", question_q54) 
 ```
 
        
@@ -214,7 +230,7 @@ names(table1) <- paste0(names(table1)," (",percents_all,"%)" ) # adds (%) after 
 
 ``` {r}
 # adjust margin to fit labels
-par(mar = c(5, 20, 4, 2), cex = 0.8) # bottom, left, top, right; character size 
+par(mar = c(5, 12, 6, 2), cex = 0.8) # bottom, left, top, right; character size 
 
 # graph bargraph
 barplot((table1), 
@@ -278,7 +294,7 @@ summary(okcupid$p_conf)
 
 
 # standard deviation of each rounded to 2 decimal places 
-round(sd(okcupid$p_exer, na.rm = TRUE), 2) # na.rm=TRUE means NA shoudl be removed
+round(sd(okcupid$p_exer, na.rm = TRUE), 2) # na.rm=TRUE means NA should be removed
 round(sd(okcupid$p_conf, na.rm = TRUE), 2)
 
 # histogram for Into Exercise
@@ -303,20 +319,19 @@ confidence_histogram
 ```
 
 
-*The responses to 'Into Exercise' are much more normal or symetric in that the majority of the answers are in the middle range, but it has a very wide range with all bins having at least one respondant. *
-*The responses to 'Confident' are skewed to the right. More people identify with being low on the scale of condience.*
+*The responses to 'Into Exercise' are much more normal or symmetric in that the majority of the answers are in the middle range, but it has a very wide range with all bins having at least one respondant. *
+*The responses to 'Confident' are skewed to the right. More people identify with being low on the scale of confidence.*
 
 (1.8) Choose either of the variables you used in 1.7 AND the Yes/No variable you choose in 1.6.
 
 *  Get summary statistics for the p_ variable by each level of your Yes/No variable. Compare the medians and means of these two distributions - what do you observe?
 
 ```{r}
-tapply(okcupid$p_conf, okcupid$q53, summary) # why does tapply work
-
+tapply(okcupid$p_conf, okcupid$q53, summary)
 ```
 
 
-*Of people who said no, they do not like to exaggerate when telling stories, they had a lower mean and median score of confidence compared to people who did like to exaggerate when telling stories. Within those who answered no, the difference in between and median was 3 and within those who answered yes, the difference between mean and median was 1. Both had a similar spread and quartile breakdown meaning the *
+*Of people who said no, they do not like to exaggerate when telling stories, they had a lower mean and median score of confidence compared to people who did like to exaggerate when telling stories. Within those who answered no, the difference in between mean and median was 3 and within those who answered yes, the difference between mean and median was 1. Both had a similar spread and quartile breakdown meaning the majority of data lied within similar ranges although the distribution was not similar.*
 
 
 (1.9)  Make a scatterplot of your two p_ variables from from 1.7).
@@ -359,7 +374,7 @@ legend(
 )
 ```
 
-I want to try one without the NAs to see if there is more of a relationship between the answered one.
+I wanted to try one without the NAs to see if there is more of a relationship between the answered one.
 ```{r}
 # drop na
 drop_na_q53 <- na.omit(okcupid$q53)
@@ -385,9 +400,7 @@ legend(
 )
 ```
 
-
-
-*I don't see any trends from the graphs. Very similar to what was seen in the histogram, they don't really have any relationship to one another but we do see points in almost all points of the graph meaning all answers were represented. The exercise data was more normally spread and represented across the entire scale. More of the confidence data is on the lower side of the scale with very few at the higher end of the scale (skewed right). Taking out the NAs did not create any noticeable trends as well.*
+*I don't see any trends from the graphs. Very similar to what was seen in the bargraph, they don't really have any relationship to one another but we do see points in almost all areas of the graph meaning all answers were represented. The exercise data was more normally spread and represented across the y axis. More of the confidence data is on the lower side of the scale, or the x axis, with very few at the higher end of the x axis(skewed right). Taking out the NAs did not create any noticeable trends either.*
 
 
 (1.10) Create a subset of the original dataset that meets the following conditions:
@@ -441,32 +454,56 @@ complete_q_df <- na.omit(q_df)
 # dimensions of complete q question 
 dim(complete_q_df)
 # 0 people also completed all q questions
+```
 
+Because no one answered the complete survey, I didn't think this would make very pretty plots, so I investigated my other questions. 
+*What was the most and least frequently answered question*
+``` {r}
 # sums number of responses per column
 answered_counts <- colSums(!is.na(q_df))
 
-# create frequency plot of which questions were most/least answered 
-plot(answered_counts) # sum the values of the q columns with NAs being removed
-
 # see what was the least frequently answered questions 
-head(sort(answered_counts))
+least_answered_q <- sort(answered_counts)
+head(least_answered_q)
 
 # go back into cupidQ to see what these columns are 
 okcupidQ[okcupidQ$X %in% c("q92899", "q72000", "q155299"), ]
 
 # see what was the most frequently answered questions
-head(sort(answered_counts, decreasing = TRUE))
+most_answered_q <- sort(answered_counts, decreasing = TRUE)
+head(most_answered_q)
 
 # go back into cupidQ to see what these columns are 
 okcupidQ[okcupidQ$X %in% c("q34113", "q64664", "q85419"), ]
 
-# create table of which were the closest to being completed.
+# table of the question and the question number
+question_table <- okcupidQ[okcupidQ$X %in% c("q92899", "q72000", "q155299", "q34113", "q64664", "q85419"), c("X", "text")]
 
+# add the response numbers as well 
+question_table$Responses <- answered_counts[question_table$X]
+
+# sort so table is decreasing by response number rather than index
+question_table <- question_table[order(question_table$Responses, decreasing = TRUE), ]
+
+# display final table
+question_table
+
+# barplot of all questions, sorted 
+barplot(most_answered_q) #ugly
+
+# create plot of comparing number of answers of most and least
+barplot(answered_counts[c("q92899", "q72000", "q155299","q34113", "q64664", "q85419")],
+        main = "Frequency of Responses to \n Most and Least Answered Questions",
+        xlab = "Question Numbers",
+        ylab = "Answer Frequency",
+        cex.names = .7,
+        cex.axis = .7,
+        ylim = c(0, 70000))
 ```
 
 
 *No one answered the full survey. Even when isolated to only the q columns which are the columns I understood to be questions and have options for respondants, no one completed all of those questions either.*
-*INCOMPLETE I  created a frequency plot of which q questions were most and least answered to see which were potentially the . This inherently answered my other questions of what were the most/least answered questions as well. I also made a plot and table of the surveys that were the closest to being fully completed.*
+*Because no one completed the entire survey, I attempted to answer my other questions that might lend themselves better to plots and tables. I got the most and least answered questions and made a table of the question number, the question, and amount of responses it got. I also made a bar graph of the 3 most and least answered so one could visually appreciate the difference in answered frequencies. The nature of the least answered questions surprised me because I felt there were more risque ones in the dataset I was expecting to have been answered less.*
 
 
 (2.1)  Your work at a social research nonprofit puts you in touch with a large, multi-year survey called the National Civic Life Survey. Each row is one respondent; columns include demographics (age, education), civic behaviors (voting frequency, volunteering hours), and attitude questions. Many questions were optional, so missing values are common. The data arrive as a Parquet file, plus a small CSV with question metadata.
