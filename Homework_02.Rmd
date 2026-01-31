@@ -57,16 +57,11 @@ As a part of this, you may want to open `okcupidQ` in the Environment (upper rig
 Write code to get the unique values of `Type` in `okcupidQ`.  What do you think these values mean?
 
 Next, write not more than three sentences about what you observe about the dataset.  Comment on missing values, the types of questions being asked, and whatever else you might notice.
-```{r}
-
-```
-
-
 
 ```{r}
 # display head of both datasets in addition to opening the data in environment 
-#head(okcupid)
-#head(okcupidQ)
+head(okcupid)
+head(okcupidQ)
 
 # understand structure of both
 str(okcupid)
@@ -75,16 +70,18 @@ str(okcupidQ)
 # get the dimensions of the original dataset - there are 68371 rows and 2626 
 # columns meaning 68371 responses on potentially 2626 questions
 dim(okcupid)
+# dimensions of other dataset - 2620 rows (aka questions) and 10 columns other options or keywords
+dim(okcupidQ)
 
 # count n/as
 missing_values <- colSums(is.na(okcupid)) # counts NA in each column
-sorted_missing_values <- sort(missing_values, decreasing = T)
+sorted_missing_values <- sort(missing_values, decreasing = T) # sorts missing value so most missing is on top 
 head(sorted_missing_values, 10) # these are the top 10 columns with missing values 
 
-# unique values of Type
+# unique values of Type - N, M, O, blank
 unique(okcupidQ$Type)
 
-# return a row of each value 
+# return a row of each value to investigate further 
 okcupidQ[okcupidQ$Type == "", ]
 okcupidQ[okcupidQ$Type == "N", ]
 okcupidQ[okcupidQ$Type == "M", ]
@@ -96,7 +93,7 @@ okcupidQ[okcupidQ$Type == "O", ]
 
 1.2)  Write exactly three questions that you are curious to answer using this dataset.
 
-*What are most answered questions (what has the highest response percentage). What is the least answered question (what has the lowest response percentage). NEED A THIRD QUESTIONS*
+*What are most answered questions (what has the highest response percentage). What is the least answered question (what has the lowest response percentage). How many people completed the entire survey. *
 
 1.3)  We are going to calculate a numeric value of income. I did this in the code below.
 
@@ -144,10 +141,12 @@ Finally - make any plot you like to examine the distribution of income and discu
 # look at how many unique numbers there are in income to determine range of graph 
 unique(okcupid$income_numeric)
 sort(unique(okcupid$income_numeric))
+
 # there are 14 unique values, including NA, spanning 20,000 - 1,000,000
 # there is basically a $10,000 increase with each but it's not steady every increase
 table_income_numeric <- (table(okcupid$income_numeric))
 table_income_numeric
+
 # table to see how many frequencies aree in each answer 
 # this will help me check my graph is showing what is actually in the variable 
 
@@ -333,17 +332,62 @@ tapply(okcupid$p_conf, okcupid$q53, summary) # why does tapply work
 * Discuss any trends you see as well as any differences between groups.
 
 ```{r}
-re
+# map options of q53 to colors
+# find levels: NA, yes, no
+unique(okcupid$q53)
+
+colors_q53 <- ifelse(
+  is.na(okcupid$q53), "gray",
+  ifelse(okcupid$q53 == "Yes", "orchid", "steelblue3")
+)
+
 ```
 
 ```{r}
 # plot for p_conf compared to p_exer and based on q53 (binary)
 confidence_plot <- plot(okcupid$p_conf, okcupid$p_exer,
-                        pch = 16)
+                        pch = 16,
+                        col = colors_q53,
+                        xlab = "Scale of Confidence",
+                        ylab = "Scale of Exercise",
+                        main = "Confidence Compared to Exercise \n Coloring based on Q53")
+legend(
+  "bottomright",
+  legend = c("Yes", "No", "NA"),
+  col = c("orchid", "steelblue3", "gray"),
+  pch = 16
+)
+```
+
+I want to try one without the NAs to see if there is more of a relationship between the answered one.
+```{r}
+# drop na
+drop_na_q53 <- na.omit(okcupid$q53)
+
+# ensure na dropped
+unique(drop_na_q53)
+
+# color yes and no onlys 
+colors_q53_na <- ifelse(okcupid$q53 == "Yes", "orchid", "steelblue3")
+
+# plot again
+confidence_plot_na<- plot(okcupid$p_conf, okcupid$p_exer,
+                        pch = 16,
+                        col = colors_q53_na,
+                        xlab = "Scale of Confidence",
+                        ylab = "Scale of Exercise",
+                        main = "Confidence Compared to Exercise \n Coloring based on Q53")
+legend(
+  "bottomright",
+  legend = c("Yes", "No"),
+  col = c("orchid", "steelblue3"),
+  pch = 16
+)
 ```
 
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+*I don't see any trends from the graphs. Very similar to what was seen in the histogram, they don't really have any relationship to one another but we do see points in almost all points of the graph meaning all answers were represented. The exercise data was more normally spread and represented across the entire scale. More of the confidence data is on the lower side of the scale with very few at the higher end of the scale (skewed right). Taking out the NAs did not create any noticeable trends as well.*
 
 
 (1.10) Create a subset of the original dataset that meets the following conditions:
@@ -358,29 +402,71 @@ Use both the `%in%` operator and the `substr()` function to complete this task. 
 
 Get the dimension of your final dataset. Comment on the reduction in size from the original dataset.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# create subset of the 5 variables: q53, q54, p_conf, p_exer, income_numeric)
+subset_data <- subset(okcupid, select = c("q53", "q54", "p_conf", "p_exer", "income_numeric")) # select choose column
+str(subset_data)
+
+# only choose astrological signs 
+subset_data <- substr(okcupid$d_astrology_sign, "Ca"| "Sa", ) # this isolates those people, now how do i retain them 
+```
+
 
 *REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
 
 (1.11)  For any one of the questions you wrote in 1.2), investigate this BRIEFLY with some combination of a plot and basic summary statistics (or a table).
 
-*What is the least most answered question of the q questions.*
+*Did anyone complete the full survey.*
 ```{r}
-# I need to sum all of the questions aka columns and then sort them 
+# I need to sum all of the questions aka columns and then sort them and figure out if any are empty.
 
-#isolate only the q columns
-q_columns <- grep("q", names(okcupid), value = TRUE)
+# drop any rows with na
+complete_survey <- na.omit(okcupid)
 
-# sort to find least answered 
-least_answer <- sort(head(q_columns))
+# get dimensions of all completed survey
+dim(complete_survey) 
+# no one completed the entire survey
 
-# questions associated with these
-# so now i need to go into okcupidq and find the long word answer associated with these numbers
-# find x in okcupidq and return text
+# I don't understand how the p variable works so I want to isolate q and see if anyone answered all of those
+
+# isolate only the q columns
+q_columns <- grep("^q", names(okcupid), value = TRUE) # looks for columns that start with q, returns matches
+
+# create df of only the q columns
+q_df <- okcupid[, q_columns]
+
+# drop NAs
+complete_q_df <- na.omit(q_df)
+
+# dimensions of complete q question 
+dim(complete_q_df)
+# 0 people also completed all q questions
+
+# sums number of responses per column
+answered_counts <- colSums(!is.na(q_df))
+
+# create frequency plot of which questions were most/least answered 
+plot(answered_counts) # sum the values of the q columns with NAs being removed
+
+# see what was the least frequently answered questions 
+head(sort(answered_counts))
+
+# go back into cupidQ to see what these columns are 
+okcupidQ[okcupidQ$X %in% c("q92899", "q72000", "q155299"), ]
+
+# see what was the most frequently answered questions
+head(sort(answered_counts, decreasing = TRUE))
+
+# go back into cupidQ to see what these columns are 
+okcupidQ[okcupidQ$X %in% c("q34113", "q64664", "q85419"), ]
+
+# create table of which were the closest to being completed.
 
 ```
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+
+*No one answered the full survey. Even when isolated to only the q columns which are the columns I understood to be questions and have options for respondants, no one completed all of those questions either.*
+*INCOMPLETE I  created a frequency plot of which q questions were most and least answered to see which were potentially the . This inherently answered my other questions of what were the most/least answered questions as well. I also made a plot and table of the surveys that were the closest to being fully completed.*
 
 
 (2.1)  Your work at a social research nonprofit puts you in touch with a large, multi-year survey called the National Civic Life Survey. Each row is one respondent; columns include demographics (age, education), civic behaviors (voting frequency, volunteering hours), and attitude questions. Many questions were optional, so missing values are common. The data arrive as a Parquet file, plus a small CSV with question metadata.
