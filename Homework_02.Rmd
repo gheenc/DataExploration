@@ -417,15 +417,25 @@ Get the dimension of your final dataset. Comment on the reduction in size from t
 
 ```{r}
 # create subset of the 5 variables: q53, q54, p_conf, p_exer, income_numeric)
-subset_data <- subset(okcupid, select = c("q53", "q54", "p_conf", "p_exer", "income_numeric")) # select choose column
-str(subset_data)
+subset_data <- subset(okcupid, select = c("q53", "q54", "p_conf", "p_exer", "income_numeric", "d_astrology_sign")) # select choose column
+
+# check dimensions here
+dim(subset_data)
+
+# drop any nas
+subset_data <- na.omit(subset_data)
+
+# check dimensions here 
+dim(subset_data)
 
 # only choose astrological signs 
-subset_data <- substr(okcupid$d_astrology_sign, "Ca"| "Sa", ) # this isolates those people, now how do i retain them 
+subset_data <- subset_data[substr(subset_data$d_astrology_sign, 1, 2) %in% c("Ca", "Sa"), ]
+subset_data
+dim(subset_data)
 ```
 
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*Isolated to only the 5 wanted variables, there were 68,371 rows/responses. After dropping the NAs to isolate only complete data, there was 453 rows/responses. After choosing only astrological signs that start with Ca or Sa, there were 105 rows/responses. This is a drastic reduction from where we started and highlights how few surveys are truly complete, even when only considering some levels of 5 variables.*
 
 (1.11)  For any one of the questions you wrote in 1.2), investigate this BRIEFLY with some combination of a plot and basic summary statistics (or a table).
 
