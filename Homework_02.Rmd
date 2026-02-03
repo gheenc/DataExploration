@@ -22,13 +22,6 @@ This homework assignment contains 1 long problem. Edit this `.Rmd` file and inse
 
 Your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
 
-**CRITICAL 1 - for every included chunk below, remove `eval = F` before knitting!!!!**
-
-**CRITICAL 2 - Please submit knitted version of this assignment as a PDF file on GRADESCOPE  You can knit directly to a DOC and then convert to PDF in Word (choose SAVE AS), or you can knit directly to PDF if that works for you.**
-
-**DELETE LINES 19 THROUGH 29 (INCLUSIVE) BEFORE KNITTING AND SUBMITTING!**
-
-
 **(1) OK Cupid Dataset**  This is a dataset first discussed by [Kirkegaard and Bjerrekaer](https://openpsych.net/paper/46/).  We'll use this dataset several times this semester.
 
 The data itself is stored as a parquet.  This is a format where each column is stored separately (rather than as a giant array or matrix).  It is more efficient to quickly access are search data.  We will create a the usual dataframe.
@@ -60,8 +53,8 @@ Next, write not more than three sentences about what you observe about the datas
 
 ```{r}
 # display head of both datasets in addition to opening the data in environment 
-head(okcupid)
-head(okcupidQ)
+# head(okcupid)
+# head(okcupidQ)
 
 # understand structure of both
 str(okcupid)
@@ -70,6 +63,7 @@ str(okcupidQ)
 # get the dimensions of the original dataset - there are 68371 rows and 2626 
 # columns meaning 68371 responses on potentially 2626 questions
 dim(okcupid)
+
 # dimensions of other dataset - 2620 rows (aka questions) and 10 columns other options or keywords
 dim(okcupidQ)
 
@@ -81,14 +75,19 @@ head(sorted_missing_values, 10) # these are the top 10 columns with missing valu
 # unique values of Type - N, M, O, blank
 unique(okcupidQ$Type)
 
-# return a row of each value to investigate further 
-okcupidQ[okcupidQ$Type == "", ]
-okcupidQ[okcupidQ$Type == "N", ]
-okcupidQ[okcupidQ$Type == "M", ]
-okcupidQ[okcupidQ$Type == "O", ]
+# return a row of each value to investigate further
+blank_type <- okcupidQ[okcupidQ$Type == "", ] # ""
+N_type <- okcupidQ[okcupidQ$Type == "N", ] # "N"
+M_type <- okcupidQ[okcupidQ$Type == "M", ] # "M"
+O_type <- okcupidQ[okcupidQ$Type == "O", ] # "O"
+
+okcupidQ[okcupidQ$X == "p_drug", ] # ""
+okcupidQ[okcupidQ$X == "q2", ] # N
+okcupidQ[okcupidQ$X == "q78", ]# M
+okcupidQ[okcupidQ$X == "q12", ] # O
 ```
 
-*Type is classified as either N, O, M or blank. I think the O is when an answer can be yes or no. N is when there are differing answers a respondant can choose from. M is when there are different answers they can choose from and they are more of a scalar nature. And nothing is not for questions but rather for profile/classification variables collected from the user.*
+*Type is classified as either N, O, M or blank. I think the O is when an answer can be yes or no. N is when there are differing answers a respondant can choose from. M is when there are different answers they can choose from and they are more of a scalar nature. And blank is not for questions but rather for profile/classification variables collected from the user.*
 *The dataset is very long and very interesting. It is dating-natured questions asked to respondants to build their profile that was scraped and parsed from OkCupid. Lots of people did not answer many of the questions so there are lots of missing values. It is a very long dataset with a lot of questions that were presented to respondants that can be analyzed,*
 
 1.2)  Write exactly three questions that you are curious to answer using this dataset.
@@ -98,7 +97,6 @@ okcupidQ[okcupidQ$Type == "O", ]
 1.3)  We are going to calculate a numeric value of income. I did this in the code below.
 
 ```{r}
-
 grep("income", names(okcupid)) # this looks for the word income in the column names of okcupid; this allows you to see what columns might have to do with income
 
 okcupid[, 1469][1:100] # this  returns the first 100 items of column 1469; this gives an idea of the data and see if it looks like it has to do with income based on the range and use of $
@@ -181,7 +179,7 @@ barplot(table(income_bins),
         ylim = c(0,6000))
 ```
 
-*The majority of respondants (53,434) either did not answer or chose 'prefer not to say.' Of respondants who gave an answer, the majority of respondants had an over $50,000 income. The next most frequent group was $20,000-29,000. Both $30,000-39,000 and $40,000-49,000 had less than 3000 respondants. Very, very few respondants said less than $20,000.*
+*The majority of respondants (53,434) either did not answer or chose 'prefer not to say.' Of respondants who gave an answer, the majority of respondants answered over $50,000 income. The next most frequent group was $20,000-29,000. Both $30,000-39,000 and $40,000-49,000 had less than 3000 respondants. Very, very few respondants said less than $20,000.*
 
 (1.4) Pick any variable EXCEPT q30458 that starts with `q` that has four possible outcomes (options).
 
@@ -197,7 +195,7 @@ okcupidQ[okcupidQ$X == "q54", ]
 # the fourth option or level is 'Your soul'
 
 # create table of q54
-table1 <- table(okcupid$q54)
+(table1 <- table(okcupid$q54))
 
 # create percent that responded to 4th option
 percent_4 <- round(table1["Your soul"]/sum(table1) *100) 
@@ -258,6 +256,7 @@ mtext("Response Options", side = 2, line = 8, cex = 0.8) # adds the y axis label
 ```{r}
 # two way table of q53 and q54
 two_questions <- table(okcupid$q53, okcupid$q54)
+two_questions
 
 # calculate percent of people for each response that answered yes
 # numerator = yes to q53/denominator = everyone who answered that level aka the column total
@@ -276,7 +275,7 @@ text(c(2, 5, 8, 11), c(500, 3500, 3500, 500), two_questions_label)
 ```
 
 
-*I looked at question 53 which asked "when telling stories do you like to exaggerate" (yes/no) and question 54 which asked "Which, on you, is closest to perfection?" (Your body, your mind, your soul, or your wallet). It does not appear these are connected, although it does seem more people do not like to exaggerate when telling stories than people who do as more people answered no in every category. Additionally, more people felt like their mind and soul were closer to perfection than their wallet or body.  *
+*I looked at question 53 which asked "when telling stories do you like to exaggerate" (yes/no) and question 54 which asked "Which, on you, is closest to perfection?" (Your body, your mind, your soul, or your wallet). It does not appear these are connected, although it does seem more people do not like to exaggerate when telling stories than people who do as more people answered no in every category. Additionally, more people felt like their mind and soul were closer to perfection than their wallet or body. But there did not seem to be any relatedness between the questions. *
 
 
 (1.7) Choose any two variables that start with the letter `p`.  These are questions that are calculated scales.
@@ -312,10 +311,6 @@ confidence_histogram <- hist((okcupid$p_conf),
      main = "Responses to 'Confident'",
      ylim = c(0, 2000),
      col = "navajowhite")
-
-exercise_histogram
-confidence_histogram
-
 ```
 
 
@@ -400,7 +395,7 @@ legend(
 )
 ```
 
-*I don't see any trends from the graphs. Very similar to what was seen in the bargraph, they don't really have any relationship to one another but we do see points in almost all areas of the graph meaning all answers were represented. The exercise data was more normally spread and represented across the y axis. More of the confidence data is on the lower side of the scale, or the x axis, with very few at the higher end of the x axis(skewed right). Taking out the NAs did not create any noticeable trends either.*
+*I don't see any trends from the graphs. Very similar to what was seen in the bargraph, they don't really have any relationship to one another but we do see points in almost all areas of the graph meaning all answers were represented. The exercise data was more normally spread and represented across the y axis. More of the confidence data is on the lower side of the scale, or the x axis, with very few at the higher end of the x axis (skewed right). Taking out the NAs did not create any noticeable trends either.*
 
 
 (1.10) Create a subset of the original dataset that meets the following conditions:
@@ -417,21 +412,22 @@ Get the dimension of your final dataset. Comment on the reduction in size from t
 
 ```{r}
 # create subset of the 5 variables: q53, q54, p_conf, p_exer, income_numeric)
-subset_data <- subset(okcupid, select = c("q53", "q54", "p_conf", "p_exer", "income_numeric", "d_astrology_sign")) # select choose column
+subset_data <- subset(okcupid, select = c("q53", "q54", "p_conf", "p_exer", "income_numeric", "d_astrology_sign")) 
 
 # check dimensions here
-dim(subset_data)
+dim(subset_data) # 68371 rows
 
 # drop any nas
 subset_data <- na.omit(subset_data)
 
 # check dimensions here 
-dim(subset_data)
+dim(subset_data) # 453 rows
 
 # only choose astrological signs 
 subset_data <- subset_data[substr(subset_data$d_astrology_sign, 1, 2) %in% c("Ca", "Sa"), ]
-subset_data
-dim(subset_data)
+
+# check dimensions
+dim(subset_data) # 105 rows
 ```
 
 
@@ -512,15 +508,14 @@ barplot(answered_counts[c("q92899", "q72000", "q155299","q34113", "q64664", "q85
 ```
 
 
-*No one answered the full survey. Even when isolated to only the q columns which are the columns I understood to be questions and have options for respondants, no one completed all of those questions either.*
-*Because no one completed the entire survey, I attempted to answer my other questions that might lend themselves better to plots and tables. I got the most and least answered questions and made a table of the question number, the question, and amount of responses it got. I also made a bar graph of the 3 most and least answered so one could visually appreciate the difference in answered frequencies. The nature of the least answered questions surprised me because I felt there were more risque ones in the dataset I was expecting to have been answered less.*
+*No one answered the full survey. Even when isolated to only the q columns which are the columns I understood to be questions and have options for respondents, no one completed all of those questions either. This could either be because it is such a long survey, respondants are only presented some questions, or new questions have been added and others retired thereby not exposing any one participant to truly all the questions. *
+*Because no one completed the entire survey, I attempted to answer my other questions that might lend themselves better to plots and tables. I got the most and least answered questions and made a table of the question number, the question, and amount of responses it got. I also made a bar graph of the 3 most and least answered so one could visually appreciate the difference in answered frequencies. The nature of the least answered questions surprised me because I felt there were more 'risque' ones in the dataset I was expecting to have been answered less.*
 
 
 (2.1)  Your work at a social research nonprofit puts you in touch with a large, multi-year survey called the National Civic Life Survey. Each row is one respondent; columns include demographics (age, education), civic behaviors (voting frequency, volunteering hours), and attitude questions. Many questions were optional, so missing values are common. The data arrive as a Parquet file, plus a small CSV with question metadata.
 
 Using only the tools you’ve learned so far, write out in words the steps you would take to explore this dataset and generate a few simple plots. Do not include any R code, but you're welcome to mention R functions you might use.
 
-*Hint: In this HW, you worked with parquet/CSV files, inspected structure and summaries, examined unique values for categorical variables, and noted missingness.*
-
-**
+*First I would save both datsets into their own variable using read.csv. I would inspect both the actual data in environment to to grasp the size and structure of the variables. I would also inspect the question metadata file in the environment to understand the columns of the actual data better. I would run dim, str, and names on both files to get a feel of size, structure, and naming. If any variables in the actual data set needed to be reprocessed, like changing characters to be factors I would do that. For the 4 demographic and civil behavior variables, I would get the summary to understand the range, median, and mean of the dataset. If there are any potential inconsistencies (age mean is insanely high for example) I would inspect specific rows for potential data entry errors or set thresholds for what a reasonable value could be (ex: age cannot be below 0 or above 120). I would also look into missing values of the large dataset, specifically using colSums (ex: (missing_values <- colSums(is.na(okcupid)))). I could also sort the missing values to understand which variable is missing the most entries. If I wanted to look at only completed surveys I could do complete.cases or na.omit and store these in their own variable to then analyze and plot. If I wanted to inspect any combination of answered questions (ex: only people who answered 2 wanted attitude questions and reported their age and voting frequency), I could also create these variables with subset or grep.*
+*For plotting I could make a barplot of volunteering hours to better understand the spread and frequency. I would create bins (0-2, 2-4, 4-6, 6+) and plot these on a barplot. I could also color the bins by another variable like yes/no attitude questions. I could create a scatterplot of age and voting frequency (I would need to ensure the labels on the plots explain this variable well - what does frequency mean? Is it every local election? Is it once every 4 years? What is the time this is looked at?) to understand is certain ages vote more frequently. I could create a barplot of any attitude questions with levels (ex: a question with 4 options) to understand the percentage breakdown of how everyone answered. I could also do a histogram of any attitude questions that are on a scale to show the frequency on spread of the answers.*
 
