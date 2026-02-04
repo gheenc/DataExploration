@@ -101,7 +101,18 @@ You are going to make six normal quantile plots that simulate 127 random observa
 *  Make the boundary lines blue (use `col.lines`)
 *  Make a main graph title that pastes the text "127 Binomial Samples, N =" to the corresponding value from `vec`.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code for parts 2.1 through 2.5 of problem 2*
+```{r}
+# 2.1 install car package
+# install.packages('car')
+library('car')
+
+# 2.2 make vector
+# list <- c(1:10)
+# for [i] in list:
+  
+
+```
+
 
 
 (2.6)  Take a look at the normal quantile plots.  For what value of n do the graphs seem to be approximately normally distributed?   Is this consistent with what you expect?   Write two complete sentences to answer these questions.
@@ -186,31 +197,31 @@ food <- tolower(food)
 length(unique(food)) # down to 188
 
 # find 'or' and remove anything that follow
-food <- gsub(" or .*", "", food) # make sure to have spaces so or on it's own, not in middle of word
+food <- gsub(" or.*", "", food) # make sure to have spaces so or on it's own, not in middle of word
 length(unique(food)) # still 188
 
 # find 'and' and remove anything that follows
-food <- gsub(" and .*", "", food)
+food <- gsub(" and.*", "", food)
 length(unique(food)) # 187
 
 # find 'food' and remove anything that follows 
-food <- gsub(" food .*", "", food)
-length(unique(food)) # 183
+food <- gsub(" food.*", "", food)
+length(unique(food)) # 171
 
 # find 'cuisine' and remove anything that follows
-food <- gsub(" cuisine .*", "", food)
-length(unique(food)) # 183
+food <- gsub(" cuisine.*", "", food)
+length(unique(food)) # 170
 
 # remove all special characters and punctuation
 food <- gsub("[^A-Za-z ]", "", food) # anything not A-Z or a-z or a space is dropped
-food
-length(unique(food)) # 167
+length(unique(food)) # 157
 
 # remove trailing spaces 
 food <- gsub("\\s$", "", food)
-length(unique(food)) # 166
+length(unique(food)) # 156
 
-# should have 156 unique levels 
+# rerun sorted
+sort(unique(food))
 ```
 
 
@@ -240,7 +251,71 @@ When you're finished, you should have 130 unique values.
 Your final two lines of code should again show the sorted unique values of food and the current number of unique values.
 
   
-*REPLACE THIS TEXT WITH YOUR R-chunk Code for part (3.7)*
+```{r}
+# hotpot
+food <- gsub(".*hotpot.*|.*hot pot.*", "hotpot", food)
+length(unique(food)) #155
+
+# curry
+food <- gsub(".*curry.*", "curry", food)
+length(unique(food)) #152
+
+# lasagna
+food <- gsub("lasagne", "lasagna", food)
+length(unique(food)) #151
+
+# noodles
+food <- gsub(".*noodles.*|*noodle.*", "noodles", food)
+length(unique(food)) #149
+
+# cookies
+food <- gsub(".*cookies.*", "cookies", food)
+length(unique(food)) #148
+
+# chocolate
+food <- gsub(".*chocolate.*", "chocolate", food)
+length(unique(food)) #146
+
+# cheese
+food <- gsub(".*cheese.*", "cheese", food)
+length(unique(food)) #143
+
+# steak
+food <- gsub(".*steak.*", "steak", food)
+length(unique(food)) #142
+
+# sushi
+food <- gsub(".*sushi.*", "sushi", food)
+length(unique(food)) #141
+
+# fries (french, cajun, five guys' should all be 'fries')
+food <- gsub(".*fries.*", "fries", food)
+length(unique(food)) #139
+
+# ramen
+food <- gsub(".*ramen.*", "ramen", food)
+length(unique(food)) #138
+
+# tofu
+food <- gsub(".*tofu.*", "tofu", food)
+length(unique(food)) #137
+
+# burgers (of any kind)
+food <- gsub(".*burgers.*", "burgers", food)
+length(unique(food)) #136
+
+# soup
+food <- gsub(".*soup.*", "soup", food)
+length(unique(food)) #135
+
+# anything containing 'delicious' just call 'delicious'
+food <- gsub(".*delicious.*", "delicious", food)
+length(unique(food)) #130
+
+sort(unique(food))
+length(unique(food)) #130
+```
+
 
 (3.8) Cleaning Part III *(8 pts)*: Cleaning types of cuisine.
 
@@ -263,7 +338,24 @@ When you're finished, you should have 120 unique values.
 
 Your final two lines of code should again show the sorted unique values of food and the current number of unique values.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code for part (3.8)*
+```{r}
+# create backup 2
+food_backup2 <- food
+
+# search vector of all cuisines
+searchvec <- c("asian", "chinese", "vietnamese", "italian", "indian", "thai", "mexican", "brazilian", "korean")
+
+# loop to replace all midifiers 
+for (i in 1:length(searchvec)){
+  food <- gsub(paste0(".*", searchvec[i], ".*"), searchvec[i], food)
+}
+
+# look at uniques 
+sort(unique(food))
+length(unique(food))
+
+```
+
 
 (3.9)  *(15 pts)*  Following the example from Class 05, display a dataframe of the sorted tabular results of `food` to see how many individuals prefer each kind of food.
 
@@ -274,7 +366,10 @@ Include your code below, and add comments where appropriate to describe the choi
 Display a dataframe of the sorted tabular results of `food` to see how many individuals prefer each kind of food AGAIN after you've finished your coding.
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code for part (3.9)*
+```{r}
+
+```
+
 
 (3.10)  *(8 pts)*  Final steps and a plot:  You'll want to CAREFULLY follow the example in the code at the end of Class 05.
 
