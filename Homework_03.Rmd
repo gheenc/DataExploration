@@ -107,9 +107,23 @@ You are going to make six normal quantile plots that simulate 127 random observa
 library('car')
 
 # 2.2 make vector
-# list <- c(1:10)
-# for [i] in list:
-  
+vec <- 10 ** (0:5)
+
+# 2.3 use par() to set up plot
+par(mfrow = c(2,3))
+
+# 2.4 rbinom()
+vec2 <- rbinom(6, 17, 0.6)
+vec2
+
+# 2.5 loop plotting
+for (i in vec) {
+  qqplot(rbinom(127, i, 0.3), vec,
+  pch = 19,
+  col.lines = "blue",
+  main = paste("127 Binomial Sample, N = ", i)
+  )
+}
 
 ```
 
@@ -191,6 +205,7 @@ Your final two lines of code should again show the sorted unique values of food 
 ```{r}
 # create a backup variable to go back to if needed
 food_backup <- food
+sort(food_backup)
 
 # convert data to lowercase
 food <- tolower(food)
@@ -218,6 +233,7 @@ length(unique(food)) # 157
 
 # remove trailing spaces 
 food <- gsub("\\s$", "", food)
+food <- trimws(food)
 length(unique(food)) # 156
 
 # rerun sorted
@@ -317,6 +333,7 @@ length(unique(food)) #130
 ```
 
 
+
 (3.8) Cleaning Part III *(8 pts)*: Cleaning types of cuisine.
 
 Clean up the following types of cuisine (in order) - in this case, you'll want to make a vector called `searchvec` that contains the types of cuisine.  Then create a loop following the example in Class 5 to replace all the modifiers for each cuisine type so that you ultimately end up with cleaned up versions of each cuisine type.  Use not more than 5 lines of code.
@@ -367,6 +384,12 @@ Display a dataframe of the sorted tabular results of `food` to see how many indi
 
 
 ```{r}
+# original df 
+(df_food <- data.frame(table(food))) 
+sort(table(food), decreasing = TRUE, value = TRUE)# currently 120 levels
+
+# I noticed in the table there was a "my favorite kinf of ..." I went to my backup and found pastries had been erranously removed behind food so I reinserted that. I also confirmed in the backup that freeze dried was the full entry and it was 
+food <- gsub("my favorite kind of", "pastries", food)
 
 ```
 
@@ -383,7 +406,7 @@ Display a dataframe of the sorted tabular results of `food` to see how many indi
 
 (3.11) *(3 pts)* In no more than three sentences, discuss your process and results.  Be sure to mention how many unique values of 'food' you started and ended with.  Any surprises?
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*There was at least one food that would have been erraneously categorized *
 
 (4.1)  Pseudocode.
 
