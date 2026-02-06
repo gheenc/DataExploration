@@ -118,10 +118,11 @@ vec2
 
 # 2.5 loop plotting
 for (i in vec) {
-  qqplot(rbinom(127, i, 0.3), vec,
+  qqPlot(rbinom(127, i, 0.3),
+  col = 'red',
   pch = 19,
   col.lines = "blue",
-  main = paste("127 Binomial Sample, N = ", i)
+  main = paste("127 Binomial Samples, N = ", i)
   )
 }
 
@@ -131,7 +132,7 @@ for (i in vec) {
 
 (2.6)  Take a look at the normal quantile plots.  For what value of n do the graphs seem to be approximately normally distributed?   Is this consistent with what you expect?   Write two complete sentences to answer these questions.
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*Graphs with 1,000, 10,000, and 100,000 samples looks approximately normal(the 100 sample size is nearing normal but still has some skew, especially compared to the other graphs that almost completely stay within the confidence interval bounds). This is consistent with what I expected because as the sample number increases, the more precise the confidence intervals will be and the more normal the sample will look, following the central limit theorem. *
 
  
 **(3) Favorite food and Data Cleaning** *(62 points.  Parts 3.2 through 3.5, 2 pts each, other values listed below)*.
@@ -273,7 +274,7 @@ food <- gsub(".*hotpot.*|.*hot pot.*", "hotpot", food)
 length(unique(food)) #155
 
 # curry
-food <- gsub(".*curry.*", "curry", food)
+food <- gsub(".*curry.*|.*curries.*", "curry", food)
 length(unique(food)) #152
 
 # lasagna
@@ -362,7 +363,7 @@ food_backup2 <- food
 # search vector of all cuisines
 searchvec <- c("asian", "chinese", "vietnamese", "italian", "indian", "thai", "mexican", "brazilian", "korean")
 
-# loop to replace all midifiers 
+# loop to replace all modifiers 
 for (i in 1:length(searchvec)){
   food <- gsub(paste0(".*", searchvec[i], ".*"), searchvec[i], food)
 }
@@ -386,10 +387,55 @@ Display a dataframe of the sorted tabular results of `food` to see how many indi
 ```{r}
 # original df 
 (df_food <- data.frame(table(food))) 
-sort(table(food), decreasing = TRUE, value = TRUE)# currently 120 levels
+sort(table(food), decreasing = TRUE, value = TRUE)# currently 120 levels 
+length(unique(food))
 
 # I noticed in the table there was a "my favorite kinf of ..." I went to my backup and found pastries had been erranously removed behind food so I reinserted that. I also confirmed in the backup that freeze dried was the full entry and it was 
 food <- gsub("my favorite kind of", "pastries", food)
+
+# i am making a vegetable category 
+food <- gsub("corn|sundried tomatoes|sundried tomatoes|sweet potato|fried okra|artichoke", "vegetables", food)
+
+# i am adding to the fruit category 
+food <- gsub("nectarine|strawberries|bananas|mango|fruits|dried fruits|platanos|dried mangos", "fruit", food)
+
+# i am making a breakfast category 
+food <- gsub("crepes|pastries|cinnamon roll|bagel|multigrain pancake", "breakfast foods", food) # must change pancakes before desserts
+
+# i am making a deserts category 
+food <- gsub("cookies|cake|donuts|dessert|desserts", "desserts", food)
+
+# i am making a chicken dishes category 
+food <- gsub("chicken|chicken wings|fried chicken|butter chicken|chicken malai kabab|chicken tikka masala|chicken parmesan|chicken tikka|chicken tenders|gizzard chicken|grilled chicken breast|jollof rice with chicken dishes", "chicken dishes", food)
+
+# i am making a snacks category 
+food <- gsub("cheez its|sweet chili doritos", "snacks", food)
+
+# i am making a seafood category 
+food <- gsub("salmon|blue point oyseter|ceviche|fish tacos|fried fish|fish|poke bowl", "seafood", food)
+
+# other country cuisines
+food <- gsub("brazilian|albanian|ethiopian|vietnamese|indonesian|lebanese|persian|puerto rican", "other national cuisines", food)
+
+# other country dishes
+food <- gsub("kelewele its an african dish|palak paneer|shahi paneer|tagine|farofa|jollof rice|hibachi|swedish meatballs|roast dinner", "other national dishes", food)
+
+# specific pizza
+food <- gsub("good pizza|lahmacun turkish pizza", "pizza", food) # adding these to pizza
+
+# specific breads
+food <- gsub("arepa|baguettes", "bread", food) # adding these to bread
+
+# specific meats
+food <- gsub("ribs|ham|hot dog", "meats", food) # adding these to bread
+
+# wrapped things 
+food <- gsub("empanadas|enchiladas|dumplings|flautas|potstickers|gyros", "wrapped delicacies", food) # once I got down to the bottom, there were many wrapped things
+
+# drop two delicious only entries 
+food <- gsub("delicious", "", food)
+food <- food[food != ""] # drop the blank value made from replacing delicious
+length(unique(food))
 
 ```
 
@@ -406,7 +452,7 @@ food <- gsub("my favorite kind of", "pastries", food)
 
 (3.11) *(3 pts)* In no more than three sentences, discuss your process and results.  Be sure to mention how many unique values of 'food' you started and ended with.  Any surprises?
 
-*There was at least one food that would have been erraneously categorized *
+*There was at least one food that would have been erraneously categorized I was suprised at how hard it was to decide how to categorize foods*
 
 (4.1)  Pseudocode.
 
@@ -419,4 +465,4 @@ iv) Visualize the final categories in a clear barplot.
 
 Write pseudocode describing the steps you would take. Don't write any R code, but you're welcome to mention functions you would use.
 
-*REPLACE THIS TEXT WITH YOUR RESPONSE AND MAKE SURE THE RESPONSE IS IN ITALICS*
+*First, I would make sure I understand my data by investigating the dim, str, and names of the columns. I would put all the responses in a single vector so they are easy to manipulate. I would save this single vector into a backup variable in case I need to check or restore any of the original values. I would then sort all unique values and get the length to understand how many unique values we are starting with. If it is manageable file, I may visually look at the unique values as well. First, I would lowercase all the words and remove any punctuation. After each step I would check the length of the unique values. I would also trim any white spaces, delete trailing spaces, or special characters that may be due to responses being submitted from different computers. If there are any common leading phrases, like "I love the..." I would drop these and keep only any characters that follow. I would also drop 'the' and 'a'. If there are an overwhelming amount of responses, I could drop 'or,' 'and,' and 'because' and everything after although I would personally prefer to not and determine this on a case by case basis. If there are any common misspellings (ex: baech instead of beach), I would fix these using gsub. If there are any common themes that I can begin to group in, like multiple parks or beaches, I can do gsub to have these responses only be reflective of the broader category. If there are multiple themes, I could potentially fix these using a loop that looks for the theme, and replaces it with that themes word. Hopefully at this point there are minimal enough themes that I can begin grouping them manually based on my rules and thoughts and how many end categories are applicable. After this I can summarize the final results into a table, which would show counts, or a barplot which would show percentages. To create final percentages, I would need to apply a sum and *
