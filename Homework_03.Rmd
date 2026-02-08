@@ -153,7 +153,6 @@ Your goal is similar to what we did with the question "What animal would you lik
 # 3.1
 # read in data as csv
 food <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/Food_230.csv")
-food
 
 # 3.2
 # dimensions of data - 317 rows/responses, 1 column/question
@@ -170,9 +169,9 @@ tail(food)
 str(food)
 
 # 3.3 
-# convert food to be single vector of the food column
+# convert food to be single vector of the food column; confirmed was character string
 food <- food$Food
-food
+str(food)
 
 # 3.4 
 # number of unique values - there are 218 
@@ -271,66 +270,66 @@ Your final two lines of code should again show the sorted unique values of food 
 ```{r}
 # hotpot
 food <- gsub(".*hotpot.*|.*hot pot.*", "hotpot", food)
-length(unique(food)) #155
+length(unique(food)) #153
 
 # curry
 food <- gsub(".*curry.*|.*curries.*", "curry", food)
-length(unique(food)) #152
+length(unique(food)) #149
 
 # lasagna
 food <- gsub("lasagne", "lasagna", food)
-length(unique(food)) #151
+length(unique(food)) #148
 
 # noodles
 food <- gsub(".*noodles.*|*noodle.*", "noodles", food)
-length(unique(food)) #149
+length(unique(food)) #146
 
 # cookies
 food <- gsub(".*cookies.*", "cookies", food)
-length(unique(food)) #148
+length(unique(food)) #145
 
 # chocolate
 food <- gsub(".*chocolate.*", "chocolate", food)
-length(unique(food)) #146
+length(unique(food)) #143
 
 # cheese
 food <- gsub(".*cheese.*", "cheese", food)
-length(unique(food)) #143
+length(unique(food)) #140
 
 # steak
 food <- gsub(".*steak.*", "steak", food)
-length(unique(food)) #142
+length(unique(food)) #139
 
 # sushi
 food <- gsub(".*sushi.*", "sushi", food)
-length(unique(food)) #141
+length(unique(food)) #138
 
 # fries (french, cajun, five guys' should all be 'fries')
 food <- gsub(".*fries.*", "fries", food)
-length(unique(food)) #139
+length(unique(food)) #136
 
 # ramen
 food <- gsub(".*ramen.*", "ramen", food)
-length(unique(food)) #138
+length(unique(food)) #135
 
 # tofu
 food <- gsub(".*tofu.*", "tofu", food)
-length(unique(food)) #137
+length(unique(food)) #134
 
 # burgers (of any kind)
 food <- gsub(".*burgers.*", "burgers", food)
-length(unique(food)) #136
+length(unique(food)) #133
 
 # soup
 food <- gsub(".*soup.*", "soup", food)
-length(unique(food)) #135
+length(unique(food)) #132
 
 # anything containing 'delicious' just call 'delicious'
 food <- gsub(".*delicious.*", "delicious", food)
-length(unique(food)) #130
+length(unique(food)) #131
 
 sort(unique(food))
-length(unique(food)) #130
+length(unique(food)) #
 ```
 
 
@@ -388,37 +387,37 @@ Display a dataframe of the sorted tabular results of `food` to see how many indi
 # original df 
 (df_food <- data.frame(table(food))) 
 sort(table(food), decreasing = TRUE, value = TRUE)# currently 120 levels 
-length(unique(food))
+length(unique(food)) 
 
-# I noticed in the table there was a "my favorite kinf of ..." I went to my backup and found pastries had been erranously removed behind food so I reinserted that. I also confirmed in the backup that freeze dried was the full entry and it was 
+# I noticed in the table there was a "my favorite kind of ..." I went to my backup and found pastries had been erranously removed behind food so I reinserted that. I also confirmed in the backup that freeze dried was the full entry and it was 
 food <- gsub("my favorite kind of", "pastries", food)
 
 # i am making a vegetable category 
 food <- gsub("corn|sundried tomatoes|sundried tomatoes|sweet potato|fried okra|artichoke", "vegetables", food)
 
 # i am adding to the fruit category 
-food <- gsub("nectarine|strawberries|bananas|mango|fruits|dried fruits|platanos|dried mangos", "fruit", food)
+food <- gsub("nectarine|strawberries|bananas|mango|dried fruits|platanos|dried mangos|fruits", "fruit", food)
 
-# i am making a breakfast category 
-food <- gsub("crepes|pastries|cinnamon roll|bagel|multigrain pancake", "breakfast foods", food) # must change pancakes before desserts
+# i am making a breakfast category - must come before desserts bc of pancakes and handles a misspelling
+food <- gsub("crepes|pastries|cinnamon roll|bagel|multigrain pancake|breakfast foodss", "breakfast foods", food) # must change pancakes before desserts
 
-# i am making a deserts category 
+# i am making a desserts category 
 food <- gsub("cookies|cake|donuts|dessert|desserts", "desserts", food)
 
+# other country dishes - must come before chicken dishes 
+food <- gsub("kelewele its an african dish|palak paneer|shahi paneer|tagine|farofa|jollof rice|hibachi|swedish meatballs|roast dinner|jollof rice with chicken dishes", "other national dishes", food)
+
 # i am making a chicken dishes category 
-food <- gsub("chicken|chicken wings|fried chicken|butter chicken|chicken malai kabab|chicken tikka masala|chicken parmesan|chicken tikka|chicken tenders|gizzard chicken|grilled chicken breast|jollof rice with chicken dishes", "chicken dishes", food)
+food <- gsub("chicken|chicken wings|fried chicken|butter chicken|chicken malai kabab|chicken tikka masala|chicken parmesan|chicken tikka|chicken tenders|gizzard chicken|grilled chicken breast", "chicken dishes", food)
 
 # i am making a snacks category 
 food <- gsub("cheez its|sweet chili doritos", "snacks", food)
 
 # i am making a seafood category 
-food <- gsub("salmon|blue point oyseter|ceviche|fish tacos|fried fish|fish|poke bowl", "seafood", food)
+food <- gsub("salmon|blue point oyster|ceviche|fish tacos|fried fish|fish|poke bowl", "seafood", food)
 
 # other country cuisines
-food <- gsub("brazilian|albanian|ethiopian|vietnamese|indonesian|lebanese|persian|puerto rican", "other national cuisines", food)
-
-# other country dishes
-food <- gsub("kelewele its an african dish|palak paneer|shahi paneer|tagine|farofa|jollof rice|hibachi|swedish meatballs|roast dinner", "other national dishes", food)
+food <- gsub("brazilian|albanian|ethiopian|vietnamese|indonesian|lebanese|persian|puerto rican|mediterranean", "other national cuisines", food)
 
 # specific pizza
 food <- gsub("good pizza|lahmacun turkish pizza", "pizza", food) # adding these to pizza
@@ -427,15 +426,20 @@ food <- gsub("good pizza|lahmacun turkish pizza", "pizza", food) # adding these 
 food <- gsub("arepa|baguettes", "bread", food) # adding these to bread
 
 # specific meats
-food <- gsub("ribs|ham|hot dog", "meats", food) # adding these to bread
+food <- gsub("ribs|ham", "meat", food) # adding these to bread
 
 # wrapped things 
-food <- gsub("empanadas|enchiladas|dumplings|flautas|potstickers|gyros", "wrapped delicacies", food) # once I got down to the bottom, there were many wrapped things
+food <- gsub("empanadas|enchiladas|dumplings|flautas|potstickers|gyros|postickers", "wrapped delicacies", food) # once I got down to the bottom, there were many wrapped things
 
-# drop two delicious only entries 
-food <- gsub("delicious", "", food)
-food <- food[food != ""] # drop the blank value made from replacing delicious
+# replacing entries under 3 to be other
+freq <- table(food)
+food[food %in% names(freq[freq < 3])] <- "Other"
+
+# how many entries have over3
+#df_food[df_food$Freq >= 3, ]
+
 length(unique(food))
+sort(table(food), decreasing = TRUE, value = TRUE)# 37
 
 ```
 
@@ -448,21 +452,16 @@ length(unique(food))
 *  Change the names of `finaltab` to include a space and then the percents followed by a "%" in curved parentheses.
 *  Make a horizontal barplot of your final plot.   Choose a nice bar color, adjust the left margins as necessary, give a main title and label the horizontal axis.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code for part (3.10)*
+```{r}
+# install tools package for title case
+# install.packages('tools')
+library('tools')
 
-(3.11) *(3 pts)* In no more than three sentences, discuss your process and results.  Be sure to mention how many unique values of 'food' you started and ended with.  Any surprises?
+# apply title case
+food <- toTitleCase(food)
 
-*There was at least one food that would have been erraneously categorized I was suprised at how hard it was to decide how to categorize foods*
+# make object called finaltab
+finaltab <- table(food)
 
-(4.1)  Pseudocode.
-
-You want to understand how to better promote tourism in New Haven and coastal Connecticut. A company collected open-ended survey responses to the question: “What is the main reason you would visit this area?” Each row is one person’s answer. The responses are messy: inconsistent capitalization, extra punctuation, multiple-word answers (“the beach!!!”), and people mixing categories (e.g., “pizza or seafood”). You want to: 
-
-i) Clean the responses so categories are consistent (lower case, remove punctuation, trim spaces)
-ii) Group answers into broader themes (e.g., pizza → food, museums → culture, beach → outdoor recreation)
-iii) Summarize the cleaned results into counts and percentages. 
-iv) Visualize the final categories in a clear barplot.
-
-Write pseudocode describing the steps you would take. Don't write any R code, but you're welcome to mention functions you would use.
-
-*First, I would make sure I understand my data by investigating the dim, str, and names of the columns. I would put all the responses in a single vector so they are easy to manipulate. I would save this single vector into a backup variable in case I need to check or restore any of the original values. I would then sort all unique values and get the length to understand how many unique values we are starting with. If it is manageable file, I may visually look at the unique values as well. First, I would lowercase all the words and remove any punctuation. After each step I would check the length of the unique values. I would also trim any white spaces, delete trailing spaces, or special characters that may be due to responses being submitted from different computers. If there are any common leading phrases, like "I love the..." I would drop these and keep only any characters that follow. I would also drop 'the' and 'a'. If there are an overwhelming amount of responses, I could drop 'or,' 'and,' and 'because' and everything after although I would personally prefer to not and determine this on a case by case basis. If there are any common misspellings (ex: baech instead of beach), I would fix these using gsub. If there are any common themes that I can begin to group in, like multiple parks or beaches, I can do gsub to have these responses only be reflective of the broader category. If there are multiple themes, I could potentially fix these using a loop that looks for the theme, and replaces it with that themes word. Hopefully at this point there are minimal enough themes that I can begin grouping them manually based on my rules and thoughts and how many end categories are applicable. After this I can summarize the final results into a table, which would show counts, or a barplot which would show percentages. To create final percentages, I would need to apply a sum and *
+# calculate percents, rounded for each food 
+percents <- round(finaltab/sum(finaltab)*100)
