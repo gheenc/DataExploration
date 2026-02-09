@@ -10,6 +10,9 @@ output:
   html_document: default
 subtitle: Due by 11:59pm, Tuesday, 2.10.26
 author: S&DS 2300/5300/ENV 757
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -18,44 +21,63 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Submission Details
 
-This homework assignment contains 3 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf file.
+This homework assignment contains 3 problems. Edit this `.Rmd` file and
+insert your responses under the appropriate problems. Submit the knitted
+output of this file as a .pdf file.
 
-Your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
+Your document should look nicely formatted, with R code, plots, and text
+descriptions nicely integrated.
 
-**CRITICAL 1 - for every included chunk below, remove `eval = F` before knitting!!!!**
+**CRITICAL 1 - for every included chunk below, remove `eval = F` before
+knitting!!!!**
 
-**CRITICAL 2 - Please submit knitted version of this assignment as a PDF file on GRADESCOPE  You can knit to a DOC and then convert to PDF in Word (choose SAVE AS), or you can knit directly to PDF if that works for you.**
+**CRITICAL 2 - Please submit knitted version of this assignment as a PDF
+file on GRADESCOPE You can knit to a DOC and then convert to PDF in Word
+(choose SAVE AS), or you can knit directly to PDF if that works for
+you.**
 
-**DELETE LINES 21 THROUGH 30 (INCLUSIVE) BEFORE KNITTING AND SUBMITTING!**
-
+**DELETE LINES 21 THROUGH 30 (INCLUSIVE) BEFORE KNITTING AND
+SUBMITTING!**
 
 **(1) More on List Manipulation** *(18 points - 3 points each)*.
 
-(1.1)  Make an object called `myList` that contains the following elements (in order):
+(1.1) Make an object called `myList` that contains the following
+elements (in order):
 
-*  A matrix with the integers 1 through 36 that has six rows, filled by row
-*  A list that contains
+-   A matrix with the integers 1 through 36 that has six rows, filled by
+    row
 
-      -  A vector with the text "Pianoforte" and "Gerbera Daisy"
-      -  A vector with the integers 9 through 13
+-   A list that contains
 
-* The integers 1 through 10
-      
+    -   A vector with the text "Pianoforte" and "Gerbera Daisy"
+    -   A vector with the integers 9 through 13
+
+-   The integers 1 through 10
+
 You should be able to make this object in a single line of code.
 
 *Use `[]`, `[[]]`, `[,]` notation to answer parts b) through f).*
 
-(1.2)  Make an object called `ans1` that is the third row of the matrix contained in `myList`.
+(1.2) Make an object called `ans1` that is the third row of the matrix
+contained in `myList`.
 
-(1.3)  Make an object called `ans2` that is the sum of the 6th column of the matrix contained in `myList`.
+(1.3) Make an object called `ans2` that is the sum of the 6th column of
+the matrix contained in `myList`.
 
-(1.4)  Make an object called `ans3` that is the sum of EACH column of the matrix contained in `myList`  *(use the `apply()` function or check out `colSums()`)*.
+(1.4) Make an object called `ans3` that is the sum of EACH column of the
+matrix contained in `myList` *(use the `apply()` function or check out
+`colSums()`)*.
 
-(1.5)  Make an object called `ans4` that is the single element of `myList` that you can play.
+(1.5) Make an object called `ans4` that is the single element of
+`myList` that you can play.
 
-(1.6)  Make an object called `ans5` that is the third element of the second element of the second element of `myList` converted to characters.
+(1.6) Make an object called `ans5` that is the third element of the
+second element of the second element of `myList` converted to
+characters.
 
-Get the results of each of your objects you created above (i.e. get them to show up in your knitted file by typing their names or putting the code line that creates each object in parentheses).
+Get the results of each of your objects you created above (i.e. get them
+to show up in your knitted file by typing their names or putting the
+code line that creates each object in parentheses).
 
 ```{r}
 # 1.1
@@ -80,26 +102,47 @@ Get the results of each of your objects you created above (i.e. get them to show
 str(ans5)
 ```
 
- 
-**(2) Normal Quantile Plots and the Binomial Distribution** *(20 points, 3 points each, part (2.5) is 5 points)*.
+**(2) Normal Quantile Plots and the Binomial Distribution** *(20 points,
+3 points each, part (2.5) is 5 points)*.
 
-You may recall from your Intro Statistics course that a binomial distribution looks like a normal distribution if np > 10 and n(1-p) > 10  (i.e. as long as the average number of successes and failures are both larger than 10).  Recall that n is the number of trials, and p is the probability of success for each Bernoulli trial.   *As an example, flip a coin 30 times, count the number of heads.  n=30, p=.5, np = 15 > 10 and n(1-p) = 15 > 10, so the distribution should be approximately normal)*.
+You may recall from your Intro Statistics course that a binomial
+distribution looks like a normal distribution if np \> 10 and n(1-p) \>
+10 (i.e. as long as the average number of successes and failures are
+both larger than 10). Recall that n is the number of trials, and p is
+the probability of success for each Bernoulli trial. *As an example,
+flip a coin 30 times, count the number of heads. n=30, p=.5, np = 15 \>
+10 and n(1-p) = 15 \> 10, so the distribution should be approximately
+normal)*.
 
-You are going to make six normal quantile plots that simulate 127 random observations from binomial distributions with p = 0.3 and various values of n.
+You are going to make six normal quantile plots that simulate 127 random
+observations from binomial distributions with p = 0.3 and various values
+of n.
 
-(2.1)  Install the `car` package.  This will allow you use the `qqPlot()` function.  Load this package.
+(2.1) Install the `car` package. This will allow you use the `qqPlot()`
+function. Load this package.
 
-(2.2)  Make a vector called `vec` that is powers of 10 for powers 0 through 5.  The one caveat is that you need to use the`**` operator which reads as 'to the power of' *(i.e. `2**3` is 8).*  Show what is contained in `vec`.
+(2.2) Make a vector called `vec` that is powers of 10 for powers 0
+through 5. The one caveat is that you need to use the`**` operator which
+reads as 'to the power of' *(i.e. `2**3` is 8).* Show what is contained
+in `vec`.
 
-(2.3)  Use the `par()` function to set up your plot region to show 6 plots on a page. Go learn about the `mfrow` option in par to create a plot that was two rows and three columns.
+(2.3) Use the `par()` function to set up your plot region to show 6
+plots on a page. Go learn about the `mfrow` option in par to create a
+plot that was two rows and three columns.
 
-(2.4)  Use the `rbinom()` function to generate 6 random binomial observations, each with 17 trials, and with p=0.6.  You may need to type `?rbinom` to get the syntax for this function  (it is somewhat counterintuitive).  Store the result in an object called `vec2` and show what is contained in `vec2`.
+(2.4) Use the `rbinom()` function to generate 6 random binomial
+observations, each with 17 trials, and with p=0.6. You may need to type
+`?rbinom` to get the syntax for this function (it is somewhat
+counterintuitive). Store the result in an object called `vec2` and show
+what is contained in `vec2`.
 
-(2.5)  Write a loop that repeatedly creates a normal quantile plot for 127 random samples each from a binomial distribution with p = 0.3 and n equal to the 6 values stored in `vec`.  A few plot details:
-*  Use the `qqPlot` function.
-*  Make the graph points red solid dots (`pch = 19`).
-*  Make the boundary lines blue (use `col.lines`)
-*  Make a main graph title that pastes the text "127 Binomial Samples, N =" to the corresponding value from `vec`.
+(2.5) Write a loop that repeatedly creates a normal quantile plot for
+127 random samples each from a binomial distribution with p = 0.3 and n
+equal to the 6 values stored in `vec`. A few plot details: \* Use the
+`qqPlot` function. \* Make the graph points red solid dots (`pch = 19`).
+\* Make the boundary lines blue (use `col.lines`) \* Make a main graph
+title that pastes the text "127 Binomial Samples, N =" to the
+corresponding value from `vec`.
 
 ```{r}
 # 2.1 install car package
@@ -128,26 +171,41 @@ for (i in vec) {
 
 ```
 
+(2.6) Take a look at the normal quantile plots. For what value of n do
+the graphs seem to be approximately normally distributed? Is this
+consistent with what you expect? Write two complete sentences to answer
+these questions.
 
+*Graphs with 1,000, 10,000, and 100,000 samples looks approximately
+normal(the 100 sample size is nearing normal but still has some skew,
+especially compared to the other graphs that almost completely stay
+within the confidence interval bounds). This is consistent with what I
+expected because as the sample number increases, the more precise the
+confidence intervals will be and the more normal the sample will look,
+following the central limit theorem.*
 
-(2.6)  Take a look at the normal quantile plots.  For what value of n do the graphs seem to be approximately normally distributed?   Is this consistent with what you expect?   Write two complete sentences to answer these questions.
+**(3) Favorite food and Data Cleaning** *(62 points. Parts 3.2 through
+3.5, 2 pts each, other values listed below)*.
 
-*Graphs with 1,000, 10,000, and 100,000 samples looks approximately normal(the 100 sample size is nearing normal but still has some skew, especially compared to the other graphs that almost completely stay within the confidence interval bounds). This is consistent with what I expected because as the sample number increases, the more precise the confidence intervals will be and the more normal the sample will look, following the central limit theorem. *
+This is data generated by former students. I simply asked "What is your
+favorite food?". You can get the data
+[HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/Food_230.csv).
 
- 
-**(3) Favorite food and Data Cleaning** *(62 points.  Parts 3.2 through 3.5, 2 pts each, other values listed below)*.
- 
-This is data generated by former students.  I simply asked "What is your favorite food?".  You can get the data [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/Food_230.csv).
+Your goal is similar to what we did with the question "What animal would
+you like to be?" in Class 5: clean this variable, make a barplot, and
+discuss the results.
 
-Your goal is similar to what we did with the question "What animal would you like to be?" in Class 5: clean this variable, make a barplot, and discuss the results.
+(3.1) *(1 pt)* Read in the data to a new object called `food`.
 
-(3.1) *(1 pt)* Read in the data to a new object called `food`. 
+(3.2) Get a sense of the dataset - dimensions, variable names, look at
+the first few rows.
 
-(3.2)  Get a sense of the dataset - dimensions, variable names, look at the first few rows.
+(3.3) Convert `food` to a single vector that is just the first column
+(literally, replace `food` with `food$Food`). if you need to, convert
+this value to character.
 
-(3.3)  Convert `food` to a single vector that is just the first column (literally, replace `food` with `food$Food`). if you need to, convert this value to character.
-
-(3.4)  Show the sorted unique values of `food`.  Calculate how many unique values exist in `food`.
+(3.4) Show the sorted unique values of `food`. Calculate how many unique
+values exist in `food`.
 
 ```{r}
 # 3.1
@@ -182,25 +240,34 @@ unique(food)
 (sort(unique(food))) # display
 ```
 
+(3.5) Write a couple of sentences about what data cleaning issues you
+notice amoung the unique values of `food`.
 
-(3.5)  Write a couple of sentences about what data cleaning issues you notice amoung the unique values of `food`.
+*There are casing inconsistencies (burritos vs Burritos). Some people
+have additionally commentary (Thai food vs Thai food is my favorite).
+There are punctuation or random unknown character (*\n in ramen, !!
+behind pizza). Misspellings could also be an issue. Some people did
+cuisines and some people did specific foods (Mexican food vs burritos) -
+this will require me to make a decision about how to handle and
+categorize these.
 
-*There are casing inconsistencies (burritos vs Burritos). Some people have additionally commentary (Thai food vs Thai food is my favorite). There are punctuation or random unknown character (\n in ramen, !! behind pizza). Misspellings could also be an issue. Some people did cuisines and some people did specific foods (Mexican food vs burritos) - this will require me to make a decision about how to handle and categorize these.*
+(3.6) Cleaning Part I *(8 pts)*: Clean the data using the following
+steps (in order):
 
- 
-(3.6)  Cleaning Part I *(8 pts)*: Clean the data using the following steps (in order):
+-   Convert data to lower case
+-   Find " or " and remove this and anything that follows.
+-   Find " and " and remove this and anything that follows.
+-   Find " food" and remove this AND anything that follows.
+-   Find " cuisine" and remove this AND anything that follows.
+-   Remove all special characters and punctuation - see class 6.
+-   Remove trailing spaces at the end of text
 
-*  Convert data to lower case
-*  Find " or " and remove this and anything that follows.
-*  Find " and " and remove this and anything that follows.
-*  Find " food" and remove this AND anything that follows.
-*  Find " cuisine" and remove this AND anything that follows.
-*  Remove all special characters and punctuation - see class 6.
-*  Remove trailing spaces at the end of text
+At each step, you'll probably want to check what unique values of `food`
+are left to make sure your functions are working correctly. By the time
+you finish, you should have 156 unique levels.
 
-At each step, you'll probably want to check what unique values of `food` are left to make sure your functions are working correctly.  By the time you finish, you should have 156 unique levels.
-
-Your final two lines of code should again show the sorted unique values of food and the current number of unique values.
+Your final two lines of code should again show the sorted unique values
+of food and the current number of unique values.
 
 ```{r}
 # create a backup variable to go back to if needed
@@ -240,33 +307,34 @@ length(unique(food)) # 156
 sort(unique(food))
 ```
 
-
-
 (3.7) Cleaning Part II *(10 pts)*: A few quick random cleaning items:
 
-Clean up the following types of food (in order) - one line of code per type of food.  In each case, deal with misspellings, modifiers ("shrimp curry" vs just "curry"), two words ('hot pot' instead of 'hotpot'), plurals, etc.
+Clean up the following types of food (in order) - one line of code per
+type of food. In each case, deal with misspellings, modifiers ("shrimp
+curry" vs just "curry"), two words ('hot pot' instead of 'hotpot'),
+plurals, etc.
 
-*  hotpot
-*  curry
-*  lasagna
-*  noodles
-*  cookies
-*  chocolate
-*  cheese
-*  steak
-*  sushi
-*  fries (french, cajun, five guys' should all be 'fries')
-*  ramen
-*  tofu
-*  burgers (of any kind)
-*  soup
-*  anything containing 'delicious' just call 'delicious'
+-   hotpot
+-   curry
+-   lasagna
+-   noodles
+-   cookies
+-   chocolate
+-   cheese
+-   steak
+-   sushi
+-   fries (french, cajun, five guys' should all be 'fries')
+-   ramen
+-   tofu
+-   burgers (of any kind)
+-   soup
+-   anything containing 'delicious' just call 'delicious'
 
 When you're finished, you should have 130 unique values.
 
-Your final two lines of code should again show the sorted unique values of food and the current number of unique values.
+Your final two lines of code should again show the sorted unique values
+of food and the current number of unique values.
 
-  
 ```{r}
 # hotpot
 food <- gsub(".*hotpot.*|.*hot pot.*", "hotpot", food)
@@ -332,28 +400,24 @@ sort(unique(food))
 length(unique(food)) #
 ```
 
-
-
 (3.8) Cleaning Part III *(8 pts)*: Cleaning types of cuisine.
 
-Clean up the following types of cuisine (in order) - in this case, you'll want to make a vector called `searchvec` that contains the types of cuisine.  Then create a loop following the example in Class 5 to replace all the modifiers for each cuisine type so that you ultimately end up with cleaned up versions of each cuisine type.  Use not more than 5 lines of code.
+Clean up the following types of cuisine (in order) - in this case,
+you'll want to make a vector called `searchvec` that contains the types
+of cuisine. Then create a loop following the example in Class 5 to
+replace all the modifiers for each cuisine type so that you ultimately
+end up with cleaned up versions of each cuisine type. Use not more than
+5 lines of code.
 
-The cuisine types (in order) are
-*  asian
-*  chinese
-*  vietnamese
-*  italian
-*  indian
-*  thai
-*  mexican
-*  brazilian
-*  korean
+The cuisine types (in order) are \* asian \* chinese \* vietnamese \*
+italian \* indian \* thai \* mexican \* brazilian \* korean
 
 (there are other types of cuisine, but they don't require cleaning).
 
 When you're finished, you should have 120 unique values.
 
-Your final two lines of code should again show the sorted unique values of food and the current number of unique values.
+Your final two lines of code should again show the sorted unique values
+of food and the current number of unique values.
 
 ```{r}
 # create backup 2
@@ -373,15 +437,24 @@ length(unique(food))
 
 ```
 
+(3.9) *(15 pts)* Following the example from Class 05, display a
+dataframe of the sorted tabular results of `food` to see how many
+individuals prefer each kind of food.
 
-(3.9)  *(15 pts)*  Following the example from Class 05, display a dataframe of the sorted tabular results of `food` to see how many individuals prefer each kind of food.
+From here on, the decisions of how to clean and combine categories are
+yours! Any food that currently has a count of 3 or more should remain
+(you can add to these categories - for example, you could add 'lasagna'
+to 'italian' or to 'pasta'). All other levels should be recoded or
+incorporated into a 'miscellaneous' food category. Points awarded based
+on thoughtfulness, effort, and quality/preciseness of your code.
 
-From here on, the decisions of how to clean and combine categories are yours!  Any food that currently has a count of 3 or more should remain (you can add to these categories - for example, you could add 'lasagna' to 'italian' or to 'pasta').  All other levels should be recoded or incorporated into a 'miscellaneous' food category.  Points awarded based on thoughtfulness, effort, and quality/preciseness of your code.
+Include your code below, and add comments where appropriate to describe
+the choices you make. You should have no more than 40 levels by the time
+you finish.
 
-Include your code below, and add comments where appropriate to describe the choices you make.  You should have no more than 40 levels by the time you finish.
-
-Display a dataframe of the sorted tabular results of `food` to see how many individuals prefer each kind of food AGAIN after you've finished your coding.
-
+Display a dataframe of the sorted tabular results of `food` to see how
+many individuals prefer each kind of food AGAIN after you've finished
+your coding.
 
 ```{r}
 # original df 
@@ -443,14 +516,20 @@ sort(table(food), decreasing = TRUE, value = TRUE)# 37
 
 ```
 
+(3.10) *(8 pts)* Final steps and a plot: You'll want to CAREFULLY follow
+the example in the code at the end of Class 05.
 
-(3.10)  *(8 pts)*  Final steps and a plot:  You'll want to CAREFULLY follow the example in the code at the end of Class 05.
-
-*  Use the `toTitleCase()` function from the package `tools` to convert food to title case.
-*  Make an object called `finaltab` that is a table of your final vector `food`.
-*  Calculate percents, rounded to the nearest integer, for each food type.  Save this as an object called `percents`.
-*  Change the names of `finaltab` to include a space and then the percents followed by a "%" in curved parentheses.
-*  Make a horizontal barplot of your final plot.   Choose a nice bar color, adjust the left margins as necessary, give a main title and label the horizontal axis.
+-   Use the `toTitleCase()` function from the package `tools` to convert
+    food to title case.
+-   Make an object called `finaltab` that is a table of your final
+    vector `food`.
+-   Calculate percents, rounded to the nearest integer, for each food
+    type. Save this as an object called `percents`.
+-   Change the names of `finaltab` to include a space and then the
+    percents followed by a "%" in curved parentheses.
+-   Make a horizontal barplot of your final plot. Choose a nice bar
+    color, adjust the left margins as necessary, give a main title and
+    label the horizontal axis.
 
 ```{r}
 # install tools package for title case
@@ -465,3 +544,19 @@ finaltab <- table(food)
 
 # calculate percents, rounded for each food 
 percents <- round(finaltab/sum(finaltab)*100)
+
+# change names
+names(finaltab) <- paste0(names(finaltab)," (", percents, "%)")
+
+# plot 
+par(mar = c(10, 20, 10, 2), cex = 0.5) # change margin and text size 
+
+barplot(sort(finaltab, decreasing = TRUE),  # puts biggest values on bottom
+        col = "plum", 
+        main = "Favorite Food of Class", 
+        horiz = TRUE, 
+        las = 1, 
+        xlab = "Frequency of Answer", 
+        xlim = c(0,30)
+)
+```
