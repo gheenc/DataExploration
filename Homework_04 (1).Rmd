@@ -1,0 +1,282 @@
+---
+title: "Homework 04 T-tests, Sampling Distributions, and the Bootstrap"
+output:
+  word_document: 
+     fig_height: 5
+     fig_width : 7
+  pdf_document: 
+     fig_height: 5
+     fig_width : 7
+  html_document: default
+subtitle: Due by 11:59pm, Tuesday 2.17.26
+author: S&DS 2300/5300/ENV 757
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Submission Details
+
+This homework assignment contains 3 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
+
+For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
+
+**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!  ALSO REMOVE ALL INSTANCES OF `eval = F` **
+
+
+**(1) Practice with Loops.** *(10 points)* For this problem, use loops even if you could do the task without them.
+
+(1.1) A Tribonacci sequence is a series of integers where each number after the third number is found by adding together the three integers before it. Starting with 0, 1, 1, the sequence goes:
+
+> 0, 1, 1, 2, 4, 7, ...
+
+Write a loop that fills a vector called `myTrib` with this sequence going up to a total length of 21 numbers. Display the final value of `myTrib` AND write a line of code that calculates how many digits are in the final number in `myTrib`.
+
+(1.2) Here is the link to the World Bank data from 2024: 
+
+> https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB_2024.csv
+
+Read the data into a dataframe called `wb`.  Write a loop to fill a vector called `compVals` having length equal to the number of columns in the World Bank data frame. The i-th entry in `compVals` should be a number (>= 0) equal to the total number of non-missing values in the i-th column of World Bank data frame. Make a histogram of `compVals` and label as appropriate. In addition, make a histogram that displays the units on the horizonal axis in terms of percentages (not proportions) for each variable (rather than totals).  Write a sentence or two about what these plots tell you about the dataset. 
+
+*(For full credit, use only one for-loop to do part 1.2)*
+
+```{r}
+# 1.1
+myTrib <- rep(NA, 21)
+
+for (i in 1:21){
+  
+}
+
+# 1.2 
+wb <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB_2024.csv")
+
+compVals <- for (i in lenght(1:wb)){
+  
+}
+```
+
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+**(2) Simulations with the Exponential Distribution** *(40 points)*.
+
+For this problem, we'll investigate the sampling distributional characteristics of three statistics.   In particular, suppose we take a sample of size 20 from an exponential distribution.   We can use the CLT to say something about how far the sample mean is likely to be from the true mean, but how far are the sample median or the sample variance likely to be from the true values in an exponential distribution where we take a sample of size 20?   Also, what do we expect the distribution of these statistics to look like?
+
+(2.1) *(10 points)* First, let's get a quick sense of what an exponential distribution looks like where the mean is 4.   By the way, it's handy to know that for an exponential distribution with mean 4, the variance is 16 and the median is 4*ln(2). You can read about the exponential distribution  [HERE](https://en.wikipedia.org/wiki/Exponential_distribution).
+
+
+The code below gives a quick plot of this distribution.  Your job is to succinctly answer what each part of the code does.   You'll probably need to get help on the function `dexp(), seq()` and on a few of the graphics parameters in `par()`.
+
+Then, add additional code that repeats the original code but uses the option `by = 4` in the `seq()` function.  Why did I choose `by = .1` in the original code?
+
+Finally, modify the code to produce a plot that shows the shape of exponential distributions with means of 1, 2, and 4 all on the same plot using different colors and line types for each distribution.  Be sure to add a legend to your plot.
+
+```{r}
+
+#Get exponential probabilities - note that rate = .5 gives us mean of 2 (mean is 1/rate)
+probs <- dexp(seq(0, 20, by = .1), rate = .25)
+
+#dexp - this is an exponential density distribution and gives the height aka the mean
+#rate - this is lambda and the step size being taken and ultimately gives us insight into the mean because mean = 1/rate
+#by - this is the step size being taken, so the number of x values being evaluated (bigger by would be bigger steps and therefore a less smooth curve) 
+
+#Plot sampling distribution
+plot(seq(0, 20, by = .1), probs, 
+     type = 'l', 
+     lwd = 3, 
+     col = "blue",
+     main = "Probability Distribution Function for Exponential Dist with Mean = 4",
+     xlab = "X",
+     ylab = "Density")
+
+#type = 'l' - this means to plot using lines 
+#lwd - this describes the width of the line
+
+#Add code below based on instructions
+# by = 4 plot
+probs2 <- dexp(seq(0, 20, by = 4), rate = .25)
+
+plot(seq(0, 20, by = 4), probs2, 
+     type = 'l', 
+     lwd = 3, 
+     col = "blue",
+     main = "Probability Distribution Function for Exponential Dist with Mean = 4",
+     xlab = "X",
+     ylab = "Density")
+
+# Finally, modify the code to produce a plot that shows the shape of exponential distributions with means of 1, 2, and 4 all on the same plot using different colors and line types for each distribution.  Be sure to add a legend to your plot
+
+# for a plot with mean = 1 rate = 1
+# for plot with mean = 2 rate = .5
+# for plot with mean = 4 rate = .25
+
+means_rates <- c(1, .5, .25)
+
+for (i in means_by){
+  table(dexp(seq(0, 20, by = 4), rate = i)
+}
+
+plot(seq(0, 20, by = 4), probs2, 
+     type = 'l', 
+     lwd = 3, 
+     col = "blue",
+     main = "Probability Distribution Function for Exponential Dist with Mean = 4",
+     xlab = "X",
+     ylab = "Density")
+
+
+
+```
+
+*You did .1 rather than 4 in the original code because the smaller rate level makes it smoother. *
+
+
+(2.2) *(4 points)* Following the example in class 8, get a random sample of 20 observations from an exponential distribution with mean 4.   Repeat this process 10000 times.   Save your results in a matrix called `samples` with 10,000 rows and 20 columns.  Display the dimension of `samples'. Show the first 3 rows of `samples` but round the values to two decimal places.
+
+
+```{r}
+# To make grading easier, please leave the following line of code in your assignment
+set.seed(230) 
+
+# FILL IN REMAINING CODE
+
+```
+
+(2.3)  *(4 points)* Calculate the sample mean for each sample of size 20 (i.e. calculate the mean for each row of `samples`).   Repeat this process to get the sample median and the sample variance for each sample of size 20.   Save these values in objects called, respectively, `smeans, smedians, svariance`.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*`
+
+(2.4) *(9 points)* 
+
+*  Create a sample histogram of the sample means (make the bars green, make sure you label your axes and put on a clear title).  
+
+*  Make a normal quantile plot of the sample means using the `qqp()` function in the `car` package.  Comment on whether the CLT seems to be in effect.
+
+*  Get summary statistics OF THE SAMPLE MEANS and save this to an object called `ans1`.  Using code, display only the element of `ans1` that is the sample mean, rounded to two decimal places.  Is this the value you expect?  
+
+*  Calculate and display the sample standard deviation of the sample means (use the function `sd()`)and display rounded to two decimal places.  Then, use code to calculate the value you'd expect based on the CLT, again rounded to two decimal places.   Are the two values similar?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(2.5)  *(7 points)* 
+
+*  Create a sample histogram of the sample MEDIANS (make the bars red, make sure you label your axes and put on a clear title).  
+
+*  Make a normal quantile plot of the sample medians using the `qqp()` function in the `car` package.  Do the medians seem normally distributed?
+
+*  Display summary statistics OF THE SAMPLE MEDIANS.  Is the median of the sample medians the value you expect?  
+
+*  Calculate and display the sample standard deviation of the sample medians and display rounded to two decimal places.  Is this value similar to the value you would expect? *Note that (despite what AI may tell you - I was given an incorrect answer twice), the standard deviation of the sample median is the same as the standard deviation of the sample mean. * 
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+(2.6)  *(6 points)* 
+
+*  Create a sample histogram of the sample VARIANCES (make the bars blue, make sure you label your axes and put on a clear title).  
+
+*  Make a normal quantile plot of the sample VARIANCES using the `qqp()` function in the `car` package.  Do the variances seem normally distributed?
+
+*  Display summary statistics OF THE SAMPLE VARIANCES  Is the mean of the sample variances the value you expect?  
+
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+**(3) Iron Concentration and the Bootstrap** *(50 points, 5 points each part, parts 3.5 and 3.8 count double*.
+
+This problem examines results of a study looking at iron concentration in the the water runoff of watersheds with different mining histories above different rock types. The data is [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/IronMineRock.csv). The variables are `Rock`, `Mine`, `Iron` (concentration) and `LogIron` which is the natural log of iron concentration.
+
+(3.1)  Read the data into an object called `iron`. Show the first 6 rows of the data. Show the unique values of `Rock` and `Mine`.  Then modify `iron` so that it only contains data for Unmined locations. How many observations remain?  How many remaining observations do you have for each rock type? Incidentally, the rock types are Limestone and Sandstone.
+
+```{r}
+# read data into iron
+iron <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/IronMineRock.csv")
+
+# show 6 first rows of data
+head(iron)
+
+# show unique vales of rock and mine
+(unique(iron$Rock))
+(unique(iron$Mine))
+
+# modify iron so only contains data for unmined locations 
+iron <- iron[iron$Mine == "Unmined", ]
+nrow(iron)
+nrow(iron[iron$Rock == "Sand", ])
+nrow(iron[iron$Rock == "Lime", ])
+```
+
+
+*26 observations remain - 13 for sand and 13 for lime.*
+
+(3.2)  Make side by side boxplots of iron concentration by rock type.   Make this same plot for the natural log of the iron concentration.  Write a sentence or two about what you observe.  Which scale do you prefer?
+
+```{r}
+par(mfrow = c(1,2))
+
+boxplot(Iron ~ Rock, data = iron)
+
+
+```
+
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(3.3)  Calculate summary statistics for iron concentration by rock type on the raw scale and the log scale.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(3.4)  Calculate a two-sample t-test comparing mean log iron concentration between rock types.  Save results in an object called `test1` and display the results.  Use alpha = .01 (i.e. make a 99% CI).   Is there evidence of a difference between rock types?  
+
+Create an object called 'test2' that has similar results for the raw iron concentration. Is there evidence of a difference between rock types?  
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+(3.5)  Get 10,000 boostrap samples from the data and calculate the difference the in mean log iron concentration between rock types for each bootstrap sample.  Save these means in an object called `diffLogIron`. In your code, use variable names that make sense.
+
+```{r}
+# To make grading easier, please leave the following line of code in your assignment
+set.seed(230) 
+
+# FILL IN REMAINING CODE
+
+```
+
+(3.6)  Calculate a 99% Bootstrap confidence interval. Show your results rounded to two decimal places.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(3.7)  Make a histogram of bootstrap differences in means and add vertical lines for the theoretical and bootstrapped confidence intervals (and also add a legend explaining which lines are which type of confidence interval). Make a normal quantile plot of the bootstrapped differences. Discuss what you observe in both plots.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+3.8)  Finally, repeat 3.5 through 3.7 for iron concentrations on the raw scale.  Discuss your results. Note that you'll need to add the option `xlim = c(-1, 12)` to your histogram.
+
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+4)  Pseudo-coding
+
+You are analyzing long-term water quality data from the Connecticut River. The dataset includes solute concentrations of major ions (Calcium, Magnesium, Sodium, Potassium, Chloride, Nitrate, Phosphate, and Bicarbonate) measured at locations across New England in New Hampshire, Vermont, Massachusetts, and Connecticut.  Measurements have been collected from the 1950s to the present. Each row of the dataset includes the state, date, discharge, and solute name & concentration (so there are separate rows for different ions on the same date). 
+
+Write pseudocode describing the steps you would take to compare concentrations across states, examine long-term temporal trends by decade, investigate concentration–discharge (C–Q) relationships (literally concentration vs. discharge), and test whether there are statistically significant differences between groups using the tools you have learned so far.
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
