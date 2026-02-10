@@ -18,27 +18,6 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## Submission Details
-
-This homework assignment contains 3 problems. Edit this `.Rmd` file and
-insert your responses under the appropriate problems. Submit the knitted
-output of this file as a .pdf file.
-
-Your document should look nicely formatted, with R code, plots, and text
-descriptions nicely integrated.
-
-**CRITICAL 1 - for every included chunk below, remove `eval = F` before
-knitting!!!!**
-
-**CRITICAL 2 - Please submit knitted version of this assignment as a PDF
-file on GRADESCOPE You can knit to a DOC and then convert to PDF in Word
-(choose SAVE AS), or you can knit directly to PDF if that works for
-you.**
-
-**DELETE LINES 21 THROUGH 30 (INCLUSIVE) BEFORE KNITTING AND
-SUBMITTING!**
-
 **(1) More on List Manipulation** *(18 points - 3 points each)*.
 
 (1.1) Make an object called `myList` that contains the following
@@ -81,7 +60,7 @@ code line that creates each object in parentheses).
 
 ```{r}
 # 1.1
-(myList <- list(matrix(1:36, nrow = 6), list(c("Pianoforte", "Gerbera Daisy"), c(9:13)), (1:10)))
+(myList <- list(matrix(1:36, nrow = 6, byrow = TRUE), list(c("Pianoforte", "Gerbera Daisy"), c(9:13)), (1:10)))
 
 # 1.2
 (ans1 <- myList[[1]][3, ])
@@ -151,6 +130,7 @@ library('car')
 
 # 2.2 make vector
 vec <- 10 ** (0:5)
+vec
 
 # 2.3 use par() to set up plot
 par(mfrow = c(2,3))
@@ -176,13 +156,7 @@ the graphs seem to be approximately normally distributed? Is this
 consistent with what you expect? Write two complete sentences to answer
 these questions.
 
-*Graphs with 1,000, 10,000, and 100,000 samples looks approximately
-normal(the 100 sample size is nearing normal but still has some skew,
-especially compared to the other graphs that almost completely stay
-within the confidence interval bounds). This is consistent with what I
-expected because as the sample number increases, the more precise the
-confidence intervals will be and the more normal the sample will look,
-following the central limit theorem.*
+*Graphs with 1,000, 10,000, and 100,000 trials looks approximately normal (the 100 trial size is nearing normal but still has some skew, especially compared to the other graphs that almost completely stay within the confidence interval bounds). This is consistent with what I expected because as the trial number increases, the more approximately normal and within the confidence interval the sample will look, following the central limit theorem.*
 
 **(3) Favorite food and Data Cleaning** *(62 points. Parts 3.2 through
 3.5, 2 pts each, other values listed below)*.
@@ -234,7 +208,7 @@ str(food)
 # 3.4 
 # number of unique values - there are 218 
 unique(food)
-(length(unique(food))) # display
+length(unique(food)) # display
 
 # sort unique values
 (sort(unique(food))) # display
@@ -243,13 +217,7 @@ unique(food)
 (3.5) Write a couple of sentences about what data cleaning issues you
 notice amoung the unique values of `food`.
 
-*There are casing inconsistencies (burritos vs Burritos). Some people
-have additionally commentary (Thai food vs Thai food is my favorite).
-There are punctuation or random unknown character (*\n in ramen, !!
-behind pizza). Misspellings could also be an issue. Some people did
-cuisines and some people did specific foods (Mexican food vs burritos) -
-this will require me to make a decision about how to handle and
-categorize these.
+*There are casing inconsistencies (burritos vs Burritos). Some people have additionally commentary (Thai food vs Thai food is my favorite). There are punctuation or random unknown character (\n in ramen, !!behind pizza). Misspellings could also be an issue. Some people did cuisines and some people did specific foods (Mexican food vs burritos) - this will require me to make a decision about how to handle and categorize these.*
 
 (3.6) Cleaning Part I *(8 pts)*: Clean the data using the following
 steps (in order):
@@ -272,7 +240,6 @@ of food and the current number of unique values.
 ```{r}
 # create a backup variable to go back to if needed
 food_backup <- food
-sort(food_backup)
 
 # convert data to lowercase
 food <- tolower(food)
@@ -349,55 +316,54 @@ food <- gsub("lasagne", "lasagna", food)
 length(unique(food)) #148
 
 # noodles
-food <- gsub(".*noodles.*|*noodle.*", "noodles", food)
-length(unique(food)) #146
+food <- gsub(".*noodles.*|.*noodle.*", "noodles", food)
+length(unique(food)) #145
 
 # cookies
 food <- gsub(".*cookies.*", "cookies", food)
-length(unique(food)) #145
+length(unique(food)) #144
 
 # chocolate
 food <- gsub(".*chocolate.*", "chocolate", food)
-length(unique(food)) #143
+length(unique(food)) #142
 
 # cheese
 food <- gsub(".*cheese.*", "cheese", food)
-length(unique(food)) #140
+length(unique(food)) #139
 
 # steak
 food <- gsub(".*steak.*", "steak", food)
-length(unique(food)) #139
+length(unique(food)) #140
 
 # sushi
 food <- gsub(".*sushi.*", "sushi", food)
-length(unique(food)) #138
+length(unique(food)) #137
 
 # fries (french, cajun, five guys' should all be 'fries')
 food <- gsub(".*fries.*", "fries", food)
-length(unique(food)) #136
+length(unique(food)) #135
 
 # ramen
 food <- gsub(".*ramen.*", "ramen", food)
-length(unique(food)) #135
+length(unique(food)) #134
 
 # tofu
 food <- gsub(".*tofu.*", "tofu", food)
-length(unique(food)) #134
+length(unique(food)) #133
 
 # burgers (of any kind)
 food <- gsub(".*burgers.*", "burgers", food)
-length(unique(food)) #133
+length(unique(food)) #132
 
 # soup
 food <- gsub(".*soup.*", "soup", food)
-length(unique(food)) #132
+length(unique(food)) #131
 
 # anything containing 'delicious' just call 'delicious'
 food <- gsub(".*delicious.*", "delicious", food)
-length(unique(food)) #131
+length(unique(food)) #130
 
 sort(unique(food))
-length(unique(food)) #
 ```
 
 (3.8) Cleaning Part III *(8 pts)*: Cleaning types of cuisine.
@@ -460,59 +426,55 @@ your coding.
 # original df 
 (df_food <- data.frame(table(food))) 
 sort(table(food), decreasing = TRUE, value = TRUE)# currently 120 levels 
-length(unique(food)) 
 
 # I noticed in the table there was a "my favorite kind of ..." I went to my backup and found pastries had been erranously removed behind food so I reinserted that. I also confirmed in the backup that freeze dried was the full entry and it was 
 food <- gsub("my favorite kind of", "pastries", food)
 
-# i am making a vegetable category 
+# i am making a vegetable category to group together broader vegetables
 food <- gsub("corn|sundried tomatoes|sundried tomatoes|sweet potato|fried okra|artichoke", "vegetables", food)
 
-# i am adding to the fruit category 
+# i am adding to the fruit category to group together broader fruits
 food <- gsub("nectarine|strawberries|bananas|mango|dried fruits|platanos|dried mangos|fruits", "fruit", food)
 
-# i am making a breakfast category - must come before desserts bc of pancakes and handles a misspelling
+# i am making a breakfast category - must come before desserts bc of pancakes and handles a misspelling of breakfast foodss
 food <- gsub("crepes|pastries|cinnamon roll|bagel|multigrain pancake|breakfast foodss", "breakfast foods", food) # must change pancakes before desserts
 
-# i am making a desserts category 
+# i am making a desserts category to group together broader desserts - i decided against chocolate being a dessert on it's own because these other items could contain chocolate as an ingrediant therefore chocolate is more of an ingrediant
 food <- gsub("cookies|cake|donuts|dessert|desserts", "desserts", food)
 
-# other country dishes - must come before chicken dishes 
+# other country dishes - must come before chicken dishes. These are dishes are are more hallmarks of other countries/nationalities but are not the whole cuisine and more than just an item 
 food <- gsub("kelewele its an african dish|palak paneer|shahi paneer|tagine|farofa|jollof rice|hibachi|swedish meatballs|roast dinner|jollof rice with chicken dishes", "other national dishes", food)
 
-# i am making a chicken dishes category 
+# i am making a chicken dishes category - I debated a lot what to do with chicken tikka but because it is ultimately chicken and only the chicken was mentioned rather than a dish or a national cuisine, I left it here
 food <- gsub("chicken|chicken wings|fried chicken|butter chicken|chicken malai kabab|chicken tikka masala|chicken parmesan|chicken tikka|chicken tenders|gizzard chicken|grilled chicken breast", "chicken dishes", food)
 
-# i am making a snacks category 
+# i am making a snacks category to encompass broader snacks. This ends up being in other anyways, so potentially unnecessary
 food <- gsub("cheez its|sweet chili doritos", "snacks", food)
 
-# i am making a seafood category 
+# i am making a seafood category to encompass broader seafood dishes 
 food <- gsub("salmon|blue point oyster|ceviche|fish tacos|fried fish|fish|poke bowl", "seafood", food)
 
-# other country cuisines
+# other country cuisines - any other country cuisines outright mentioned that received less than 3 votes
 food <- gsub("brazilian|albanian|ethiopian|vietnamese|indonesian|lebanese|persian|puerto rican|mediterranean", "other national cuisines", food)
 
-# specific pizza
-food <- gsub("good pizza|lahmacun turkish pizza", "pizza", food) # adding these to pizza
+# specific pizza - adding these to pizza
+food <- gsub("good pizza|lahmacun turkish pizza", "pizza", food)
 
-# specific breads
-food <- gsub("arepa|baguettes", "bread", food) # adding these to bread
+# specific breads - adding these to bread
+food <- gsub("arepa|baguettes", "bread", food) 
 
-# specific meats
-food <- gsub("ribs|ham", "meat", food) # adding these to bread
+# specific meats -  adding these to meat
+food <- gsub("ribs|ham", "meat", food) 
 
-# wrapped things 
-food <- gsub("empanadas|enchiladas|dumplings|flautas|potstickers|gyros|postickers", "wrapped delicacies", food) # once I got down to the bottom, there were many wrapped things
+# wrapped things - once I got down to the bottom, there were many food items that I would considered wrapped and have a similar vibe 
+food <- gsub("empanadas|enchiladas|dumplings|flautas|potstickers|gyros|postickers", "wrapped delicacies", food) 
 
-# replacing entries under 3 to be other
+# replacing entries under 3 to be other - I wanted anything under 3 to be other. Anything that initially started as a category with 3 or more votes  was not integrated into any other categories and therefore I wanted them to continue to be represented outside of other. 
 freq <- table(food)
 food[food %in% names(freq[freq < 3])] <- "Other"
 
-# how many entries have over3
-#df_food[df_food$Freq >= 3, ]
-
-length(unique(food))
-sort(table(food), decreasing = TRUE, value = TRUE)# 37
+length(unique(food)) # ended with 37 unique items 
+sort(table(food), decreasing = TRUE, value = TRUE)
 
 ```
 
@@ -549,14 +511,15 @@ percents <- round(finaltab/sum(finaltab)*100)
 names(finaltab) <- paste0(names(finaltab)," (", percents, "%)")
 
 # plot 
-par(mar = c(10, 20, 10, 2), cex = 0.5) # change margin and text size 
+png("foods.png", width = 800, height = 1200) # makes it a photo; made it less fuzzy, all labels seen and not weirdly off-centered
+par(mar = c(15, 15, 10, 2)) # change margin and text size 
 
 barplot(sort(finaltab, decreasing = TRUE),  # puts biggest values on bottom
         col = "plum", 
         main = "Favorite Food of Class", 
         horiz = TRUE, 
         las = 1, 
-        xlab = "Frequency of Answer", 
+        xlab = "Number of Responses Received", 
         xlim = c(0,30)
 )
 ```
