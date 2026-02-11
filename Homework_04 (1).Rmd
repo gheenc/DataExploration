@@ -42,19 +42,41 @@ Read the data into a dataframe called `wb`.  Write a loop to fill a vector calle
 *(For full credit, use only one for-loop to do part 1.2)*
 
 ```{r}
-# 1.1
+# 1.1 create Tribonacci sequence
 myTrib <- rep(NA, 21)
 
 for (i in 1:21){
-  
+  myTrib <- sum[myTrib[3index]]
 }
 
+# calculates digits in final number 
+length(myTrib[21])
+
+# INCOMPLETE 
 # 1.2 
 wb <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB_2024.csv")
 
-compVals <- for (i in lenght(1:wb)){
-  
+compVals <- rep(NA, ncol(wb))
+
+for (i in seq_len(ncol(wb))) {
+  compVals[i] <- sum(!is.na(wb[, i]))
 }
+
+# histogram of compVals
+hist(compVals,
+     main = "Histogram of NA in Columns",
+     col = "steelblue4",
+     xlab = "Number of NAs")
+
+# create percentage labels
+compVals_percents <- round((compVals/nrow(wb)*100))
+  
+# additional histogram
+hist(compVals,
+     main = "Histogram of NA in Columns",
+     col = "steelblue4",
+     xlab = "Percentage of Column that is NAs")
+# NEED TO ADD CUSTOM LABELS TO SECOND HISTOGRAM 
 ```
 
 
