@@ -44,15 +44,16 @@ Read the data into a dataframe called `wb`.  Write a loop to fill a vector calle
 ```{r}
 # 1.1 create Tribonacci sequence
 myTrib <- rep(NA, 21)
+myTrib <- c(0, 1, 1)
 
-for (i in 1:21){
-  myTrib <- sum[myTrib[3index]]
+for (i in 4:21){
+  myTrib[i] <- sum(myTrib[i-3],myTrib[i-2],myTrib[i-1])
 }
+print(myTrib)
 
 # calculates digits in final number 
-length(myTrib[21])
+nchar(myTrib[21])
 
-# INCOMPLETE 
 # 1.2 
 wb <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB_2024.csv")
 
@@ -64,15 +65,16 @@ for (i in seq_len(ncol(wb))) {
 
 # histogram of compVals
 hist(compVals,
-     main = "Histogram of NA in Columns",
+     main = "Frequency of NA in World Bank Columns",
      col = "steelblue4",
-     xlab = "Number of NAs")
+     xlab = "Number of NAs in Column")
 
 # create percentage labels
 compVals_percents <- round((compVals/nrow(wb)*100))
+compVals_percents <- as.numeric(paste0(compVals_percents, "%"))
   
 # additional histogram
-hist(compVals,
+hist(compVals_percents,
      main = "Histogram of NA in Columns",
      col = "steelblue4",
      xlab = "Percentage of Column that is NAs")
@@ -80,7 +82,7 @@ hist(compVals,
 ```
 
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*Both histograms tell us that there are a lot of columns with missing values. The first histogram tells us the raw value (which is high) but does not provide any info on how many columns there are in the whole dataset, whereas the second histogram tells us that some of the columns have almost all of their columns empty.*
 
 
 **(2) Simulations with the Exponential Distribution** *(40 points)*.
@@ -102,7 +104,7 @@ Finally, modify the code to produce a plot that shows the shape of exponential d
 probs <- dexp(seq(0, 20, by = .1), rate = .25)
 
 #dexp - this is an exponential density distribution and gives the height aka the mean
-#rate - this is lambda and the step size being taken and ultimately gives us insight into the mean because mean = 1/rate
+#rate - this gives us insight into the mean because mean = 1/rate and will also determine where the distribution will begin on the y-axis
 #by - this is the step size being taken, so the number of x values being evaluated (bigger by would be bigger steps and therefore a less smooth curve) 
 
 #Plot sampling distribution
@@ -117,9 +119,8 @@ plot(seq(0, 20, by = .1), probs,
 #type = 'l' - this means to plot using lines 
 #lwd - this describes the width of the line
 
-#Add code below based on instructions
 # by = 4 plot
-probs2 <- dexp(seq(0, 20, by = 4), rate = .25)
+probs2 <- dexp(seq(0, 20, by = 4), rate = .25) # change by = 4 
 
 plot(seq(0, 20, by = 4), probs2, 
      type = 'l', 
@@ -129,31 +130,38 @@ plot(seq(0, 20, by = 4), probs2,
      xlab = "X",
      ylab = "Density")
 
-# Finally, modify the code to produce a plot that shows the shape of exponential distributions with means of 1, 2, and 4 all on the same plot using different colors and line types for each distribution.  Be sure to add a legend to your plot
+# mean = 1, rate = 1 = steel blue and lty = 1
+# mean = 2, rate = .5 = salmon and lty = 4
+# mean = 4, rate = .25 = orchid and lty = 2
 
-# for a plot with mean = 1 rate = 1
-# for plot with mean = 2 rate = .5
-# for plot with mean = 4 rate = .25
+# plotting with means 1, 
+x <- seq(0, 20, by = .1) # create base x to come back to to plot
+rates <- c(.5, .25) # create rate for loop 
+colors <- c('salmon3', 'orchid3') # create colors for loop
+linetypes <- c(4, 2) # create linetypes for loop
 
-means_rates <- c(1, .5, .25)
+plot(x, dexp(x, rate = 1),
+     type = 'l', 
+     lwd = 3, 
+     col = "steelblue3",
+     lty = 1,
+     main = "Probability Distribution Function for Exponential Dist with Means 1, 2, 4",
+     xlab = "X",
+     ylab = "Density")
 
-for (i in means_by){
-  table(dexp(seq(0, 20, by = 4), rate = i)
+for (i in 1:length(rates)) {
+  lines(x, dexp(x, rate = rates[i]),
+        lwd = 3,
+        col = colors[i],
+        lty = linetypes[i]
+        )
 }
 
-plot(seq(0, 20, by = 4), probs2, 
-     type = 'l', 
-     lwd = 3, 
-     col = "blue",
-     main = "Probability Distribution Function for Exponential Dist with Mean = 4",
-     xlab = "X",
-     ylab = "Density")
-
-
+legend("topright", c("Mean = 1", "Mean = 2", "Mean = 4"), lwd = 3, col = c("steelblue3", "salmon3", "orchid3"), lty = c(1, 4, 2))
 
 ```
 
-*You did .1 rather than 4 in the original code because the smaller rate level makes it smoother. *
+*You did .1 rather than 4 in the original code because the smaller rate level makes the curve of the density distribution appear smoother. *
 
 
 (2.2) *(4 points)* Following the example in class 8, get a random sample of 20 observations from an exponential distribution with mean 4.   Repeat this process 10000 times.   Save your results in a matrix called `samples` with 10,000 rows and 20 columns.  Display the dimension of `samples'. Show the first 3 rows of `samples` but round the values to two decimal places.
