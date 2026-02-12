@@ -170,6 +170,7 @@ legend("topright", c("Mean = 1", "Mean = 2", "Mean = 4"), lwd = 3, col = c("stee
 ```{r}
 # To make grading easier, please leave the following line of code in your assignment
 set.seed(230) 
+n_samp <- 10000
 
 # get random sample of 20 exponential dist observation with mean = 4 aka rate = .25
 samples <- matrix(NA, nrow = n_samp, ncol = 20) # create empty matrix 
@@ -262,7 +263,7 @@ qqp(smeans)
 # summary statistics of sample medians 
 summary(smedians)
 
-# sample standard devition of sample median 
+# sample standard deviation of sample median 
 round(sd(smedians),2)
 ```
 
@@ -312,8 +313,8 @@ iron <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/he
 head(iron)
 
 # show unique vales of rock and mine
-(unique(iron$Rock))
-(unique(iron$Mine))
+unique(iron$Rock)
+unique(iron$Mine)
 
 # modify iron so only contains data for unmined locations 
 iron <- iron[iron$Mine == "Unmined", ]
@@ -329,55 +330,130 @@ nrow(iron[iron$Rock == "Lime", ])
 
 ```{r}
 par(mfrow = c(1,2))
-
 boxplot(Iron ~ Rock, data = iron)
-
-
+boxplot(logIron ~ Rock, data = iron)
 ```
 
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*Using the raw values not in log scale, the sand observations are very condensed and small. I prefer the log because you can appreciate the differences better and understand the full scope of data but the log does include negative values.Limestone has a higher concentration of iron compared to sandstone on average.*
 
 (3.3)  Calculate summary statistics for iron concentration by rock type on the raw scale and the log scale.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# summary statistics for iron concentration by rock on raw scale
+summary(iron$Iron[iron$Rock == "Lime"])
+summary(iron$Iron[iron$Rock == "Sand"])
+
+# summary statistics for iron concentration by rock on log scale
+summary(iron$logIron[iron$Rock == "Lime"])
+summary(iron$logIron[iron$Rock == "Sand"])
+```
+
 
 (3.4)  Calculate a two-sample t-test comparing mean log iron concentration between rock types.  Save results in an object called `test1` and display the results.  Use alpha = .01 (i.e. make a 99% CI).   Is there evidence of a difference between rock types?  
 
 Create an object called 'test2' that has similar results for the raw iron concentration. Is there evidence of a difference between rock types?  
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# two sample t-test comparing mean log iron concentration between rock types
+test1 <- t.test(iron$logIron[iron$Rock == "Lime"], iron$logIron[iron$Rock == "Sand"], conf.level = 0.99) # two different ways to do t test
+test1
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# create object called test two that has similar results for raw iron
+test2 <- t.test(logIron ~ Rock, data=iron, conf.level = 0.99) # two different ways to do t test 
+test2
+```
 
 
-(3.5)  Get 10,000 boostrap samples from the data and calculate the difference the in mean log iron concentration between rock types for each bootstrap sample.  Save these means in an object called `diffLogIron`. In your code, use variable names that make sense.
+*Using both logirons and raw iron concentrations, p value = .0000388 which is < 0.01 (additionally, there is no 0 in the confidence interval) so we can reject the null hyposthesis that there is no difference between the group means ie. there is evidence of difference between rock types using logiron or raw iron concentration. *
+
+
+(3.5)  Get 10,000 bootstrap samples from the data and calculate the difference the in mean log iron concentration between rock types for each bootstrap sample.  Save these means in an object called `diffLogIron`. In your code, use variable names that make sense.
 
 ```{r}
 # To make grading easier, please leave the following line of code in your assignment
 set.seed(230) 
 
-# FILL IN REMAINING CODE
+# create empty variables needed
+n_length <- nrow(iron)
+n_samples <- 10000
+diffLogIron <- rep(NA, n_samples) # empty vector to hold the means 
+
+for (i in 1:n_samples){
+  s <- sample(iron$logIron, n_length, replace = TRUE) # samples from iron with replacement
+  diffLogIron[i] <- mean(s) # saves the mean for that run
+}
 
 ```
 
 (3.6)  Calculate a 99% Bootstrap confidence interval. Show your results rounded to two decimal places.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+confidence_interval <- quantile(diffLogIron, c(0.005, 0.995))
+round(confidence_interval, 2)
+```
+
 
 (3.7)  Make a histogram of bootstrap differences in means and add vertical lines for the theoretical and bootstrapped confidence intervals (and also add a legend explaining which lines are which type of confidence interval). Make a normal quantile plot of the bootstrapped differences. Discuss what you observe in both plots.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# histogram of bootstrap differences in means + vertical lines of theoretical
+hist(diffLogIron,
+     xlab = "Log Concentration of Iron",
+     main = "Bootstrapped Sample Means of Log Concentration of Iron",
+     xlim = c(-1.5, 1.5)) # adjusted to ensure legend shows 
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+abline(v = confidence_interval, lwd = 3, col = 'red3') # CI of bootstraped 
+abline(v = t.test(iron$logIron)$conf.int, lwd = 3, col = 'green4', lty = 4) # CI of t test
+legend("topright", c("t-Test CI", "Bootstrapped CI"), col = c("green4", "red3"), lwd = 3, lty = c(1,4))
+
+# normal quantile plot of bootstrapped differences
+qqp(diffLogIron)
+
+```
+
+
+*From the histogram, we also see that the data is normally distributed but that 0 was included in the confidence interval for both the bootstrapped and normal t-test and therefore we cannot be confident the null hypothesis would be rejected. From the quantile plot, we can check and see that the sample means are normally distributed. *
 
 
 3.8)  Finally, repeat 3.5 through 3.7 for iron concentrations on the raw scale.  Discuss your results. Note that you'll need to add the option `xlim = c(-1, 12)` to your histogram.
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+```{r}
+#bootstrap 
+
+# create empty variables needed
+n_length <- nrow(iron) # reuse, technically dont need to redefine
+n_samples <- 10000 # reuse, technically dont need to redefine
+diffIron <- rep(NA, n_samples) # empty vector to hold the means 
+
+for (i in 1:n_samples){
+  s <- sample(iron$Iron, n_length, replace = TRUE) # samples from iron with replacement
+  diffIron[i] <- mean(s) # saves the mean for that run
+}
+
+# calculate confidence interval
+ci_raw <- quantile(diffIron, c(0.005, 0.995))
+round(ci_raw, 2)
+
+# make histogram and qq plot
+# histogram of bootstrap differences in means + vertical lines of theoretical
+hist(diffIron,
+     xlab = "Raw Concentration of Iron",
+     main = "Bootstrapped Sample Means of Raw Concentration of Iron",
+     xlim = c(-1, 12)) # adjusted to show CI 
+
+abline(v = ci_raw, lwd = 3, col = 'red3') # CI of bootstraped 
+abline(v = t.test(iron$Iron)$conf.int, lwd = 3, col = 'green4', lty = 4) # CI of t test
+legend("topright", c("t-Test CI", "Bootstrapped CI"), col = c("green4", "red3"), lwd = 3, lty = c(1,4))
+
+# normal quantile plot of bootstrapped differences
+qqp(diffIron)
+
+```
+
+**
 
 4)  Pseudo-coding
 
