@@ -226,13 +226,18 @@ qqp(smeans)
 
 # get summary statistics 
 ans1 <- summary(smeans)
-(round(as.numeric(ans1[4]),2 )) # need to round, currently a table and therefore not numeric
+(round(as.numeric(ans1[4]),2 )) # NEED TO ROUND, currently a table and therefore not numeric
 
 # calculate and display 
+round(sd(smeans),2)
+
+#d value expected based on clt
+clt_sd <- round(4/sqrt(20), 2)
+
 ```
 
 
-*Comment on whether the CLT seems to be in effect. Is this the value you expect? Are the two values similar? *
+*Yes CLT does seem to be in effect because the data appears to be normally distributed around 4 which we know to be the true mean CHECK BC THE QUARTILE HAS SOME NON NORMALITIES. Yes, the mean of all the sample means is 4.006, which is very close to 4 which we know to be the true mean. Yes, the values are exactly the same. *
 
 (2.5)  *(7 points)* 
 
@@ -244,7 +249,23 @@ ans1 <- summary(smeans)
 
 *  Calculate and display the sample standard deviation of the sample medians and display rounded to two decimal places.  Is this value similar to the value you would expect? *Note that (despite what AI may tell you - I was given an incorrect answer twice), the standard deviation of the sample median is the same as the standard deviation of the sample mean. * 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# histogram of smaple medians
+hist(smedians,
+     col = 'red',
+     main = "Frequency of Sample Medians of 20 Observations for 10,000 Trials",
+     xlab = "Sample Medians")
+
+# normal quantile plot of medians 
+qqp(smeans)
+
+# summary statistics of sample medians 
+summary(smedians)
+
+# sample standard devition of sample median 
+round(sd(smedians),2)
+```
+
 
 *REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
 
@@ -258,7 +279,21 @@ ans1 <- summary(smeans)
 *  Display summary statistics OF THE SAMPLE VARIANCES  Is the mean of the sample variances the value you expect?  
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# histogram of smaple medians
+hist(svariance,
+     col = 'blue',
+     main = "Frequency of Sample Variances of 20 Observations for 10,000 Trials",
+     xlab = "Sample Variances")
+
+# normal quantile plot of medians 
+qqp(svariance)
+
+# summary statistics of sample medians 
+summary(svariance)
+
+```
+
 
 *REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
 
