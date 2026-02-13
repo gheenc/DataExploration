@@ -453,7 +453,7 @@ qqp(diffIron)
 
 ```
 
-**
+*The histogram of the raw concentrations does not include 0 in the confidence interval so we would likely reject the null hypothesis in favor of the alternate that there is a difference in means. We can also see from the quartile plot that the data is less normally distributed. *
 
 4)  Pseudo-coding
 
@@ -461,4 +461,10 @@ You are analyzing long-term water quality data from the Connecticut River. The d
 
 Write pseudocode describing the steps you would take to compare concentrations across states, examine long-term temporal trends by decade, investigate concentration–discharge (C–Q) relationships (literally concentration vs. discharge), and test whether there are statistically significant differences between groups using the tools you have learned so far.
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*Like with any dataset, my first steps would be to get familiar with the data. I would look at the dimensions, structure, names and head and tail of the data to understand how the data is laid out, what form the variables are in, and understand if any cleaning needed to take place. I would also see how many missing values are present across the dataset.*
+*Following any cleaning and ensuring I understand what the variables and data are representing, I would subset the data to be only the most recent values of every ion concentration across all states. I would store this subsetting data in it's own dataframe. I would then create a boxplot for each most recent measurement of ion discharge concentration across all states and analyze the summary statistics to understand any initial differences, including mean, median, quartile distribution, and range of each ion concentration. With so many variables there are many groupings and further analyses that could be made. I would then begin by making boxplots for each state for each wanted ion concentration (so, for example, this would be one boxplot graph for Vermont that has 8 boxplots, one for each major ion; so the data would be this subsetting df == to the wanted state and we would be looking at Concentration ~ Ion - if there is significant variance in the data, it might be advantageous to utilize log(ion concentration values)).*
+*To look at long term temporal trends by decade, I would ideally create a  line graph of each ion and it's concentration across the years, with each state having its own graph - although we don't technically know how to make this kind of line graph yet.*
+*To begin looking concentration-discharge relationship, we would need to create a new variable that takes the concentration and divides by discharge to create the concentration-discharge. This could be done using the mutate function, ensuring all NA's are dropped, the dividing concentration by discharge and saving it in the new created column with a meaningful name. It would be good to analyze these visually via a boxplot like the ion concentrations described above: subset the data to only be the state and the most recent concentration-discharge value for each ion, then do Concentration ~ Ion for each subsetting state. *
+*I could analyze any significant differences between the groups utilizing a t test. Again, due to the multitude of variables, it would likely be advantageous to conduct the t test using a for loop. For comparing the most recent discharge concentration of the same mineral across state, I would write a for loop that would utilize a vector of a list of each state, a list of each ion, and a list of the ion concentration for that state. *
+*If I wanted to be even more thorough, I could conduct permutation tests as well on all grouping listed above. This would involve. *
+   *
