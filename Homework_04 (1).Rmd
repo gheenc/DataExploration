@@ -15,16 +15,6 @@ author: S&DS 2300/5300/ENV 757
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## Submission Details
-
-This homework assignment contains 3 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
-
-For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
-
-**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!  ALSO REMOVE ALL INSTANCES OF `eval = F` **
-
-
 **(1) Practice with Loops.** *(10 points)* For this problem, use loops even if you could do the task without them.
 
 (1.1) A Tribonacci sequence is a series of integers where each number after the third number is found by adding together the three integers before it. Starting with 0, 1, 1, the sequence goes:
@@ -74,9 +64,9 @@ compVals_percents <- round(compVals/nrow(wb)*100)
   
 # additional histogram
 hist(compVals_percents,
-     main = "Histogram of NA in Columns",
+     main = "Histogram of non-NA in Columns",
      col = "steelblue4",
-     xlab = "Percentage of Column that is NAs")
+     xlab = "Percentage of Column that is non-NAs")
 
 ```
 
@@ -160,7 +150,7 @@ legend("topright", c("Mean = 1", "Mean = 2", "Mean = 4"), lwd = 3, col = c("stee
 
 ```
 
-*You did .1 rather than 4 in the original code because the smaller rate level makes the curve of the density distribution appear smoother. *
+*You did .1 rather than 4 in the original code because the smaller value makes the curve of the density distribution appear smoother because it is plotting more values on the x axis. *
 
 
 (2.2) *(4 points)* Following the example in class 8, get a random sample of 20 observations from an exponential distribution with mean 4.   Repeat this process 10000 times.   Save your results in a matrix called `samples` with 10,000 rows and 20 columns.  Display the dimension of `samples'. Show the first 3 rows of `samples` but round the values to two decimal places.
@@ -187,7 +177,7 @@ head(round(samples, 2), 3)
 (2.3)  *(4 points)* Calculate the sample mean for each sample of size 20 (i.e. calculate the mean for each row of `samples`).   Repeat this process to get the sample median and the sample variance for each sample of size 20.   Save these values in objects called, respectively, `smeans, smedians, svariance`.
 
 ```{r}
-set.seed(230) 
+set.seed(230)
 
 # get random sample of 20 exponential dist observation with mean = 4 aka rate = .25
 smeans <- matrix(NA, nrow = n_samp) # create empty mean matrix 
@@ -220,26 +210,28 @@ hist(smeans,
      xlab = "Sample Means",
      main = "Frequency of Sample Means of 20 Observations for 10,000 Trials")
 
-# make normal quartile plot
+# make normal quantile plot
 library('car') # load library needed 
-qqp(smeans)
+qqp(smeans,
+    main = "QQ Plot of Sample Means of 20 Observations for 10,000 Trials")
 
-# get summary statistics 
+# get summary statistics and display mean
 ans1 <- summary(smeans)
-str(ans1)
-ans1[[1]][4]
-(round(as.numeric(ans1["Mean",1]),2)) # NEED TO ROUND, currently a table and therefore not numeric
+round(mean(smeans), 2)
 
-# calculate and display 
+# calculate and display sd
 round(sd(smeans),2)
 
-#d value expected based on clt
+#sd value expected based on clt
 clt_sd <- round(4/sqrt(20), 2)
+clt_sd
 
 ```
 
 
-*Yes CLT does seem to be in effect because the data appears to be normally distributed around 4 which we know to be the true mean CHECK BC THE QUARTILE HAS SOME NON NORMALITIES. Yes, the mean of all the sample means is 4.006, which is very close to 4 which we know to be the true mean. Yes, the values of standard deviation from the sample and expected standard deviation using CLT are exactly the same. *
+*Yes CLT does seem to be in effect because the data appears to be normally distributed around 4 which we know to be the true mean. The QQ plot also suggests the data is normally distributed (although there is a slight right skewness) and thus the CLT is in effect.*
+*Yes, the mean of all the sample means is 4.006, which is very close to 4 which we know to be the true mean.* 
+*Yes, the values of standard deviation from the sample and the expected standard deviation using CLT are exactly the same (0.89). You can calculate the expected/theoretical standard deviation from CLT for an exponential distribution using mu/square root of n (4/sqrt(20)).*
 
 (2.5)  *(7 points)* 
 
@@ -259,18 +251,21 @@ hist(smedians,
      xlab = "Sample Medians")
 
 # normal quantile plot of medians 
-qqp(smedians)
+qqp(smedians, 
+    main = "QQ Plot of Sample Medians of 20 Observations for 10,000 Trials")
 
 # summary statistics of sample medians 
 summary(smedians)
+median_population <- 4*log(2)
 
 # sample standard deviation of sample median 
 round(sd(smedians),2)
 ```
 
 
-*Yes, the medians look normally distributed, but they do drift a little upwards on the right and left ends. The median of the sample values is a little lower than expected because with an exponential graph with a mean of 4 I expected most values to be above 4. Because the graph is right skewed, it is predicted that the mean > median. Yes, the standard deviation is as expected because the values used for calculating it withing the sample mean are still true (mean of 4 with sample size of 20 = 4/sqrt(20)).*
-*CHECK*
+*The medians is almost normally distributed, but it drifts upwards on both the right and left ends suggesting there is some right-sided skewedness.*
+*Yes, the median is as expected because the sample medians would be normally distributed around the sample median. Because the graph is right skewed, it is predicted that the mean > median, which 4 > 2.7. Additionally, because it is an exponential graph, we can estimate the population median to be 4ln2 = 2.77, which is the value we are getting and what the sample medians would be normally distributed around.* 
+*Yes, the standard deviation is as expected because it is normally distributed, we would expect the variation around the mean and median to be the same so we can expect a similar value to the theoretical/expected sd as above (mean of 4 with sample size of 20 = 4/sqrt(20)).*
 
 
 (2.6)  *(6 points)* 
@@ -290,7 +285,8 @@ hist(svariance,
      xlab = "Sample Variances")
 
 # normal quantile plot of medians 
-qqp(svariance)
+qqp(svariance,
+        main = "QQ Plot of Sample Medians of 20 Observations for 10,000 Trials")
 
 # summary statistics of sample medians 
 summary(svariance)
@@ -298,7 +294,8 @@ summary(svariance)
 ```
 
 
-*These variances do not seen normally distributed. They veer highly up on the right side, suggesting it is skewed right, and alow veer high on the left side, suggesting the left tail is shorter than expected. Yes, the mean of the sample variance is as expected because we would expect the variance to be mean^2.*
+*These variances do not seen normally distributed. They veer highly up on the right side, suggesting it is skewed right, and also veer high on the left side, suggesting the left tail is shorter than expected.*
+*Yes, the mean of the sample variance is as expected because we would expect the population variance to be mean^2 (4^2).*
 
 
 **(3) Iron Concentration and the Bootstrap** *(50 points, 5 points each part, parts 3.5 and 3.8 count double*.
@@ -332,12 +329,14 @@ nrow(iron[iron$Rock == "Lime", ])
 
 ```{r}
 par(mfrow = c(1,2))
-boxplot(Iron ~ Rock, data = iron)
-boxplot(logIron ~ Rock, data = iron)
+boxplot(Iron ~ Rock, data = iron,
+        main = "Iron Concentration \n Across Rock Types")
+boxplot(logIron ~ Rock, data = iron,
+        main = "Log Iron Concentration \n Across Rock Types")
 ```
 
 
-*Using the raw values not in log scale, the sand observations are very condensed and small. I prefer the log values because you can appreciate the differences better and understand the full scope of data but the log does include negative values.Limestone has a higher concentration of iron compared to sandstone on average.*
+*Using the raw values not in log scale, the sand observations are very condensed and small. I prefer the log values because you can appreciate the differences better and understand the full scope of data but the log does include negative values. Limestone has a higher concentration of iron compared to sandstone on average.*
 
 (3.3)  Calculate summary statistics for iron concentration by rock type on the raw scale and the log scale.
 
@@ -391,7 +390,7 @@ for (i in 1:n_samples){
   l <- sample(iron$logIron[iron$Rock == "Lime"], lime_values, replace = TRUE) # 
   s <- sample(iron$logIron[iron$Rock == "Sand"], sand_values, replace = TRUE) # 
   diffLogIron[i] <- mean(l) - mean(s) # saves the mean for that run 
-}
+} 
 
 ```
 
@@ -416,7 +415,8 @@ abline(v = test1$conf.int, lwd = 3, col = 'green4') # CI of t test
 legend("topright", c("t-Test CI", "Bootstrapped CI"), col = c("green4", "red3"), lwd = 3, lty = c(1, 4))
 
 # normal quantile plot of bootstrapped differences
-qqp(diffLogIron)
+qqp(diffLogIron,
+    main = "QQ Plot of Bootstrapped Sample Means of Log Iron Concentration")
 
 ```
 
@@ -452,18 +452,20 @@ round(ci_raw, 2)
 hist(diffIron,
      xlab = "Raw Concentration of Iron",
      main = "Bootstrapped Sample Means of Raw Concentration of Iron",
-     xlim = c(-1, 12)) # adjusted to show CI 
+     xlim = c(-1, 12),
+     breaks = 50) # adjusted to show CI 
 
 abline(v = ci_raw, lwd = 3, col = 'red3') # CI of bootstraped 
 abline(v = test2$conf.int, lwd = 3, col = 'green4', lty = 4) # CI of t test
 legend("topright", c("t-Test CI", "Bootstrapped CI"), col = c("green4", "red3"), lwd = 3, lty = c(1,4))
 
 # normal quantile plot of bootstrapped differences
-qqp(diffIron)
+qqp(diffIron,
+    main = "QQ Plot of Bootstrapped Sample Means of Iron Concentration")
 
 ```
 
-*The histogram of the raw concentrations using bootstrapping does not include 0 in the confidence interval so we would likely reject the null hypothesis in favor of the alternate that there is a difference in means. The traditional t-test, however, does include 0 in the confidence interval so we could not as confidently reject the null hypothesis. We also see that the confidence intervals are similar for the traditional and bootstrapped samples on the right side, but on the left, the traditional is wider, likely due to the smallness of the Sandstone values. We can also see from the quartile plot that the data is less normally distributed but still fairly considered normal. We especially see deviation on the left end again because the values of sand are so small. CHECK *
+*The histogram of the raw concentrations using bootstrapping does not include 0 in the confidence interval so we would likely reject the null hypothesis in favor of the alternate that there is a difference in means. The traditional t-test, however, does include 0 in the confidence interval so we could not as confidently reject the null hypothesis. We also see that the confidence intervals are similar for the traditional and bootstrapped samples on the right side, but on the left, the traditional is wider, likely due to the smallness of the Sandstone values. We can also see from the QQ plot that the data is less normally distributed but still fairly considered normal. We especially see deviation on the left end because the values of sandstone are so small and concentrated on the left end of the x-axis.*
 
 4)  Pseudo-coding
 
@@ -472,8 +474,8 @@ You are analyzing long-term water quality data from the Connecticut River. The d
 Write pseudocode describing the steps you would take to compare concentrations across states, examine long-term temporal trends by decade, investigate concentration–discharge (C–Q) relationships (literally concentration vs. discharge), and test whether there are statistically significant differences between groups using the tools you have learned so far.
 
 *Like with any dataset, my first steps would be to get familiar with the data. I would look at the dimensions, structure, names and head and tail of the data to understand how the data is laid out, what form the variables are in, and understand if any cleaning needed to take place. I would also see how many missing values are present across the dataset.*
-*Following any cleaning and ensuring I understand what the variables and data are representing, I would create a boxplot of the measurement of ion discharge concentration across all states and analyze the summary statistics to understand any initial differences, including mean, median, quartile distribution, and range of each ion concentration. With so many variables there are many groupings and further analyses that could be made. I would then begin by making boxplots for each state for each wanted ion concentration (so, for example, this would be one boxplot graph for Vermont that has 8 boxplots, one for each major ion; so the data would be this subsetting df == to the wanted state and we would be looking at Concentration ~ Ion - if there is significant variance in the data, it might be advantageous to utilize log(ion concentration values)).*
+*Following any cleaning and ensuring I understand what the variables and data are representing, I would create a boxplot of the measurement of ion discharge concentration across all states and analyze the summary statistics to initially understand the data further. If any concentration values are very small, it might be advantageous to add a column that is logConcentration for each sampling. With so many variables there are many groupings and further analyses that could be made. I would then begin by making boxplots for each state for each wanted ion concentration (so, for example, this would be one boxplot graph for Vermont that has 8 boxplots, one for each major ion; so the data would be this subsetting df == to the wanted state and we would be looking at Concentration ~ Ion - if there is significant variance in the data, it might be advantageous to utilize  the log(ion concentration values)).*
 *To look at long term temporal trends by decade, I would ideally create a  line graph of each ion and it's concentration across the years, with each state having its own graph - although we don't technically know how to make this kind of line graph yet.*
-*To begin looking concentration-discharge relationship, we would need to create a new variable that takes the concentration and divides by discharge to create the concentration-discharge. This could be done using the mutate function, ensuring all NA's are dropped, then dividing concentration by discharge and saving it in the new created column with a meaningful name. It would be good to analyze these visually via a boxplot like the ion concentrations described above: subset the data to only be the state and the most recent concentration-discharge value for each ion, then do Concentration ~ Ion for each subsetting state.*
-*I could analyze any significant differences between the groups utilizing a t test. Again, due to the multitude of variables, it would likely be advantageous to conduct the t test using a for loop. I could conduct a t test between each general ion concentration (calcium vs magnesium), specific ion concentrations between states (calcium in Vermont vs calcium in New Hampshire), differences in ion concentration between years (calcium in all states in 1950 vs calcium in all states in 2026), concentration discharge calculated including all years between states (c/d of calcium in Vermont vs c/d of calcium in New Hampshire), of between years (c/d of calcium in 1950 vs c/d of calcium in 2026), or between ion (c/d of calcium vs c/d of magnesium). Utilizing a for loop would allow you to select the question you want to explore (ex: c/d of all ions compared to themselves betweeen all states) and then create vectors holding the indexing values needed. Because a t-test requires two groups and there are almost 75 years of individual data, you could also bin and combine certain years and make them into a two group cut off (ie 1950-1980 and 1980-2026) *
-*If I wanted to be even more thorough, I could conduct bootstrapping tests as well on all grouping listed above. I could do 10,000 trials of bootstrapping with replacement then determine the  difference of each trial mean and store the differences in a variable. I could do this to determine the differences between ENTER VARIABLE PAIRS HERE. Again, due to the multitude of variables it would be advantageous to do this in a for loop and then only examine the final difference variable.   *
+*To begin looking concentration-discharge relationship, we would need to create a new variable that takes the concentration and divides by discharge to create the concentration-discharge. This could be done using the mutate function, ensuring all NA's are dropped, then dividing concentration by discharge and saving it in the new created column with a meaningful name. It would be good to analyze these visually via a boxplot like the ion concentrations described above.*
+*I could analyze any significant differences between the groups utilizing a t-test. Again, due to the multitude of variables, it would likely be advantageous to conduct the t test using a for loop. I could conduct a t test between each general ion concentration (calcium vs magnesium), specific ion concentrations between states (calcium in Vermont vs calcium in New Hampshire), differences in ion concentration between years (calcium in all states in 1950 vs calcium in all states in 2026), concentration discharge calculated including all years between states (c/d of calcium in Vermont vs c/d of calcium in New Hampshire), of between years (c/d of calcium in 1950 vs c/d of calcium in 2026), or between ion (c/d of calcium vs c/d of magnesium). Utilizing a for loop would allow you to select the question you want to explore (ex: c/d of all ions compared to themselves between all states: Calcium in Vermont vs Calcium in New Hampshire, etc.) and then create vectors holding the indexing values needed. Because a t-test requires two groups and there are almost 75 years of individual data, you could also bin and combine certain years and make them into a two group cut off if wanting to look more in depth at the years(ie 1950-1980 and 1980-2026). *
+*If I wanted to be even more thorough, I could conduct bootstrapping tests as well on all grouping listed above. I could do 10,000 trials of bootstrapping with replacement then determine the  difference of each trial mean and store the differences in a variable. I would then want to plot that variable on a histogram and QQ plot to understand the distribution. I could identify the values for a 95% confidence interval and add lines on the histogram at those interval numbers. I would then use that confidence interval to determine if there is a difference between the two groups (if 0 is included, there is a difference between the groups). Again, due to the multitude of variables it would be advantageous to do this in a for loop (bootstrap samples calculate difference, confidence intervals, and plot on histogram and qq plot) and then only examine the final difference variable.*
