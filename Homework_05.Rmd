@@ -30,7 +30,7 @@ str(nh2017)
 names(nh2017)
 
 nh2018 <- read.csv('https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/NHRR2018.csv')
-#head(nh2018)
+head(nh2018)
 str(nh2018)
 names(nh2018)
 ```
@@ -62,12 +62,12 @@ convertTimes <- function(v) {
 }
 
 cleanNHData <- function(data) {
-  nh2018$Div[nh2018$Div == ""] <- NA
-  nh2018$Gender <- substr(nh2018$Div, 1, 1)
-  nh2018$AgeGrp <- substr(nh2018$Div, 2, nchar(nh2018$Div))
-  nh2018$Nettime_min <- convertTimes(nh2018$Nettime)
-  nh2018$Time_min <- convertTimes(nh2018$Time)
-  nh2018$Pace_min <- convertTimes(nh2018$Pace)
+  data$Div[data$Div == ""] <- NA
+  data$Gender <- substr(data$Div, 1, 1)
+  data$AgeGrp <- substr(data$Div, 2, nchar(data$Div))
+  data$Nettime_min <- convertTimes(data$Nettime)
+  data$Time_min <- convertTimes(data$Time)
+  data$Pace_min <- convertTimes(data$Pace)
   
   #Replace dataset with same dataset such that Name is not equal to ""
   data <- data[data$Name != "", ]                      
@@ -79,6 +79,7 @@ cleanNHData <- function(data) {
 #run cleanNHData on nh2018 and nh2017 and replace these with the cleaned up versions of themselves
 nh2017 <- cleanNHData(nh2017)
 nh2018 <- cleanNHData(nh2018)
+names(nh2018)
 ```
 
 
@@ -142,8 +143,8 @@ nhcombined <- data.frame(Name = nh2018Unq$Name[w],
                          Gender = nh2018Unq$Gender[w],
                          Nettime_2018 = nh2018Unq$Nettime_min[w])
 
-# this merges the df nhcmobined and nh2017uniq's name and nettime columns
-nhcombined <- merge(nhcombined, nh2017Unq[ ,c("Name", "Nettime")])
+# this merges the df nhcmobined and nh2017uniq's name and nettime columns. it adds the nettime 
+nhcombined <- merge(nhcombined, nh2017Unq[ ,c("Name", "Nettime_min")])
 
 # This removes any runner with NA as their gender and rewrites it into nhcombined
 nhcombined <- nhcombined[!is.na(nhcombined$Gender),]
@@ -162,13 +163,39 @@ head(nhcombined)
 (2.4)  *(5 pts)* Create a new variable in the data frame `nhcombined` called `improvement` that is the improvement in run time from 2017 to 2018 (a positive number here should indicate an improvement,a negative number means they did worse in 2018). Get summary statistics for `nhcombined`.  Then make a histogram of `improvement`.  Comment on the summary statistics and what you observe in the histogram.
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# create new improvement 
+nhcombined$improvement <- nhcombined$Nettime_2018 - nhcombined$Nettime_2017
+  
+#summary of nhcombined
+summary(nhcombined)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# histogram of improvement 
+hist(nhcombined$improvement,
+     main = "Histogram of Change in Time \n between 2017 and 2018 Duplicate Runners",
+     breaks = 75, # increase to better see data distribution
+     xlab = "Change in Time")
+```
+
+
+*The majority of runners did not see a large change in their time. There are some presummed outliers (a boxplot would better annalyze this), but the IQR which is at least 50% of the data is between -.5 and 2 minute changes between the years. We see this in the histogram because the majority of the data stays at or around 0.*
 
 (2.5)  *(5 pts)* You'll notice a few extreme values (i.e. people got amazingly better or worse).   Print the rows of `nhcombined` that had improvement times of more than 50 in absolute value.  Update the `nhcombined` dataframe to exclude these rows and make the histogram again.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# print extreme values 
+print(nhcombined[abs(nhcombined$improvement) > 50, ])
+
+# update nhcombine to exclude extreme values
+nhcombined <- nhcombined[abs(nhcombined$improvement) <= 50, ]
+
+# histogram of nhcombined improvement times again without extreme values 
+hist(nhcombined$improvement,
+     main = "Histogram of Change in Time \n between 2017 and 2018 Duplicate Runners \n (without Extreme Times)",
+     breaks = 75, # Maintain same break
+     xlab = "Change in Time")
+```
+
 
 **3) Changes in Measles Vaccination Rates in the Past 8 Years** *(45 pts)*
 
@@ -185,7 +212,80 @@ Finally, calculate a variable that is the change in Measles vaccination rates (2
 
 Show the first 10 rows of the final dataset.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# read in data sets
+wb2016 <- read.csv('https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB.2016.csv')
+wb2024 <- read.csv('https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB_2024.csv')
+
+# show names of datasets
+names(wb2016)
+names(wb2024)
+
+# confirm dimentions are same between datasets
+dim(wb2016) == dim(wb2024) # only rows are same; different number of columns 
+
+# modify each to only contain Country, Measles, and GNI
+wb2016 <- wb2016[ , c("Country", "Measles", "GNI")]
+wb2024 <- wb2024[ , c("Country", "Measles", "GNI")]
+
+# confirm both only have country, measles, and gni
+names(wb2016)
+names(wb2024)
+
+# rename variables to be for each year
+names(wb2016) <- c("Country_2016", "Measles_2016", "GNI_2016")
+names(wb2024) <- c("Country_2024", "Measles_2024", "GNI_2024")
+
+# combine datasets together with renamed variables 
+# ensure all names are unique in each dataset
+duplicated(wb2016$Country_2016) # no duplicates within 
+duplicated(wb2024$Country_2024) # no duplicates
+
+# ensure all countries appear in both 
+setequal(wb2016$Country_2016, wb2024$Country_2024) #FALSE
+
+# Countries in 2016 but not in 2024
+setdiff(wb2016$Country_2016, wb2024$Country_2024)
+
+# Countries in 2024 but not in 2016
+setdiff(wb2024$Country_2024, wb2016$Country_2016)
+
+# Czech Republic - Czechia; Swaziland - Eswatini; Korea, Dem. People\x92s Rep. - Korea, Dem People's Rep.; Macedonia, FYR - North Macedonia; Turkey - Tukiye; Vietnam - Viet Nam
+
+# correct these country names to be aligned to what is in 2024
+wb2016$Country_2016[wb2016$Country_2016 == "Czech Republic"] <- "Czechia"
+wb2016$Country_2016[wb2016$Country_2016 == "Swaziland"] <- "Eswatini"
+wb2016$Country_2016[wb2016$Country_2016 == "Korea, Dem. People\x92s Rep."] <- "Korea, Dem. People's Rep."
+wb2016$Country_2016[wb2016$Country_2016 == "Macedonia, FYR"] <- "North Macedonia"
+wb2016$Country_2016[wb2016$Country_2016 == "Turkey"] <- "Turkiye"
+wb2016$Country_2016[wb2016$Country_2016 == "Vietnam"] <- "Viet Nam"
+
+# recheck all are same
+setequal(wb2016$Country_2016, wb2024$Country_2024) # TRUE!
+
+# stores values of country in c
+c <- wb2016$Country_2016
+
+# this created a df that has columns filled with the repeat runners name gender and nettime in 2018.
+wb <- data.frame(Country = wb2016$Country_2016[c],
+                         Measles_2016 = wb2016$Measles_2016[c],
+                         Measles_2024 = wb2024$Measles_2024[c],
+                         GNI_2016 = wb2016$GNI_2016[c],
+                         GNI_2024 = wb2024$GNI_2024[c])
+
+# this merges the df nhcmobined and nh2017uniq's name and nettime columns. it adds the nettime 
+wb <- merge(wb, nh2017Unq[ ,c("Name", "Nettime_min")])
+
+# remove observations missing for Measles or GNI in 2024
+wb <- wb[!is.na(nhcombined$Gender),]
+
+# create new factor variable that identified countries with GNI_2024 > 8000 | <= 8000
+
+# recalculate change in masles vaccination rate per country
+
+# show first 10 rows of final dataset
+```
+
 
 (3.2)  *(10 pts)* Calculate and display summary statistics for the change in Measles vaccination rates overall.  Make a histogram of these changes and add a vertical line at the value which indicates no change. Discuss what you observe in a few sentences.
 
