@@ -262,28 +262,34 @@ wb2016$Country_2016[wb2016$Country_2016 == "Vietnam"] <- "Viet Nam"
 
 # recheck all are same
 setequal(wb2016$Country_2016, wb2024$Country_2024) # TRUE!
+```
 
-# stores values of country in c
-c <- wb2016$Country_2016
+```{r}
+# stores values of country in c of countries in 2016 that appear in 2024
+c <- wb2016$Country_2016 %in% wb2024$Country_2024
 
-# this created a df that has columns filled with the repeat runners name gender and nettime in 2018.
-wb <- data.frame(Country = wb2016$Country_2016[c],
-                         Measles_2016 = wb2016$Measles_2016[c],
-                         Measles_2024 = wb2024$Measles_2024[c],
-                         GNI_2016 = wb2016$GNI_2016[c],
-                         GNI_2024 = wb2024$GNI_2024[c])
+# create initial dataframe of 2016 values 
+wb <- data.frame(Country = wb2016$Country_2016[w],
+                 Measles_2016 = wb2016$Measles_2016[w],
+                 GNI_2016 = wb2016$GNI_2016[w])
 
-# this merges the df nhcmobined and nh2017uniq's name and nettime columns. it adds the nettime 
-wb <- merge(wb, nh2017Unq[ ,c("Name", "Nettime_min")])
+# merges in 2024 dataset, mathcing based on country names 
+wb <- merge(wb, wb2024[ , c("Country_2024", "Measles_2024", "GNI_2024")],
+            by.x = "Country", by.y = "Country_2024") # will only keep by.x, drop by.y since they match
 
 # remove observations missing for Measles or GNI in 2024
-wb <- wb[!is.na(nhcombined$Gender),]
+wb <- wb[!is.na(wb$Measles_2024),]
+wb <- wb[!is.na(wb$GNI_2024),]
 
 # create new factor variable that identified countries with GNI_2024 > 8000 | <= 8000
+wb$GNI_8000 <- as.factor(ifelse(wb$GNI_2024 > 8000, "Above 8000", "Below or Equal to 8000"))
 
-# recalculate change in masles vaccination rate per country
+# calculate change in measles vaccination rate per country
+wb$Measles_change <- wb$Measles_2024 - wb$Measles_2016
 
 # show first 10 rows of final dataset
+head(wb, n=10)
+
 ```
 
 
@@ -291,10 +297,35 @@ wb <- wb[!is.na(nhcombined$Gender),]
 
 Make a side-by-side boxplot to see differences between the change in Measles vaccination rates between Countries with GNI < 8000 and countries with GNI > 8000.   Does there appear to be any difference between groups?  Comment both on center and spread.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# calculate and display summary statistics for change in measles 
+summary(wb$Measles_change)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# create histogram
+hist(wb$Measles_change, 
+     main = "Histogram of Changes in Measles Vaccination \n Between 2024 and 2016",
+     breaks = 20,
+     xlab = "Changes in Measles Vaccination Rate",
+     col= 'grey60')
 
+# add vertical line at no change
+abline(v = 0,
+       lwd = 3,
+       col = 'peru')
+
+text(-1, 7, "No Rate Change", srt=90)
+
+# side by side box plot of differences between change in Measles vaccination of countries on either side of 8000
+boxplot(wb$Measles_change ~ wb$GNI_8000,
+        main= "Boxplot of Measles Vaccination Rate Change \n Betweeen 2016-2014 in Countries GNI\n Above or Below 8000",
+        ylab = "Change in Measles Vaccination Rate",
+        xlab = "GNI Status", 
+        col = "forestgreen")
+```
+
+
+*Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was 5% and 4% decrease, respectively. There are some countries that had as much of a 15% increase but some also had a 26% decrease.*
+*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had a larger decrease in measles vaccination rate as the median for that box is lower. Conversely, one country with a GNI less than or equal to 8000 had the largest increase in measles vaccination rate. The countries with a GNI of 8000 had more condensed spread of differing vaccination rates and their median was close to zero. They also had several low outliers, however.*
 
 (3.3) *(10 pts)* Create a 95% bootstrap confidence interval for the mean change in measles vaccination rates among countries with GNI < 8000. Do the same for countries with a GNI > 8000. You don't need to make any histograms of your bootstrap results, and you don't need to use the `t.test()` function.  You also are not comparing the means of these two groups - you're getting separate intervals for each GNI group.  Display the intervals and discuss what you observe.
 
@@ -304,9 +335,32 @@ Make a side-by-side boxplot to see differences between the change in Measles vac
 set.seed(230)
 
 # FILL IN REMAINING CODE
+# create bootstrap for < 8000
+mean_greater_8000 <- rep(NA, 10000)
+
+for (i in 1:10000){
+  s <- sample(wb$Measles_change[wb$GNI_8000 == "Above 8000"], sum(wb$GNI_8000 == "Above 8000"), replace = TRUE)
+  mean_greater_8000[i] <- mean(s)
+}
+
+# get 95% confidence interval
+(qg <- quantile(mean_greater_8000, c(0.05, 0.95)))
+paste("95% CI Interval of Measles Vaccation Rates of Countries with GNI > 8000", round(qg[1], 2), "to", round(qg[2], 2))
+
+# repeat bootstrap for > 8000
+mean_less_8000 <- rep(NA, 10000)
+
+for (i in 1:10000){
+  s <- sample(wb$Measles_change[wb$GNI_8000 == "Below or Equal to 8000"], sum(wb$GNI_8000 == "Below or Equal to 8000"), replace = TRUE)
+  mean_less_8000[i] <- mean(s)
+}
+
+# get 95% confidence interval
+(ql <- quantile(mean_less_8000, c(0.05, 0.95)))
+paste("95% CI Interval of Measles Vaccation Rates of Countries with GNI <= 8000", round(ql[1], 2), "to", round(ql[2], 2))
 ```
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*From the bootstraping, we can see that the countries with GNI > 8000 have a smaller confidence interval that includes 0. Based on this, we could could not be confident that the difference in rate c hanges is not different. For the countries with a GNI less than or equal to 8000, there is a larger confident interval that is totally negative. Because of this, we can be more confident that there is a change in measles vaccination rate difference between the year with the rate declining.*
 
 (3.4) *(15 pts)* Using a permutation test, examine whether there a significant difference in the **MEDIAN** change in vaccination rates between high GNI countries and low GNI countries (calculate as high - low). Use a significance level of 0.01. Be sure to state (in words is fine) the null and alternative hypotheses, and discuss your conclusion.  Be sure to include a histogram of results and add a vertical line that shows that observed difference in medians (see example in code from class).
 
@@ -315,9 +369,44 @@ set.seed(230)
 set.seed(230)
 
 # FILL IN REMAINING CODE
+# imput low as "Below or Equal to"
+levels(wb$GNI_8000)
+levels(wb$GNI_8000)[levels(wb$GNI_8000) == "Below or Equal to 8000"] <- "low"
+
+# imput high as "Above 8000"
+levels(wb$GNI_8000)[levels(wb$GNI_8000) == "Above 8000"] <- "high"
+levels(wb$GNI_8000)
+
+# determine difference in median between high and low using original data
+actual_median <- by(wb$Measles_change, wb$GNI_8000, median)
+actual_median <- actual_median[1] - actual_median[2]
+
+# permutations
+N <- 10000
+diffmedians <- rep(NA, 10000)
+
+for (i in 1:N){
+  s <- sample(wb$GNI_8000)
+  diffmedians[i] <- median(wb$Measles_change[s == "high"]) - median(wb$Measles_change[s == "low"]) # original was high-low
+}
+
+# histogram
+hist(diffmedians,
+     main = "Histogram of Permuted Sample Medians \n of Difference in Measles Vaccination Rates \n between Countries based on GNI",
+     xlab = "Measles Vaccination Rates",
+     col = 'burlywood4',
+     xlim = c(-12, 12))
+
+# add vertical line at test hypothesis median
+abline(v = actual_median,
+       lwd = 3,
+       col = 'peru')
+
+text(8.6, 715, paste("Actual Difference in Medians = ", actual_median), srt=90)
 ```
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+**
+*For the permutation tests, the null hypothesis is that when switching the labels, the difference will be seen again, meaning that level of change can be seen by random chance and thus the null hypothesis that there is no difference in mean must be true. The alternative hypothesis is that when switching the labels, the test statistic not seen from the original test will not be seen and thus must not have happened by chance and then we can reject the ultimate null hypothesis and claim that there is a difference between the groups.*
 
 
 4)  Pseudo-coding
