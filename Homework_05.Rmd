@@ -165,7 +165,7 @@ head(nhcombined)
 
 ```{r}
 # create new improvement 
-nhcombined$improvement <- nhcombined$Nettime_2018 - nhcombined$Nettime_2017
+nhcombined$improvement <- nhcombined$Nettime_2017 - nhcombined$Nettime_2018
   
 #summary of nhcombined
 summary(nhcombined)
@@ -178,7 +178,7 @@ hist(nhcombined$improvement,
 ```
 
 
-*The majority of runners did not see a large change in their time. There are some presummed outliers (a boxplot would better annalyze this), but the IQR which is at least 50% of the data is between -.5 and 2 minute changes between the years. We see this in the histogram because the majority of the data stays at or around 0.*
+*The majority of runners did not see a large change in their time. There are some presummed outliers (a boxplot would better annalyze this), but the IQR of improvement - which is at least 50% of the data is between -2 and 0.5 minute changes between the years. We see this in the histogram because the majority of the data stays at or around 0.*
 
 (2.5)  *(5 pts)* You'll notice a few extreme values (i.e. people got amazingly better or worse).   Print the rows of `nhcombined` that had improvement times of more than 50 in absolute value.  Update the `nhcombined` dataframe to exclude these rows and make the histogram again.
 
@@ -267,11 +267,12 @@ setequal(wb2016$Country_2016, wb2024$Country_2024) # TRUE!
 ```{r}
 # stores values of country in c of countries in 2016 that appear in 2024
 c <- wb2016$Country_2016 %in% wb2024$Country_2024
+wb2016$Country_2016 == wb2024$Country_2024
 
 # create initial dataframe of 2016 values 
-wb <- data.frame(Country = wb2016$Country_2016[w],
-                 Measles_2016 = wb2016$Measles_2016[w],
-                 GNI_2016 = wb2016$GNI_2016[w])
+wb <- data.frame(Country = wb2016$Country_2016[c],
+                 Measles_2016 = wb2016$Measles_2016[c],
+                 GNI_2016 = wb2016$GNI_2016[c])
 
 # merges in 2024 dataset, mathcing based on country names 
 wb <- merge(wb, wb2024[ , c("Country_2024", "Measles_2024", "GNI_2024")],
@@ -279,6 +280,7 @@ wb <- merge(wb, wb2024[ , c("Country_2024", "Measles_2024", "GNI_2024")],
 
 # remove observations missing for Measles or GNI in 2024
 wb <- wb[!is.na(wb$Measles_2024),]
+wb <- wb[!is.na(wb$Measles_2016),]
 wb <- wb[!is.na(wb$GNI_2024),]
 
 # create new factor variable that identified countries with GNI_2024 > 8000 | <= 8000
@@ -313,7 +315,7 @@ abline(v = 0,
        lwd = 3,
        col = 'peru')
 
-text(-1, 7, "No Rate Change", srt=90)
+text(-1.5, 30, "No Rate Change", srt=90)
 
 # side by side box plot of differences between change in Measles vaccination of countries on either side of 8000
 boxplot(wb$Measles_change ~ wb$GNI_8000,
@@ -325,7 +327,7 @@ boxplot(wb$Measles_change ~ wb$GNI_8000,
 
 
 *Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was 5% and 4% decrease, respectively. There are some countries that had as much of a 15% increase but some also had a 26% decrease.*
-*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had a larger decrease in measles vaccination rate as the median for that box is lower. Conversely, one country with a GNI less than or equal to 8000 had the largest increase in measles vaccination rate. The countries with a GNI of 8000 had more condensed spread of differing vaccination rates and their median was close to zero. They also had several low outliers, however.*
+*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had a larger decrease in measles vaccination rate as the median for that box is lower. Conversely, one country with a GNI less than or equal to 8000 had the largest increase in measles vaccination rate. The countries with a GNI greater than 8000 had more condensed spread of differing vaccination rates and their median was close to zero. They also had several low outliers, however.*
 
 (3.3) *(10 pts)* Create a 95% bootstrap confidence interval for the mean change in measles vaccination rates among countries with GNI < 8000. Do the same for countries with a GNI > 8000. You don't need to make any histograms of your bootstrap results, and you don't need to use the `t.test()` function.  You also are not comparing the means of these two groups - you're getting separate intervals for each GNI group.  Display the intervals and discuss what you observe.
 
@@ -382,10 +384,9 @@ actual_median <- by(wb$Measles_change, wb$GNI_8000, median)
 actual_median <- actual_median[1] - actual_median[2]
 
 # permutations
-N <- 10000
 diffmedians <- rep(NA, 10000)
 
-for (i in 1:N){
+for (i in 1:10000){
   s <- sample(wb$GNI_8000)
   diffmedians[i] <- median(wb$Measles_change[s == "high"]) - median(wb$Measles_change[s == "low"]) # original was high-low
 }
@@ -402,11 +403,15 @@ abline(v = actual_median,
        lwd = 3,
        col = 'peru')
 
-text(8.6, 715, paste("Actual Difference in Medians = ", actual_median), srt=90)
+text(3.5, 1650, paste("Actual Difference in Medians = ", actual_median), srt=90)
+
+# obtain p value by counting what fraction of fake test statistics were more extreme than the actual one 
+mean(abs(diffmedians) >= abs(actual_median))
 ```
 
 **
 *For the permutation tests, the null hypothesis is that when switching the labels, the difference will be seen again, meaning that level of change can be seen by random chance and thus the null hypothesis that there is no difference in mean must be true. The alternative hypothesis is that when switching the labels, the test statistic not seen from the original test will not be seen and thus must not have happened by chance and then we can reject the ultimate null hypothesis and claim that there is a difference between the groups.*
+*pvalue = 0.002 so with an alpha of .01, we can reject the null hypothesis and claim that there is an actual difference between group medians*
 
 
 4)  Pseudo-coding
