@@ -45,7 +45,7 @@ I've started the outline of the function below.  Your job is to follow the exact
 Then, run the function on `nh2017` and `nh2018` to replace each of these datasets with the cleaned up version of themselves.
 
 
-```{r}
+```{r, warning = FALSE}
 library(lubridate)
 convertTimes <- function(v) {
   hourplus <- nchar(v) == 7
@@ -305,7 +305,7 @@ summary(wb$Measles_change)
 
 # create histogram
 hist(wb$Measles_change, 
-     main = "Histogram of Changes in Measles Vaccination \n Between 2024 and 2016",
+     main = "Histogram of Rate Changes in Measles Vaccination \n Between 2024 and 2016",
      breaks = 20,
      xlab = "Changes in Measles Vaccination Rate",
      col= 'grey60')
@@ -323,11 +323,15 @@ boxplot(wb$Measles_change ~ wb$GNI_8000,
         ylab = "Change in Measles Vaccination Rate",
         xlab = "GNI Status", 
         col = "forestgreen")
+
+# Extra
+# confirm summary statistics of each 
+by(wb$Measles_change, wb$GNI_8000, summary)
 ```
 
 
-*Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was 5% and 4% decrease, respectively. There are some countries that had as much of a 15% increase but some also had a 26% decrease.*
-*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had a larger decrease in measles vaccination rate as the median for that box is lower. Conversely, one country with a GNI less than or equal to 8000 had the largest increase in measles vaccination rate. The countries with a GNI greater than 8000 had more condensed spread of differing vaccination rates and their median was close to zero. They also had several low outliers, however.*
+*Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was 3% and 1% decrease, respectively. There are some countries that had as much of a 32% increase but some also had a 45% decrease. The spread does look normal (maybe slightly left skewed considering the mean is less than the median).*
+*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had just a slightly larger decrease in measles vaccination rate as the median and mean for that box is lower (0 and -2 vs -4 and -4). The spread for the countries with a GNI above 8000 is much tighter, meaning overall the data was more condensed. There are several outliers, however; many that are a larger decrease than the rest of the data and one that is an increase. The countries with a GNI below or equal to 8000 had a larger spread, both within the IQR and the whiskers. There are some noteable outliers for this plot as well.*
 
 (3.3) *(10 pts)* Create a 95% bootstrap confidence interval for the mean change in measles vaccination rates among countries with GNI < 8000. Do the same for countries with a GNI > 8000. You don't need to make any histograms of your bootstrap results, and you don't need to use the `t.test()` function.  You also are not comparing the means of these two groups - you're getting separate intervals for each GNI group.  Display the intervals and discuss what you observe.
 
@@ -360,9 +364,15 @@ for (i in 1:10000){
 # get 95% confidence interval
 (ql <- quantile(mean_less_8000, c(0.05, 0.95)))
 paste("95% CI Interval of Measles Vaccation Rates of Countries with GNI <= 8000", round(ql[1], 2), "to", round(ql[2], 2))
+
+#Extra
+# confirm p value with t-test 
+t.test(wb$Measles_change[wb$GNI_8000 == "Above 8000"]) #-3 to -.6 p = 0.004
+t.test(wb$Measles_change[wb$GNI_8000 == "Below or Equal to 8000"]) #-6 to -1 p = .0006
+
 ```
 
-*From the bootstraping, we can see that the countries with GNI > 8000 have a smaller confidence interval that includes 0. Based on this, we could could not be confident that the difference in rate c hanges is not different. For the countries with a GNI less than or equal to 8000, there is a larger confident interval that is totally negative. Because of this, we can be more confident that there is a change in measles vaccination rate difference between the year with the rate declining.*
+*From the bootstraping, we can see that the countries with GNI > 8000 have a smaller confidence interval while the countries with a GNI less than or equal to 8000 has a larger confident interval. Both confidence intervals are completely negative and do not include 0, meaning we potentially can reject our null hypothesis and accept that is a change in measles vaccination rate with the rate declining. This would be true for both groups, although the countries with a GNI less than or equal to 8000 is potentially declining at a steeper rate.*
 
 (3.4) *(15 pts)* Using a permutation test, examine whether there a significant difference in the **MEDIAN** change in vaccination rates between high GNI countries and low GNI countries (calculate as high - low). Use a significance level of 0.01. Be sure to state (in words is fine) the null and alternative hypotheses, and discuss your conclusion.  Be sure to include a histogram of results and add a vertical line that shows that observed difference in medians (see example in code from class).
 
@@ -381,7 +391,7 @@ levels(wb$GNI_8000)
 
 # determine difference in median between high and low using original data
 actual_median <- by(wb$Measles_change, wb$GNI_8000, median)
-actual_median <- actual_median[1] - actual_median[2]
+actual_median <- actual_median[1] - actual_median[2] #high - low
 
 # permutations
 diffmedians <- rep(NA, 10000)
@@ -396,7 +406,7 @@ hist(diffmedians,
      main = "Histogram of Permuted Sample Medians \n of Difference in Measles Vaccination Rates \n between Countries based on GNI",
      xlab = "Measles Vaccination Rates",
      col = 'burlywood4',
-     xlim = c(-12, 12))
+     xlim = c(-8, 8))
 
 # add vertical line at test hypothesis median
 abline(v = actual_median,
@@ -409,9 +419,10 @@ text(3.5, 1650, paste("Actual Difference in Medians = ", actual_median), srt=90)
 mean(abs(diffmedians) >= abs(actual_median))
 ```
 
-**
-*For the permutation tests, the null hypothesis is that when switching the labels, the difference will be seen again, meaning that level of change can be seen by random chance and thus the null hypothesis that there is no difference in mean must be true. The alternative hypothesis is that when switching the labels, the test statistic not seen from the original test will not be seen and thus must not have happened by chance and then we can reject the ultimate null hypothesis and claim that there is a difference between the groups.*
-*pvalue = 0.002 so with an alpha of .01, we can reject the null hypothesis and claim that there is an actual difference between group medians*
+*Null: there is no difference between median measles vaccination rate change between countries with a high and low GNI.*
+*Alternative: there is a difference between median measles vaccination rate change between countries with a high and low GNI.*
+*Futhermore, for permutation tests, the null hypothesis is that when switching the labels, the difference will be seen again, meaning that level of change can be seen by random chance and thus the null hypothesis must be true. The alternative hypothesis is that when switching the labels, the test statistic from the original test will not be seen and thus must not have happened by chance and then we can claim that there is a difference between the groups.*
+*pvalue = 0.0019 so with an alpha of .01, we can reject the null hypothesis and claim that there is an actual difference between group medians.*
 
 
 4)  Pseudo-coding
