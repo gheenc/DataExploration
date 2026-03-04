@@ -38,7 +38,7 @@ names(nh2018)
 
 *Both datasets have the same variables (No., Name, City, Div, Time, Pace, Nettime) with the same format. There are more observations in 2017, so they had more runners. *
 
-(1.2)  *(15 pts)*  Since the two datasets seem to have the same structure, we can write a function that creates new variables in each dataset.   This function will be called `cleanNHData()`.   As a first step, I've already included code to load the `lubridate` package and define a function called `convertTimes()` similar to that we used in Class 10.
+(1.2)  *(15 pts)*  Since the two datasets seem to have the same structure, we can write a function that creates new variables in each dataset. This function will be called `cleanNHData()`. As a first step, I've already included code to load the `lubridate` package and define a function called `convertTimes()` similar to that we used in Class 10.
 
 I've started the outline of the function below.  Your job is to follow the exact process we used in class 9 to clean the 2018 data.  You need to replace each comment line in the `cleanNHData()` function with the code that will perform this task.   You literally just need to find the relevant line in the class code and put this into the `cleanNHData()` function.  The one exception is a new line you'll need to write that deletes rows where `Name` is missing (i.e. equal to "")
 
@@ -62,7 +62,7 @@ convertTimes <- function(v) {
 }
 
 cleanNHData <- function(data) {
-  data$Div[data$Div == ""] <- NA
+  data$Div[data$Div == ""] <- NA 
   data$Gender <- substr(data$Div, 1, 1)
   data$AgeGrp <- substr(data$Div, 2, nchar(data$Div))
   data$Nettime_min <- convertTimes(data$Nettime)
@@ -80,6 +80,9 @@ cleanNHData <- function(data) {
 nh2017 <- cleanNHData(nh2017)
 nh2018 <- cleanNHData(nh2018)
 names(nh2018)
+names(nh2017)
+head(nh2017)
+head(nh2018)
 ```
 
 
@@ -109,6 +112,12 @@ nh2017Unq <- nh2017[!duplicated(nh2017$Name), ]
 nh2018Unq <- nh2018[!duplicated(nh2018$Name), ]
 
 # dimensions of each dataframes
+dim(nh2017)
+dim(nh2017Unq)
+dim(nh2018)
+dim(nh2018Unq)
+
+# how many observations eliminated 
 dim(nh2017) - dim(nh2017Unq)
 dim(nh2018) - dim(nh2018Unq)
 ```
@@ -178,7 +187,7 @@ hist(nhcombined$improvement,
 ```
 
 
-*The majority of runners did not see a large change in their time. There are some presummed outliers (a boxplot would better annalyze this), but the IQR of improvement - which is at least 50% of the data is between -2 and 0.5 minute changes between the years. We see this in the histogram because the majority of the data stays at or around 0.*
+*The majority of runners did not see a large change in their time but there was overall improvement seen in runners who ran in both 2017 and 2018. The mean improvement time was -1.11 and the median was -0.93. There are some presumed outliers (a boxplot would better annalyze this but we can see the x axis of histogram is stretched), but the IQR of improvement - which is at least 50% of the data is between -2.6 and 0.5 minute changes between the years so most people stayed consistent. We see this in the histogram because the majority of the data stays at or around 0.*
 
 (2.5)  *(5 pts)* You'll notice a few extreme values (i.e. people got amazingly better or worse).   Print the rows of `nhcombined` that had improvement times of more than 50 in absolute value.  Update the `nhcombined` dataframe to exclude these rows and make the histogram again.
 
@@ -221,8 +230,11 @@ wb2024 <- read.csv('https://raw.githubusercontent.com/jreuning/sds230_data/refs/
 names(wb2016)
 names(wb2024)
 
-# confirm dimentions are same between datasets
+# confirm dimensions are same between datasets
 dim(wb2016) == dim(wb2024) # only rows are same; different number of columns 
+dim(wb2016) # 217 - 29
+dim(wb2024) # 217 - 18 
+# the amount of countries investigated are the same but in 2024, they looked at less variables (ie less columns)
 
 # modify each to only contain Country, Measles, and GNI
 wb2016 <- wb2016[ , c("Country", "Measles", "GNI")]
@@ -262,9 +274,7 @@ wb2016$Country_2016[wb2016$Country_2016 == "Vietnam"] <- "Viet Nam"
 
 # recheck all are same
 setequal(wb2016$Country_2016, wb2024$Country_2024) # TRUE!
-```
 
-```{r}
 # stores values of country in c of countries in 2016 that appear in 2024
 c <- wb2016$Country_2016 %in% wb2024$Country_2024
 wb2016$Country_2016 == wb2024$Country_2024
@@ -312,10 +322,10 @@ hist(wb$Measles_change,
 
 # add vertical line at no change
 abline(v = 0,
-       lwd = 3,
+       lwd = 4,
        col = 'peru')
 
-text(-1.5, 30, "No Rate Change", srt=90)
+text(-1.5, 30, "No Rate Change", srt=90, col = 'white')
 
 # side by side box plot of differences between change in Measles vaccination of countries on either side of 8000
 boxplot(wb$Measles_change ~ wb$GNI_8000,
@@ -330,8 +340,8 @@ by(wb$Measles_change, wb$GNI_8000, summary)
 ```
 
 
-*Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was 3% and 1% decrease, respectively. There are some countries that had as much of a 32% increase but some also had a 45% decrease. The spread does look normal (maybe slightly left skewed considering the mean is less than the median).*
-*Looking at the box plots, we see the points that are outliers and how the spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had just a slightly larger decrease in measles vaccination rate as the median and mean for that box is lower (0 and -2 vs -4 and -4). The spread for the countries with a GNI above 8000 is much tighter, meaning overall the data was more condensed. There are several outliers, however; many that are a larger decrease than the rest of the data and one that is an increase. The countries with a GNI below or equal to 8000 had a larger spread, both within the IQR and the whiskers. There are some noteable outliers for this plot as well.*
+*Looking at the histogram, The majority of countries saw a decrease in measles vaccination rate. The mean and median was -3% and -1% decrease, respectively. There are some countries that had as much of a 32% increase in vaccinations but some also had a 45% decrease. The spread does look normal (maybe slightly left skewed considering the mean is less than the median).*
+*Looking at the box plots, we see how the outliers and spread differs based on countries GNI. The countries with a GNI less than or equal to 8000 had just a slightly larger decrease in measles vaccination rate as the median for that box is lower. They also had a larger spread, both within the IQR and the whiskers and had more outliers that was an increased vaccination rate. The spread for the countries with a GNI above 8000 is much tighter, meaning overall the data was more condensed. There are several outliers, however; many that are a larger decrease than the rest of the data and one that is an increase. *
 
 (3.3) *(10 pts)* Create a 95% bootstrap confidence interval for the mean change in measles vaccination rates among countries with GNI < 8000. Do the same for countries with a GNI > 8000. You don't need to make any histograms of your bootstrap results, and you don't need to use the `t.test()` function.  You also are not comparing the means of these two groups - you're getting separate intervals for each GNI group.  Display the intervals and discuss what you observe.
 
@@ -350,7 +360,7 @@ for (i in 1:10000){
 }
 
 # get 95% confidence interval
-(qg <- quantile(mean_greater_8000, c(0.05, 0.95)))
+qg <- quantile(mean_greater_8000, c(0.05, 0.95))
 paste("95% CI Interval of Measles Vaccation Rates of Countries with GNI > 8000", round(qg[1], 2), "to", round(qg[2], 2))
 
 # repeat bootstrap for > 8000
@@ -362,10 +372,10 @@ for (i in 1:10000){
 }
 
 # get 95% confidence interval
-(ql <- quantile(mean_less_8000, c(0.05, 0.95)))
+ql <- quantile(mean_less_8000, c(0.05, 0.95))
 paste("95% CI Interval of Measles Vaccation Rates of Countries with GNI <= 8000", round(ql[1], 2), "to", round(ql[2], 2))
 
-#Extra
+#Extra Check
 # confirm p value with t-test 
 t.test(wb$Measles_change[wb$GNI_8000 == "Above 8000"]) #-3 to -.6 p = 0.004
 t.test(wb$Measles_change[wb$GNI_8000 == "Below or Equal to 8000"]) #-6 to -1 p = .0006
@@ -413,7 +423,7 @@ abline(v = actual_median,
        lwd = 3,
        col = 'peru')
 
-text(3.5, 1650, paste("Actual Difference in Medians = ", actual_median), srt=90)
+text(3.75, 1650, paste("Actual Difference in Medians = ", actual_median), srt=90)
 
 # obtain p value by counting what fraction of fake test statistics were more extreme than the actual one 
 mean(abs(diffmedians) >= abs(actual_median))
@@ -429,7 +439,14 @@ mean(abs(diffmedians) >= abs(actual_median))
 
 A public health group in New Haven is studying patterns of childhood and respiratory illnesses over the past 25 years, focusing on the fall season from August through mid-December. The dataset includes weekly counts of hand, foot, and mouth disease and strep throat from the first full week of August through the last full week of December.  There is also information on the academic and break/holiday schedules for Greater New Haven colleges as well as the public school system. Vaccination rates for each year (not week) are also available. Write pseudocode describing how you would explore how yearly illness incidence changes over time, test whether rates differ before and after school starts, compare high- versus low-vaccination years, and assess whether the observed differences are statistically significant.
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*Like any dataset, you would want to start by looking it over; analyzing the dim, str, names, and analyzing head and tail. I am assuming the dates and vaccination would be in the dataset somehow, but if that information is separate, you would want to analyze it individually. You will likely want to create a lubridate function loop to ensure the schedules and dates and years are all expressed the same. It would also be helpful to run some summary statistics: the mean amount of weekly cases of hand and foot and strep, what is the typical range of the calendar the schools are open, what is the average vaccination rate.*
+*Once you get familiar with the data, you will need to aggregate the weekly illness counts into "yearly" values. You can do this by summing them in a variable stored outside the df (avg_illness_year  <- sum(illness counts for that year)) or you could begin a new dataframe that is year, yearly counts of hfm, yearly counts of strep. Once you have this, you can use it to analyze the illness counts over the years. It might be helpful to make visualizations, like a histogram of the frequency of yearly illness counts or boxplots of the yearly illness counts for each illness(if the values are small, it may be necessary to do log(yearly illness) but by doing year this will be unlikely). Using the newly created variables or df, you will want to create a change in value variable that takes the yearly illness count from one year and subtracts the yearly illness count from the year prior. You could probably do this efficiently using a for loop that cycles the the pairs of years and stores the outcome in a column in the dataframe. You could then create a histogram to understand the frequency of the changes between years and the distribution of the overall changes between years. You could run a one sample t test on yearly change values to determine if there was a significant difference compared to no change (0). You could also execute a bootstrapping of the mean, median, or variance of illness change or yearly illness if we wanted to confirm any further tests of significant. This would likely be beneficial because the sample size of 25 is still relatively small. You would do this for each disease separately.*
+*To investigate whether illness differs before and after school start, you can add a tag/variable that indicates if the week reported was in school or out of school in the original df. You can do this by analyzing the schedules and writing if then statements that will tag it as this school was in session or not (ex: if you look at the public school schedule make a "if this date is after (start date) and before (first break) then it would have DURING in the tag column"). You can create histograms and boxplots of the before, during, and after weekly illness counts to see the frequency and distribution of the data. You can then run t tests to compare the weekly illness counts before, after, and during school to determine if there is a significant difference (you could do this as multiple t tests (1v1) or an ANOVA (comparing all groups)). Finally, if you want to investigate further, you can do permutation test where you switch up the labels and see if there is still a difference between the weekly illness counts regardless of if they're before, during, or after school.*
+*To analyze high vs low vaccination years, you first need to determine a cutoff of what is high and what is low. This will require some domain knowledge and consulting with an expert or the literature and will likely be specific to the vaccination (ex: we would expect/hope that measles vaccination rate might be higher than flu vaccination rate). You can create histograms and boxplots of the yearly vaccination rates to look at the distribution of the data. To compare illness in high vs low vaccination years, you could do a t test between the high and low groups. If you wanted to look further, you could also do a two sample t test between the averages of the first 12 years vs last 12 years to determine if there is a significant difference. Or you could do a one sample t test against a benchmark value, like the vaccination rate of the first reported year or the national average. If want to investigate further, you could do permutation test where you switch up the labels of "high" and "low" and see if there is a significant difference between the values. It might also be beneficial to determine a change in vaccination rates to compare to the change in illness per year value calculated earlier. You could add another variable to the newly created yearly df that is change in vaccination created similarly to the change in illness rate (vaccination year - vaccination year of year before). For the vaccination rate change, you could do a bootstrap to see if any characteristic (mean, median, variance) is significant. This would be beneficial because of the small sample size.*
+
+
+
+
 
 
 
