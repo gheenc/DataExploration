@@ -1,0 +1,153 @@
+---
+title: "Homework 06 Correlation"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+subtitle: Due by 11:59pm, Tuesday, 3.24.26
+author: S&DS 2300/5300/ENV 757
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Submission Details
+
+This homework assignment contains 3 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
+
+For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
+
+**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!**
+
+To make grading easier, please leave the following line of code in your assignment.
+
+```{r}
+set.seed(1234)
+```
+
+
+**1) Correlation of 2017 and 2018 New Haven Road Race Times**.
+
+On homework 5 you created a dataset called `nhcombined` that had times for runners who ran in both the 2017 and 2018 New Haven Road Race AFTER removing unusual observations. I've put the final resulting dataset [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/nhcombined.csv). 
+
+(1.1). Read the data into an R object called `nhcombined`.  Get the dimension and head of this data to make sure it has the same number of rows that you found in homework 5.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(1.2)  Find the code that defines the functions `myCor()` (class 11) and `permCor()` (class 12).   Paste the code for both functions in a chunk below.  Run each function on net times in 2018 and 2017 for runners in your `nhcombined` dataset to make a scatterplot of these times and to run a permutation test on the correlation between times (i.e. we're seeing if times from one year to the next are correlated within runners).  Be sure to include the resulting histogram and the p-value of the test.  Does it seem appropriate to calculate correlation (think about outliers)?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(1.3)  Repeat part 1.2), but first remove the one individual who had times over 120 minutes in both years.  Does it seem appropriate to calculation correlation now?   How does the correlation change by removing the one outying value?  Is the correlation statistically significantly different from zero?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+**2) Correlation and the Bootstrap**. 
+
+**World Bank Data: CO2 Emissions per capita and Energy Use per capita**  
+
+A `.CSV` file containing world bank data from 2016 can be downloaded [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB.2016.csv).
+
+The variables we'll consider in this example are:
+
+* `Country` : countryname
+* `EnergyUse`: kilograms of oil equivalent usage per capita
+* `CO2`: CO2 emissions per capita (metric tons)
+
+In this problem, we will take a closer look at the correlation between Energy Use per capita and CO2 Emissions per capita.
+
+(2.1)  Read the data into an object called `wb`. Then make a dataframe called `wb2` that has complete data but only contains the country name, EnergyUse and CO2.  Finally, create two new variables `logEnergy` and `logCO2` which are the natural log of each of these variables, respectively. You only need to retain these 5 columns in `wb2`.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(2.2)  Make histograms of CO2 and EnergyUse on both the raw scale and the log scale.  Then make a scatterplot of CO2 (vertical axis) and EnergyUse (horizontal axis) on both the raw scale and the log scale.  Put appropriate labels on all plots and make them look interesting (i.e. use a non-default color at least). Add the correlation to two decimal places between variables as a subtitle. Describe in a few words the shape of each distribution.  Comment on the appropriateness of calculating correlation on both the raw scale and the log scale and comment on the correlation itself.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(2.3)  Identify the one country that is an outlier from the general trend (i.e. country with very HIGH Energy Usage and very LOW Emissions per capita).  Give a one sentence reason why this country has the values it does (i.e. why is it an outlier from the trend).
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(2.4)  Calculate (and display) a parametric test of the significance of the correlation between logCO2 and logEnergy, and save the result in an object called `cor1test`.  Is the correlation statistically significantly different from zero?  What is a 96% confidence interval for the location of the true correlation?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(2.5)  Get 10000 bootstrap samples from `wb2` following the example given in Class 11.  For each sample, calculate the correlation of log(CO2) and log(Energy Use) in your sample - save results in an object called `corResults`. Calculate a 96% bootstrap confidence interval for the true correlation based on quantiles.  Save results in an objects called `ci_r` (for correlation).  Display the results for these intervals.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(2.6)  Make a histogram of the results in `corResults`.  Add vertical lines for both the theoretical confidence interval and the bootstrapped confidence interval.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(2.7)  Comment on any differences you observe between the bootstrapped CI and the theoretical CI.  
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(2.8)  Repeat parts 2.5 through 2.7 but on the RAW SCALE (i.e. use EnergyUse and CO2, not logEnergyUse and logCO2).
+
+*REPLACE THIS TEXT WITH YOUR R-chunks and Comments*
+
+(2.9)  Repeat 2.8, but without Iceland.  Write a few sentences on what changes.
+
+*REPLACE THIS TEXT WITH YOUR R-chunks and Comments*
+
+
+**3) Class Survey Data** 
+
+This questions involves cleaning and making bivariate plots of several variables from the class survey data.   I'm going to be less specific of what you need to do - I'll say that at this point you have all the tools you need to clean the data and make interesting plots.
+
+Just run the code below to get the data and remind you of the variables that exist.
+
+```{r}
+#Get data
+survey <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/class.survey.csv", header = TRUE, as.is = T)
+names(survey)
+dim(survey)
+```
+
+(3.1)   Clean the variable `ClassProb` so that all values are between zero and 1.  Assume that any value over 20 is in a percentage and should be changed to a probability.  Any value more than 1 but less than 20 should be changed to `NA`.  Make a nice looking histogram of the resulting data and comment on the shape of the distribution.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(3.2)   Clean the variables `Social` and `Econ` so that they are integer and numeric on the scale 1 to 7.  Make a two-way table of the results.  Does it appear there is a relationship between these variables?
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(3.3)   Make three scatterplots of `Social` and `Econ` - one on the raw scale, one with jittered results, one with radii proportional to the square root of the frequency. Follow the examples shown in Class 11. Each plot should include the correlation in the labels. 
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+(3.4)  Write a quick function called `cleanIt()`  that cleans the variables `Exercise` and `Coursework` so that they are numeric.  Apply this function to these two variables (which by the way are in minutes) and make histograms of the results.  In a sentence, describe what you see.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+(3.5)   Following code in classes 11 and 12, create plots `corrplot.mixed` and `chart.Correlation()` for all the variables mentioned in parts 3.1 through 3.4.  Write not more than two sentences about what you observe and what you might do next.  Note: ignore any warnings you might get, OR just include the cod `warning = F' at the top of your chunk.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+
+
+
