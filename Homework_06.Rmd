@@ -12,15 +12,6 @@ author: S&DS 2300/5300/ENV 757
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-## Submission Details
-
-This homework assignment contains 3 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
-
-For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
-
-**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!**
-
 To make grading easier, please leave the following line of code in your assignment.
 
 ```{r}
@@ -34,19 +25,141 @@ On homework 5 you created a dataset called `nhcombined` that had times for runne
 
 (1.1). Read the data into an R object called `nhcombined`.  Get the dimension and head of this data to make sure it has the same number of rows that you found in homework 5.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+nhcombined <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/nhcombined.csv")
+  
+dim(nhcombined) #985, 5 - this is the same as the data in hw5
+names(nhcombined)
+head(nhcombined)
+```
+
 
 (1.2)  Find the code that defines the functions `myCor()` (class 11) and `permCor()` (class 12).   Paste the code for both functions in a chunk below.  Run each function on net times in 2018 and 2017 for runners in your `nhcombined` dataset to make a scatterplot of these times and to run a permutation test on the correlation between times (i.e. we're seeing if times from one year to the next are correlated within runners).  Be sure to include the resulting histogram and the p-value of the test.  Does it seem appropriate to calculate correlation (think about outliers)?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# myCor() function
+myCor <- function(x, y){
+  #make the scatterplot
+  plot(x, y, pch = 19, col = "red")
+  #add text in the margin reporting the sample correlation)
+  mtext(paste("Sample Correlation =", round(cor(x, y), 3)), side = 3, cex = 1.2)
+}
+# permCor() function
+#The option below prevents R from using scientific notation!
+options(scipen = 999)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+permCor <- function(x, y, n_samp = 10000, plotit = T){
+   corResults <- rep(NA, n_samp)
+   for (i in 1:n_samp){
+      corResults[i] <- cor(x, sample(y))
+   }
+   
+   pval <- mean(abs(corResults) >= abs(cor(x, y)))
+   
+   if (plotit == T){
+      #Make histogram of permuted correlations
+      hist(corResults, col = "yellow", main = "", xlab = "Correlations", breaks = 50,
+           xlim = range(corResults,cor(x,y)))
+      mtext("Permuted Sample Correlations", cex = 1.2, line = 1)
+      mtext(paste0("Permuted P-value = ", round(pval, 4),", Calculated P-value = ", round(cor.test(x, y)$p.value, 4)), cex = 0.8, line = 0)
+      abline(v = cor(x, y), col = "blue", lwd = 3)
+      text(cor(x,y)-.02, 0, paste("Actual Correlation =", round(cor(x, y), 2)), srt = 90, adj = 0) # changed x of text to be in viewing panel
+   }
+   if (plotit == F){
+      return(round(pval, 5))
+   }  
+}
 
-(1.3)  Repeat part 1.2), but first remove the one individual who had times over 120 minutes in both years.  Does it seem appropriate to calculation correlation now?   How does the correlation change by removing the one outying value?  Is the correlation statistically significantly different from zero?
+# run on nettimes in 2018 and 2017 for runners in dataset
+myCor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)
+permCor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+# scatterplot of times 
+plot(nhcombined$Nettime_2017, nhcombined$Nettime_2018,
+     main = "Scatterplot of Nettimes for Runners in 2017 and 2018",
+     ylab = "2018 Time",
+     xlab = "2017 Time",
+     col = "coral",
+     pch = 4,
+     lwd = 2
+     )
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# permutation test on correlation between times 
+n_samp <- 10000
+
+corResults <- rep(NA, n_samp)
+
+for(i in 1:n_samp){
+  corResults[i] <- cor(sample(nhcombined$Nettime_2017), sample(nhcombined$Nettime_2018))
+}
+
+# histogram of permutation and p value of test
+truecor <- mean(abs(corResults) >= abs(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)))
+
+hist(corResults, col = "yellow", main = "", xlab = "Permuted Correlations", breaks = 50, xlim = c(-.15, .8)) # manually added xlim to see abline
+
+mtext("Permuted Sample Correlations", cex = 1.2, line = 1)
+mtext(paste0("Permuted P-value = ", round(truecor, 4),", Calculated P-value = ", round(cor.test(nhcombined$Nettime_2017, nhcombined$Nettime_2018)$p.value, 4)), cex = 0.8, line = 0)
+
+abline(v = cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), col = "blue", lwd = 3)
+text(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)-.02, 300, paste("Actual Correlation =", round(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), 2)), srt = 90) # manually changed where text appears 
+
+```
+
+*No, on the raw values there seem to be large outliers (3 specifically stick out) that are likely pulling the correlation.*
+
+(1.3)  Repeat part 1.2), but first remove the one individual who had times over 120 minutes in both years.  Does it seem appropriate to calculation correlation now?   How does the correlation change by removing the one outlying value?  Is the correlation statistically significantly different from zero?
+
+```{r}
+# find one individual with times over 120 minutes in both years
+print(nhcombined[nhcombined$Nettime_2017 > 120 & nhcombined$Nettime_2018 > 120, ])
+
+# remove their X number but maintain all other 
+nhcombined <- nhcombined[nhcombined$X != 535, ]
+
+# check individuals with times over 120 minutes in both years is removed
+print(nhcombined[nhcombined$Nettime_2017 > 120 & nhcombined$Nettime_2018 > 120, ])
+
+# repeat 1.2
+# run on nettimes in 2018 and 2017 for runners in dataset
+myCor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)
+permCor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)
+
+# scatterplot of times 
+plot(nhcombined$Nettime_2017, nhcombined$Nettime_2018,
+     main = "Scatterplot of Nettimes for Runners in 2017 and 2018",
+     ylab = "2018 Time",
+     xlab = "2017 Time",
+     col = "coral",
+     pch = 4,
+     lwd = 2
+     )
+
+# permutation test on correlation between times 
+n_samp <- 10000
+
+corResults <- rep(NA, n_samp)
+
+for(i in 1:n_samp){
+  corResults[i] <- cor(sample(nhcombined$Nettime_2017), sample(nhcombined$Nettime_2018))
+}
+
+# histogram of permutation and p value of test
+truecor <- mean(abs(corResults) >= abs(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)))
+
+hist(corResults, col = "yellow", main = "", xlab = "Permuted Correlations", breaks = 50, xlim = c(-.15, .9)) # manually added xlim to see abline
+
+mtext("Permuted Sample Correlations", cex = 1.2, line = 1)
+mtext(paste0("Permuted P-value = ", round(truecor, 4),", Calculated P-value = ", round(cor.test(nhcombined$Nettime_2017, nhcombined$Nettime_2018)$p.value, 4)), cex = 0.8, line = 0)
+
+abline(v = cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), col = "blue", lwd = 3)
+text(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)-.02, 300, paste("Actual Correlation =", round(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), 2)), srt = 90) # manually changed where text appears 
+```
+
+
+*Yes, it is more appropriate to calculate correlation now that that outlier has been removed. Looking at the scatterplot there does not appear to be any large outliers. Additionally, it fulfills the other two criteria of assessing quantiative variables and they appear to have a linear relationship.* 
+*The correlation increased from .7 to .86 and is stronger by removing the one outlier.*
+*Yes the correlation is statistically different from 0. The p value from both the calculated and permuted tests are 0 meaning it would be unlikely to be 0 at any alpha level.*
 
 
 **2) Correlation and the Bootstrap**. 
@@ -65,45 +178,259 @@ In this problem, we will take a closer look at the correlation between Energy Us
 
 (2.1)  Read the data into an object called `wb`. Then make a dataframe called `wb2` that has complete data but only contains the country name, EnergyUse and CO2.  Finally, create two new variables `logEnergy` and `logCO2` which are the natural log of each of these variables, respectively. You only need to retain these 5 columns in `wb2`.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# read in data as wb
+wb <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/WB.2016.csv")
+dim(wb)
+names(wb)
+
+# make dataframe wb2 that is complete data of country, energy and co2
+wb2 <- wb[, c("Country", "EnergyUse", "CO2")] # already dataframe
+ 
+# omit rows that have NA aka only keeps complete data 
+wb2 <- na.omit(wb2)
+rownames(wb2) <- NULL # resets row index to be 1, 2, 3... after saving only complete data
+
+# make sure no values are 0 that would require adding a base 
+range(wb2$EnergyUse) # no 0s
+range(wb2$CO2) # no 0s
+
+# create new variable logenergy
+wb2$logEnergy <- log(wb2$EnergyUse)
+
+# create new variable logCO2
+wb2$logCO2 <- log(wb2$CO2)
+
+# check dim of wb2 to ensure only 5 columns remain
+dim(wb2)
+names(wb2)
+
+# check there are no na
+sum(is.na(wb2)) # 0!
+```
+
 
 (2.2)  Make histograms of CO2 and EnergyUse on both the raw scale and the log scale.  Then make a scatterplot of CO2 (vertical axis) and EnergyUse (horizontal axis) on both the raw scale and the log scale.  Put appropriate labels on all plots and make them look interesting (i.e. use a non-default color at least). Add the correlation to two decimal places between variables as a subtitle. Describe in a few words the shape of each distribution.  Comment on the appropriateness of calculating correlation on both the raw scale and the log scale and comment on the correlation itself.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# make histogram of CO2 and EnergyUse on raw scale
+hist(wb2$CO2,
+     main = "CO2 Emissions on Raw Scale",
+     xlab = "CO2 Emissions",
+     breaks = 10,
+     col = "cadetblue2")
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+hist(wb2$EnergyUse,
+     main = "Energy Use on Raw Scale",
+     xlab = "Energy Use",
+     breaks = 10,
+     col = "darkolivegreen2")
+
+# make histogram of CO2 and EnergyUse on log scale
+hist(wb2$logCO2,
+     main = "CO2 Emissions on Log Scale",
+     xlab = "CO2 Emissions",
+     breaks = 10,
+     col = "cadetblue4")
+
+hist(wb2$logEnergy,
+     main = "Energy Use on Log Scale",
+     xlab = "Energy Use",
+     breaks = 10,
+     col = "darkolivegreen4")
+
+# scatterplot of CO2(y) and EnergyUse (x) on raw scale; add corr two decimal points as subtitle
+plot(wb2$EnergyUse, wb2$CO2,
+     ylab = "CO2 Use",
+     xlab = "Energy Use",
+     col = "darkorange2",
+     pch = 3,
+     lwd = 2)
+mtext("Scatterplot of CO2 Emissions and Energy Use on Raw Scale", line = 1.25, font = 2) # title
+mtext(paste("Correlation = ", round(cor(wb2$EnergyUse, wb2$CO2), 2)), cex = 0.8, font = 3) # subtitle
+
+# scatterplot of CO2(y) and EnergyUse (x) on log scale; add corr two decimal points as subtitle
+plot(wb2$logEnergy, wb2$logCO2,
+     ylab = "CO2 Use",
+     xlab = "Energy Use",
+     col = "darkorange4",
+     pch = 3,
+     lwd = 2)
+mtext("Scatterplot of CO2 Emissions and Energy Use on Log Scale", line = 1.25, font = 2) # title
+mtext(paste("Correlation = ", round(cor(wb2$logEnergy, wb2$logCO2), 2)), cex = 0.8, font = 3) # subtitle
+```
+
+*Both variables on a raw scale are right skewed. In log scale, they are closer to normal distribution.*
+*For both the raw and log scale, it is an analysis between two quantitative variables and they seem to have a linear relationship. There are some outliers on the raw scale that might make correlation not the best analysis. On the log scale, these outliers are not present. This is perhaps reflected in the value of the correlation because the correlation is stronger on the log scale compared to the raw scale. Both correlations are strongly positive.*
 
 (2.3)  Identify the one country that is an outlier from the general trend (i.e. country with very HIGH Energy Usage and very LOW Emissions per capita).  Give a one sentence reason why this country has the values it does (i.e. why is it an outlier from the trend).
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# find what country has high energy use and low emissions; values inserted from looking at scatterplot and identifying possible x and y coordinates
+print(wb2[wb2$EnergyUse > 15000 & wb2$CO2 < 10, ])
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+```
+
+
+*Iceland has high energy usage but low CO2 emissions. Iceland is very cold, so they have to use a lot of energy, but because of their geographical placement and natural resources, they are using very clean energy leading to low CO2 emissions.*
 
 (2.4)  Calculate (and display) a parametric test of the significance of the correlation between logCO2 and logEnergy, and save the result in an object called `cor1test`.  Is the correlation statistically significantly different from zero?  What is a 96% confidence interval for the location of the true correlation?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# parametric test of significance of correlations between logCO2 and logEnergy
+cor1test <-  cor.test(wb2$logCO2, wb2$logEnergy)
+cor1test
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# 96% confidence interval of true correlation 
+truecor <- cor.test(wb2$logCO2, wb2$logEnergy, conf.level = 0.96)
+truecor
+```
+
+
+*Yes, with a p value of essentially 0, it is likely the true correlation is not equal to 0 evaluated at any alpha level.*
+*A 96% confidence interval places that the location of the true correlation is between 0.89 and 0.94.*
 
 (2.5)  Get 10000 bootstrap samples from `wb2` following the example given in Class 11.  For each sample, calculate the correlation of log(CO2) and log(Energy Use) in your sample - save results in an object called `corResults`. Calculate a 96% bootstrap confidence interval for the true correlation based on quantiles.  Save results in an objects called `ci_r` (for correlation).  Display the results for these intervals.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# 10000 bootstrap samples 
+corResults <- rep(NA, 10000)
+data <- wb2 
+N <- nrow(data) # calculate number of row
+
+for(i in 1:10000){
+  #get vector of rows in our fake sample
+  s <- sample(1:N, N , replace = T) # taking sample of row numbers that will be chosen, sometimes more than once because done with replacement
+  
+  #Calculate unique rows in our sample
+  sVals <- as.numeric(names(table(s))) # extracts unique row numbers selected 
+  
+  #Calculate how many times each row shows up
+  sCounts <-  as.vector(table(s))
+  
+  #Get bootstrapped data - choose pairs of rows multiple times or not at all
+  fakeData <-  data[s, ] # actually pulls rows of data 
+    
+  #calculates correlation 
+  corResults[i] <- cor(fakeData[, 4], fakeData[,5])} # columns 4 and 5 are logEnergy and logCO2
+    
+# calculate 96% bootstrap ci for true correlation
+ci_r <- quantile(corResults, c(0.02, 0.98))
+round(ci_r, 2)
+```
 
 (2.6)  Make a histogram of the results in `corResults`.  Add vertical lines for both the theoretical confidence interval and the bootstrapped confidence interval.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# histogram of corResults 
+hist(corResults,
+     main = "Correlation Results of 10000 Bootstrap Tests \n Between logCO2 and logEnergyUse",
+     xlab = "Correlation Value",
+     xlim = c(0.82, 1),
+     col = "brown4")
+abline(v = ci_r, col = "black", lwd = 3, lty = 2)
+abline(v = truecor$conf.int, col = "grey", lwd = 3, lty = 3)
+legend(0.82, 2500, c("Bootstrapped CI", "Theoretical CI"), lwd = 3, col = c("black","grey"), lty = c(2, 3))
+```
+
 
 (2.7)  Comment on any differences you observe between the bootstrapped CI and the theoretical CI.  
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*The bootstrapped CI is wider than the theoretical CI on both the left and the right side. This could be due to the presence of some high and low values that when they are continually included or not included, can skew the data.*
 
 (2.8)  Repeat parts 2.5 through 2.7 but on the RAW SCALE (i.e. use EnergyUse and CO2, not logEnergyUse and logCO2).
 
-*REPLACE THIS TEXT WITH YOUR R-chunks and Comments*
+```{r}
+# repeat 2.5
+# 10000 bootstrap samples 
+corResults <- rep(NA, 10000)
+data <- wb2 
+N <- nrow(data) # calculate number of row
+
+for(i in 1:10000){
+  #get vector of rows in our fake sample
+  s <- sample(1:N, N , replace = T) # taking sample of row numbers that will be chosen, sometimes more than once because done with replacement
+  
+  #Calculate unique rows in our sample
+  sVals <- as.numeric(names(table(s))) # extracts unique row numbers selected 
+  
+  #Calculate how many times each row shows up
+  sCounts <-  as.vector(table(s))
+  
+  #Get bootstrapped data - choose pairs of rows multiple times or not at all
+  fakeData <-  data[s, ] # actually pulls rows of data 
+    
+  #calculates correlation 
+  corResults[i] <- cor(fakeData[, 2], fakeData[ ,3])} # columns 2 and 3 are EnergyUse and CO2
+    
+# calculate 96% bootstrap ci for true correlation
+ci_r <- quantile(corResults, c(0.02, 0.98))
+
+# repeat 2.6
+# create theoretical correlation of raw scale 
+truecorRaw <- cor.test(wb2$CO2, wb2$EnergyUse, conf.level = 0.96)
+
+# histogram of corResults 
+hist(corResults,
+     main = "Correlation Results of 10000 Bootstrap Tests \n Between CO2 and EnergyUse",
+     xlab = "Correlation Value",
+     xlim = c(0.45, 1),
+     col = "brown4")
+abline(v = ci_r, col = "black", lwd = 3, lty = 2)
+abline(v = truecorRaw$conf.int, col = "grey", lwd = 3, lty = 3)
+legend(0.5, 3000, c("Bootstrapped CI", "Theoretical CI"), lwd = 3, col = c("black","grey"), lty = c(2, 3))
+```
+
+*The correlation value and confidence interval from the he bootstrapped samples is a lot wider than the theoretical correlation value and confidence interval. This could be due to the fact that many of the data points are clustered in the lower values, but there are some wide outliers, so depending on how they are sampled and represented in the bootstrapped sample, it could change the correlation and confidence interval a lot.  *
 
 (2.9)  Repeat 2.8, but without Iceland.  Write a few sentences on what changes.
 
-*REPLACE THIS TEXT WITH YOUR R-chunks and Comments*
+```{r}
+# remove Iceland 
+data <- wb2[wb2$Country != "Iceland", ]
+
+# run theoretical CI without Iceland 
+truecorRaw2 <- cor.test(data$CO2, data$EnergyUse, conf.level = 0.96)
+
+# repeat 2.5
+# 10000 bootstrap samples 
+corResults <- rep(NA, 10000)
+N <- nrow(data) # calculate number of row
+
+for(i in 1:10000){
+  #get vector of rows in our fake sample
+  s <- sample(1:N, N , replace = T) # taking sample of row numbers that will be chosen, sometimes more than once because done with replacement
+  
+  #Calculate unique rows in our sample
+  sVals <- as.numeric(names(table(s))) # extracts unique row numbers selected 
+  
+  #Calculate how many times each row shows up
+  sCounts <-  as.vector(table(s))
+  
+  #Get bootstrapped data - choose pairs of rows multiple times or not at all
+  fakeData <-  data[s, ] # actually pulls rows of data 
+    
+  #calculates correlation 
+  corResults[i] <- cor(fakeData[, 2], fakeData[ ,3])} # columns 2 and 3 are EnergyUse and CO2
+    
+# calculate 96% bootstrap ci for true correlation
+ci_r <- quantile(corResults, c(0.02, 0.98))
+
+# repeat 2.6
+# create theoretical correlation of raw scale 
+truecorRaw <- cor.test(wb2$CO2, wb2$EnergyUse, conf.level = 0.96)
+
+# histogram of corResults 
+hist(corResults,
+     main = "Correlation Results of 10000 Bootstrap Tests \n Between CO2 and EnergyUse",
+     xlab = "Correlation Value",
+     xlim = c(0.87, 1),
+     col = "brown4")
+abline(v = ci_r, col = "black", lwd = 3, lty = 2)
+abline(v = truecorRaw2$conf.int, col = "grey", lwd = 3, lty = 3)
+legend(0.87, 2000, c("Bootstrapped CI", "Theoretical CI"), lwd = 3, col = c("black","grey"), lty = c(2, 3))
+```
+*Without Iceland, the values are more condensed into what we would expect the range of frequency for correlation values to be. The bootstrapped CI is still quite a bit wider than the theoretical, showing that there are still some outlier values that can cause the intervals to change quite a bit. Overall, without the large outlier of Iceland, the distribution of values is much more as expected. *
 
 
 **3) Class Survey Data** 
