@@ -105,8 +105,7 @@ abline(v = cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), col = "blue", 
 text(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)-.02, 300, paste("Actual Correlation =", round(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), 2)), srt = 90) # manually changed where text appears 
 
 ```
-
-*No, on the raw values there seem to be large outliers (3 specifically stick out) that are likely pulling the correlation.*
+*No it is not appropriate to calculate correlation on the raw values as there seems to be large outliers (3 specifically stick out) that are likely pulling the correlation.*
 
 (1.3)  Repeat part 1.2), but first remove the one individual who had times over 120 minutes in both years.  Does it seem appropriate to calculation correlation now?   How does the correlation change by removing the one outlying value?  Is the correlation statistically significantly different from zero?
 
@@ -155,7 +154,6 @@ mtext(paste0("Permuted P-value = ", round(truecor, 4),", Calculated P-value = ",
 abline(v = cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), col = "blue", lwd = 3)
 text(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018)-.02, 300, paste("Actual Correlation =", round(cor(nhcombined$Nettime_2017, nhcombined$Nettime_2018), 2)), srt = 90) # manually changed where text appears 
 ```
-
 
 *Yes, it is more appropriate to calculate correlation now that that outlier has been removed. Looking at the scatterplot there does not appear to be any large outliers. Additionally, it fulfills the other two criteria of assessing quantiative variables and they appear to have a linear relationship.* 
 *The correlation increased from .7 to .86 and is stronger by removing the one outlier.*
@@ -443,36 +441,197 @@ Just run the code below to get the data and remind you of the variables that exi
 #Get data
 survey <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/class.survey.csv", header = TRUE, as.is = T)
 names(survey)
-dim(survey)
+dim(survey) # 239 reponses on 17 questions 
+
+#install.packages("dplyr")
+library(dplyr) # load dplyr to use pipes
 ```
 
 (3.1)   Clean the variable `ClassProb` so that all values are between zero and 1.  Assume that any value over 20 is in a percentage and should be changed to a probability.  Any value more than 1 but less than 20 should be changed to `NA`.  Make a nice looking histogram of the resulting data and comment on the shape of the distribution.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# clean variable ClassProb with all values between 0-1
+# examine ClassProb
+survey$ClassProb
+range(survey$ClassProb) # range from .5 to 100
+str(survey$ClassProb) # already numeric
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# check for NA or blanks before any manipulation
+survey$ClassProb[survey$ClassProb == "" | is.na(survey$ClassProb)] # none are blank or empty
+
+# change any value between 1 and 20 to be NA 
+survey$ClassProb[survey$ClassProb > 1 & survey$ClassProb < 20] <- NA
+
+# any value over 20 from percentage to probability 
+survey$ClassProb[survey$ClassProb > 20] <- survey$ClassProb[survey$ClassProb > 20] / 100
+
+# recheck survey$ClassProb
+str(survey$ClassProb) # still numeric
+range(survey$ClassProb) # 0.5 - 1 yay!
+survey$ClassProb[survey$ClassProb == "" | is.na(survey$ClassProb)] # none are blank or empty
+
+# histogram 
+hist(survey$ClassProb,
+     main = "Frequency of Response to ClassProb",
+     xlab = "Probablity You Will Take the Class",
+     col = "red4")
+```
+
+
+*The histogram is heavily left skewed. This is likely due to the fact probability is a strict range of 0-1. A lot of students felt likely to take the class, causing a lot of data to be bunched on the right side.*
 
 (3.2)   Clean the variables `Social` and `Econ` so that they are integer and numeric on the scale 1 to 7.  Make a two-way table of the results.  Does it appear there is a relationship between these variables?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# examine social 
+survey$Social # some have just numeric values, some have words after
+unique(survey$Social)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# check for NA or blanks before any manipulation
+survey$Social[survey$Social == "" | is.na(survey$Social)] # none are blank or empty
+
+# make "No answer text provided." NA
+survey$Social[survey$Social == "No answer text provided."] <- NA
+
+# drop Social# drop anything that is not numeric
+survey$Social <- gsub("[A-Z, a-z]", "", survey$Social)
+#drop =
+survey$Social <- gsub("=", "", survey$Social)
+
+# examine econ 
+survey$Econ # some have just numeric values, some have words after
+unique(survey$Econ)
+
+# check for NA or blanks before any manipulation
+survey$Econ[survey$Econ == "" | is.na(survey$Econ)] # none are blank or empty
+# there is a blank; impute NA
+survey$Econ[survey$Econ == ""] <- NA
+
+# drop anything that is not numeric
+survey$Econ <- gsub("[A-Z, a-z]", "", survey$Econ)
+#drop =
+survey$Econ <- gsub("=", "", survey$Econ)
+
+# find range of both 
+range(na.omit(survey$Social)) # 1-7
+range(na.omit(survey$Econ)) # 1-7
+
+# drop NAs and make numeric
+survey$Social <- as.numeric(survey$Social)
+survey$Econ <- as.numeric(survey$Econ)
+
+# check structure
+str(survey$Social)
+str(survey$Econ)
+
+# make two way table of the results 
+cat("Two Way Table of Counts Between Econ and Social \n")
+table(Social = survey$Social, Econ = survey$Econ)
+
+cat("Two Way Table of Percents Between Econ and Social \n")
+round(prop.table(table(Social = survey$Social, Econ = survey$Econ))*100, 1)
+```
+
+
+*There does seem to be a relationship between the variables. COMMENT MORE*
 
 (3.3)   Make three scatterplots of `Social` and `Econ` - one on the raw scale, one with jittered results, one with radii proportional to the square root of the frequency. Follow the examples shown in Class 11. Each plot should include the correlation in the labels. 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# scatterplot - raw scale
+plot(survey$Social, survey$Econ,
+     xlab = "Responses to Social",
+     ylab = "Responses to Econ", 
+     col = "lightsteelblue1",
+     pch = 16)
+mtext("Scatterplot Between Social and Econ Survey Results", line = 1.25, font = 2)
+mtext(paste("Correlation = ", round(cor.test(survey$Social, survey$Econ)$estimate, 2)), line = 0, font = 3)
+
+
+# scatterplot - jitter
+plot(jitter(survey$Social), jitter(survey$Econ),
+     xlab = "Responses to Social",
+     ylab = "Responses to Econ", 
+     col = "lightsteelblue2",
+     pch = 16)
+mtext("Scatterplot Between Social and Econ Survey Results \n with Jitter", line = 1.5, font = 2)
+mtext(paste("Correlation = ", round(cor.test(survey$Social, survey$Econ)$estimate, 2)), line = 0, font = 3)
+
+# scatterplot - radii proportional to square root of frequency
+#Turn table of occurances into a vector
+freq <- as.vector(table(survey$Social, survey$Econ))
+
+#gives every possible combination pair
+x1 <- rep(c(1:7), 7)
+y1 <- rep(c(1:7), each = 7)
+
+#Make plot - area of character is proportional to frequency of occurence (i.e. square root of count)
+plot(x1, y1, #plotting every combination possible
+     xlab = "Responses to Social",
+     ylab = "Responses to Econ", 
+     col = "lightsteelblue3",
+     cex = sqrt(freq/max(freq)*30), # makes as large as frequency of responses
+     pch = 16)
+mtext("Scatterplot Between Social and Econ Survey Results", line = 1.5, font = 2)
+mtext(paste("Correlation = ", round(cor.test(survey$Social, survey$Econ)$estimate, 2)), line = 0, font = 3)
+text(x1[freq >0], y1[freq >0], freq[freq >0], cex = log(freq/max(freq)*3 + 1), col = "black") # add text on top of points, except 0
+
+```
+
 
 (3.4)  Write a quick function called `cleanIt()`  that cleans the variables `Exercise` and `Coursework` so that they are numeric.  Apply this function to these two variables (which by the way are in minutes) and make histograms of the results.  In a sentence, describe what you see.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# explore Exercise and Coursework
+survey$Exercise
+survey$Coursework
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# write function called cleanIt() cleaning variables Exercise and Coursework to be numeric
+cleanIt <- function(data) {
+  data <- gsub("[^0-9]", "", data)
+  as.numeric(data)
+}
+
+survey$Coursework[is.na(as.numeric(survey$Coursework))]
+
+# apply function to Exercise
+survey$Exercise <- cleanIt(survey$Exercise)
+#check structure
+str(survey$Exercise)
+
+# apply function to Coursework
+survey$Coursework <- cleanIt(survey$Coursework)
+#check structure
+str(survey$Coursework)
+
+# histogram of Exercise
+hist(survey$Exercise,
+     col = "maroon3",
+     main = "Frequency of Exercise Answers in Survey",
+     xlab = "Exercise Values",
+     ylim = c(0, 100))
+
+# histogram of Coursework
+hist(survey$Coursework,
+     col = "maroon4",
+     main = "Frequency of Coursework Answers in Survey",
+     xlab = "Coursework Values",
+     ylim = c(0, 150))
+```
+
+*Both distributions are right-skewed, but they have different ranges. For both coursework and exercise, low value answers were the most popular but with coursework there are a lot of values under 500 with some high outliers out past 2000; with exercise, there is more values spread out amongst the whole range but the low values under 200 are still the most popular.*
 
 (3.5)   Following code in classes 11 and 12, create plots `corrplot.mixed` and `chart.Correlation()` for all the variables mentioned in parts 3.1 through 3.4.  Write not more than two sentences about what you observe and what you might do next.  Note: ignore any warnings you might get, OR just include the cod `warning = F' at the top of your chunk.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r, warning = F}
+# create corrplots.mixed plots 
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# create chart.Correlation*()
+```
+
+
+*Write not more than two sentences about what you observe*
+*what you might do next*
 
 
 
