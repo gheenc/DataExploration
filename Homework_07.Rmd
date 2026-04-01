@@ -57,14 +57,13 @@ colnames(simdata)
 ```{r}
 # fit simple linear regression model predicting y using x1
 mod1 <- lm(y ~ x1, data = simdata)
-summary(mod1$r.squared)
-
+round(summary(mod1)$r.squared, 4)
 ```
 
-
-*Does it appear that `x1` is a significant predictor of `y`?*
-*What is the value of R-squared (use `summary(mod1)$r.squared`)?*
-*Interpret its value in the context of the model*
+##CHECK: CAN YOU SAY IT EXPLAINS 14.2% OF THE VARIABILITY 
+*There does seem to be some positive correlation between x1 and y, so x1 would be a significant predictor of y.*
+*R-squared = 0.1419*
+*This means some 14.19% of the variability in y could be explained by x1.*
 
 1.2) Using a for-loop, now expand your linear regression model in (a) by iteratively adding in one more predictor at a time. That is to say, the first iteration of your for-loop should use `x1` as a predictor; the second iteration of your for-loop should use `x1`, and `x2`; and so on, until all 14 predictors are used in your model. Store the values of R-squared in a vector called `rsqvals` of length 14, so that the `rsqvals[i]` should contain the value of R-squared for a model using predictors `x1` through `xi`.  Finally, display the values in `rsqvals`.
 
@@ -76,13 +75,37 @@ m7 <- lm(y ~ ., data = simtemp)
 ```
 
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# rsqvals contain value of r-squared for model of predictors 
+rsqvals <- rep(NA, 14)
+
+for (i in 1:14) {
+  simtemp <- simdata[,1:(i+1)]
+  mod2 <- lm(y ~ ., data= simtemp)
+  rsqvals[i] <- round(summary(mod2)$r.squared, 4)
+}
+rsqvals
+```
+
 
 1.3 How many predictors did it take to reach an R-squared of 1 (write a line of code to get this value)? Display a plot that shows the increase in R-squared with an increasing number of predictors.  Be sure to label your plot.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# how many predictors to reach R-squared of 1
+min(which(rsqvals == 1))
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# plot to show increase in R-squared 
+x <- seq(1, 14)
+plot(x, rsqvals, type = "b",
+     main = "R-squared Values with Increasing Number of Predictors",
+     xlab = "Number of Predictors",
+     ylab = "R-squared Values", 
+     col = "coral4")
+
+```
+
+
+*It took 9 predictors to reach an r-squared value of 1.*
 
 
 **2) Ohio Crime Data** 
@@ -95,32 +118,50 @@ The data itself is [HERE](https://raw.githubusercontent.com/jreuning/sds230_data
 
 2.1)  Read the data into an object called `crime`.  Get the dimension and column names of `crime`.  You won't need the `as.is = TRUE` option.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# read data in
+crime <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/ohiocrime.csv")
+
+# get dimensions and column names
+dim(crime) # 559 respondants on 99 questions 
+names(crime)
+```
 
 2.2)  First consider the variables in columns 10 through 23; these are 14 questions having to do with attitudes toward preventing crime (see PDF file).   Each question is on a 6 point scale (see PDF file for particular levels).  Your first task is to visually examine the correlations with the `corrplot.mixed` function discussed in class 11.
 
 I've given an outline chunk below. Your job is to fill in the details as indicated.  Be sure to remove `eval = F` before knitting.
 
 
-```{r fig.height = 5, fig.width = 5, eval = F}
+```{r fig.height = 5, fig.width = 5}
 
 #note the options above are to make plots work properly in the corrplot package.
 
 #Load the corrplot package
+library('corrplot')
 
-cor1 <- #calculate pairwise correlations for columns 10-23 of crime.  You'll need the   use = "pairwise.complete.obs" option.
+#calculate pairwise correlations for columns 10-23 of crime.  You'll need the   use = "pairwise.complete.obs" option.
+cor1 <- cor(crime[, 10:23], use = "pairwise.complete.obs")
 
-#round cor1 to 2 decimal places and display the result.  
+#round cor1 to 2 decimal places and display the result.
+cor1 <- round(cor1, 2)
+cor1
   
-#WRITE A DESCRIPTION HERE OF THE PURPOSE OF THE FOLLOWING LINE.
+#this is finding the array index location of the largest correlation coefficent
 maxloc <- which(cor1 == max(cor1[cor1<1]), arr.ind = TRUE)
+# V19, row 10 column 1; V10, row 1 column 10
+# this means the largest correlation is between 19 and 10
 
-#WRITE A DESCRIPTION HERE OF THE PURPOSE OF THE FOLLOWING LINE.
+## CHECK I DONT FEEL LIKE THIS IS RIGHT 
+#this is looking into the first column of maxloc that we just made and then returning the name of crime variable columns that are in maxloc
 names(crime[10:23])[maxloc[1,]]
+# this again return V19, V10 that shows the largest correlation is between them
 
 #Create an object called sigcorr that has the results of cor.mtest for columns 10-23 of the crime data.  Use 95% CI.
+sigcorr <- cor.mtest(crime[10:23], conf.level = 0.95)
 
 #Use corrplot.mixed to display confidence ellipses, pairwise correlation values, and put on 'X' over non-significant values.
+corrplot.mixed(cor(crime[, 10:23], use = "pairwise.complete.obs"), lower.col = "black", upper = "ellipse", tl.col = "black", number.cex = .7, order = "hclust", tl.pos = "lt", tl.cex = .7, p.mat = sigcorr$p, sig.level = 0.05)
+
 
 ```
 
@@ -131,27 +172,60 @@ names(crime[10:23])[maxloc[1,]]
 
 2.4) Make a scatterplot of values for the two questions that had the highest pairwise correlation.  Make sure your plot has labels for each axis (and not 'V10' - something with meaning).  Include two top titles  - one for the plot as a whole, one which reports the sample correlation to two decimal places.  How helpful is this plot?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r fig.height = 5, fig.width = 8}
+# scatterplot for two questions with highest pairwise correlation
+plot(crime$V19, crime$V10,
+     xlab = "V19: Agreement with job programs",
+     ylab = "V10: Agreement with summer youth programs",
+     pch = 19, 
+     col = "steelblue3")
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+mtext("Correlation Between Questions 19 and 10", line = 2)
+mtext(paste("Sample Correlation = ", round(cor(crime$V19, crime$V10, use = "pairwise.complete.obs"), 2)), cex = .9, line = 1 )
+```
+
+
+*This plot is not very helpful because the questions are on 6 point Likert scales. It basically just shows that people answered almost all option combinations.*
 
 2.5)  Repeat part 2.4) but jitter results in both directions.  Write a sentence about what you observe.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r fig.height = 5, fig.width = 8}
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# with jitter, scatterplot for two questions with highest pairwise correlation
+plot(jitter(crime$V19), jitter(crime$V10),
+     xlab = "V19: Agreement with job programs",
+     ylab = "V10: Agreement with summer youth programs",
+     pch = 19, 
+     col = "steelblue3")
+
+mtext("Correlation Between Questions 19 and 10", line = 2)
+mtext(paste("Sample Correlation = ", round(cor(crime$V19, crime$V10, use = "pairwise.complete.obs"), 2)), cex = .9, line = 1 )
+```
+
+
+*There is more jitter in the top right corner, which is answering high agreement with both programs, and less litter in the lower answer options.*
 
 We are now going to proceed with performing stepwise regression. In particular, we're going to fit a model that looks at possible predictors of question V45 (you'll want to look up what this question is).   To do this, I'm making a new dataset called `crime2` which contains the relevant columns (notice I'm putting the response variable FIRST).  Be sure to remove the option `eval = F`.
 
-```{r, eval = F}
-crime2 <- crime[, c(45, 10:23, 65, 70, 72, 87, 86)]
+```{r}
+crime2 <- crime[, c(45, 10:23, 65, 70, 72, 87, 86)] # 45 is response variable
 names(crime2)
-dim(crime2)
+dim(crime2) # 559 responses, 20 questions 
 ```
 
 2.6)  Perform best subsets regression using the `regsubsets` function in the `leaps` package.  Save the results in an object called `mod2`.  Get the summary of `mod2` and save the results in an object called `mod2sum`.  Display `mod2sum$which` to get a sense of which variables are included at each step of best subsets.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# perform best subset regression 
+#install.packages('leaps')
+library('leaps')
+
+ncol(crime2) # 20 columns therefore nvmax = 20-1
+mod2 <- regsubsets(crime2$V45 ~ ., data = crime2, nvmax = 19)
+mod2sum <- summary(mod2)
+mod2sum$which
+```
+
 
 2.7)  Following the example in classes 13-16, examine the best model according to highest r-squared.  Here are your steps:
 
@@ -160,39 +234,135 @@ dim(crime2)
 *  Make a temporary dataset called `crimetemp` which has the columns of `crime2` that were included in this model.
 *  Fit the model and return summary information for the model.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# modnum object containing row numbers for model with highest r-squared
+modnum <- which.max(mod2sum$rsq)
+
+# print variable names for predictors in model
+names(crime2)[mod2sum$which[which.max(mod2sum$rsq), ]][-1]
+
+# temporary dataset with all columns included in model
+crimetemp <- crime2[ , mod2sum$which[which.max(mod2sum$rsq), ]]
+
+# fit model, return summary info for model
+summary(lm(V45 ~ ., data = crimetemp))
+
+```
+
 
 2.8)  Repeat 2.7) for adjusted R-squared.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# adjusted r squared 
+# modnum object containing row numbers for model with highest adj r-squared
+modnum <- which.max(mod2sum$adjr2)
+
+# print variable names for predictors in model
+names(crime2)[mod2sum$which[which.max(mod2sum$adjr2), ]][-1]
+
+# temporary dataset with all columns included in model
+crimetemp <- crime2[ , mod2sum$which[which.max(mod2sum$adjr2), ]]
+
+# fit model, return summary info for model
+summary(lm(V45 ~ ., data = crimetemp))
+
+```
+
 
 2.9)  Repeat 2.7) for BIC.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# repeat BIC - want the lowest
+# modnum object containing row numbers for model with highest r-squared
+modnum <- min(mod2sum$bic)
+
+# print variable names for predictors in model
+names(crime2)[mod2sum$which[which.min(mod2sum$bic), ]][-1]
+
+# temporary dataset with all columns included in model
+crimetemp <- crime2[ , mod2sum$which[which.min(mod2sum$bic), ]]
+
+# fit model, return summary info for model
+summary(lm(V45 ~ ., data = crimetemp))
+
+```
+
 
 2.10)  Repeat 2.7) for the Cp Statistic.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# repeat Cp statistic
+# modnum object containing row numbers for model with highest r-squared
+modnum <- min(c(1:length(mod2sum$cp))[mod2sum$cp <= c(1:length(mod2sum$cp))+1])
+
+# print variable names for predictors in model
+names(crime2)[mod2sum$which[modnum, ]][-1]
+
+# temporary dataset with all columns included in model
+crimetemp <- crime2[ , mod2sum$which[modnum, ]
+
+# fit model, return summary info for model
+summary(lm(V45 ~ ., data = crimetemp))
+
+```
+
 
 2.11)  We choose as our final model the model indicated by BIC.  Go refit this model and save the results in an object called `modfin`.  How many observations had missing values in this model vs. the number of observations with missing values in the model with all predictors?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# refit BIC model
+# print variable names for predictors in model
+names(crime2)[mod2sum$which[which.min(mod2sum$bic), ]][-1]
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# temporary dataset with all columns included in model
+crimetemp <- crime2[ , mod2sum$which[which.min(mod2sum$bic), ]]
+
+# fit model, return summary info for model
+modfin <- lm(V45 ~ ., data = crimetemp)
+summary(modfin)
+
+# how many observations had missing values in model
+sum(is.na(crimetemp)) #31
+
+# how many observations had missing values in  model with all predictors
+sum(is.na(crime2)) #143
+```
+
+
+*There are 31 missing values in the lowest BIC model. There are 143 missing values in the model with all the predictors, so this one had more missing values because more columns of data were used.*
 
 2.12)  Make two residual plots - studentized residuals vs fitted values (with boundaries at +/-2 and +/-3) as well a normal quantile plot of the residuals. Write a few sentences about how the plots do/do not indicate that we've met the assumptions of our regression model.  Note : the six-toed beast that seems to have slashed the plot of fits vs. residuals is exactly what we would expect.   Why is this?
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+library('car')
+# studentized residual plot
+plot(rstudent(modfin) ~ modfin$fitted.values, pch = 19, col = 'red3',
+     main = "Plot of Fits vs Studentized Residuals",
+     xlab = "Fitted Values",
+     ylab = "Studentized Residuals",
+     ylim = c(-4, 4))
+abline(h = 0, lwd = 3)
+abline(h = c(2, -2), lty = 2, lwd = 3, col = "blue4")
+abline(h = c(3, -3), lty = 2, lwd = 3, col = "green4")
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+## CHECK: is this supposed to be studentized residuals
+# normal quantile plot of residuals 
+qqp(rstudent(modfin), pch = 19, 
+    main = "Normal Quantile Plot of Studentized Residuals")
+```
+
+
+*The plot looks like a 6 fingered beast because both questions are on a 6 point Likert scale, meaning they are more categorical than continuous. This is also why it does not indicate we've met the assumptioms of our regression model.*
 
 2.13)  Run the code below.  Describe what this does in not more than two sentences.
 
-```{r, eval = F}
+```{r}
 
 CIs <- confint(modfin)
 coefs <- coef(modfin)
-library(plotrix)
+#install.packages('plotrix')
+library('plotrix')
 plotCI(1:(length(coefs)-1), coefs[-1], 
        ui = CIs[-1,2], li = CIs[-1,1], 
        xlab = "", 
@@ -205,14 +375,19 @@ axis(side = 1, at = 1:(length(coefs)-1), label = names(coefs)[-1], las = 2)
 
 ```
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*This is plotting the coefficient and 95% confidence interval of each predictor in the best model (the one with the lowest BIC), and highlights 0 x so you can visually see if a predictor is negative or positive. None cross 0 either, indicating all are significant at a 95% confidence level.*
 
 2.14)  FINALLY - write a short paragraph discussing your model results.
+```{r}
+summary(modfin)
+summary(modfin)$r.squared # 0.2264285
+```
 
 *  Comment on R-squared
 *  Comment on direction and interpretation of each of the predictors included in the final model.   Are you surprised in any instance?
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*The R-squared for this model is 0.2264, meaning there is a slight positive correlation. All predictors are between -.3 and .3, with V72 and V10 being the only negative predictors. This indicates that . Overall, all predictors are very significant, esentially 0, excite V22 which is not statistically significant at 0.001 alpha.*
+*look back at questions; are there any surprises*
 
 3)  Pseudocode
 
