@@ -61,7 +61,7 @@ round(summary(mod1)$r.squared, 4)
 ```
 
 ##CHECK: CAN YOU SAY IT EXPLAINS 14.2% OF THE VARIABILITY 
-*There does seem to be some positive correlation between x1 and y, so x1 would be a significant predictor of y.*
+*There does seem to be some positive correlation between x1 and y, but the p-value is 0.2 so it is unlikely to be a significant predictor. This is what we would expect considering the data was randomly generated.*
 *R-squared = 0.1419*
 *This means some 14.19% of the variability in y could be explained by x1.*
 
@@ -105,7 +105,7 @@ plot(x, rsqvals, type = "b",
 ```
 
 
-*It took 9 predictors to reach an r-squared value of 1.*
+*It took 9 predictors to reach an r-squared value of 1. This shows that fitting more and more predictors can create a model showing a relationship when there is not actually a relationship. *
 
 
 **2) Ohio Crime Data** 
@@ -133,7 +133,6 @@ I've given an outline chunk below. Your job is to fill in the details as indicat
 
 
 ```{r fig.height = 5, fig.width = 5}
-
 #note the options above are to make plots work properly in the corrplot package.
 
 #Load the corrplot package
@@ -203,7 +202,7 @@ mtext(paste("Sample Correlation = ", round(cor(crime$V19, crime$V10, use = "pair
 ```
 
 
-*There is more jitter in the top right corner, which is answering high agreement with both programs, and less litter in the lower answer options.*
+*There is more jitter in the top right corner, which is answering high agreement with both programs, and less jitter in the lower answer options.*
 
 We are now going to proceed with performing stepwise regression. In particular, we're going to fit a model that looks at possible predictors of question V45 (you'll want to look up what this question is).   To do this, I'm making a new dataset called `crime2` which contains the relevant columns (notice I'm putting the response variable FIRST).  Be sure to remove the option `eval = F`.
 
@@ -274,7 +273,7 @@ summary(lm(V45 ~ ., data = crimetemp))
 ```{r}
 # repeat BIC - want the lowest
 # modnum object containing row numbers for model with highest r-squared
-modnum <- min(mod2sum$bic)
+modnum <- which.min(mod2sum$bic)
 
 # print variable names for predictors in model
 names(crime2)[mod2sum$which[which.min(mod2sum$bic), ]][-1]
@@ -299,7 +298,7 @@ modnum <- min(c(1:length(mod2sum$cp))[mod2sum$cp <= c(1:length(mod2sum$cp))+1])
 names(crime2)[mod2sum$which[modnum, ]][-1]
 
 # temporary dataset with all columns included in model
-crimetemp <- crime2[ , mod2sum$which[modnum, ]
+crimetemp <- crime2[ , mod2sum$which[modnum, ]]
 
 # fit model, return summary info for model
 summary(lm(V45 ~ ., data = crimetemp))
@@ -395,10 +394,8 @@ Prompt:
 You’ve been hired by the Connecticut Department of Environmental Protection to help understand what drives nutrient pollution in lakes across the state. The dataset you’re given includes measurements for total phosphorus concentration (your response variable) and nineteen potential predictors, including lake area, depth, surrounding land use, population density, road density, and several management practices. Your boss wants you to determine which combination of predictors best explains variation in phosphorus levels, while also checking that your final model meets the assumptions of linear regression. Write pseudocode describing the steps you would take to provide meaningful insights into how different variables contribute to better or worse water quality (based on total phosphorus concentration) and what these variables may suggest about future protection, clean up, and management decisions (i.e. outline the steps you'd use to fit a multiple linear regression model).
 
 *First, I would explore the data and understand dimensions, column names, variable ranges, and how many missing data points there are.*
-*Step 1 Identify Variables: We have already identified our predictors and response (phospohorus concentration)*
-*Step 2 check relationship: This can  be done by making a matrix plot. Within the matrix plot we will want to examine, the relationship among the predictors to ensure none are corerlated. And we will examine the relationship between the the response variable and each predictor on the top row and ensure non are linear or a strong predictor of the response and that the spread is constant. The matrix plot will also give the histogram showing a frequency of answers which can be used to consider if any of the predictors should be transformed. The bottom of the matrix plot will also give ___ values which can give an overview if any are significant. In the top row between predictors and response variable, we want to see linear relationship or blobs, we do not want to see cirves. If non-linear (curved, predictable) may need to transform a predictor. Also want to see constant spread. Also look for variables with strong outliers or influential points.*
-*Step 3 Perform Regression: Next, we would want to perform the actual linear regression model and examine the regression coefficients. Examine which are negative and positive and if they are similar to each other or if any are way larger.*
-*Step 4 Identify Significant Predictors: We would then examine the output for significant predictors, based on our pre-determined alpha. *
-*We'd also want to decide how we want to build out model (forward or backward) and how we decide which is best (AIC, BIC, CP, adjusted R squared).*
-*Step 5 Check Model Assumptions:*
+*Step 1 Identify Variables: We have already identified our predictors and response (phospohorus concentration). If you are going to utilize the . expression, ensure the response variable is the first column in the dataset.*
+*Step 2 check relationship: This can  be done by making a matrix plot. Within the matrix plot we will want to examine the relationship among the predictors to ensure none are correlated. And we will examine the relationship between the response variable and each predictor on the top row and ensure non are non-linear (predictable curve, for example) and that the spread is constant. Also, look for variables that have strong outliers or influential points in any scatterplot.The matrix plot will also give the histogram showing a frequency of answers which can be used to consider if any of the predictors should be transformed. Also, check the frequency of phosphorus concentration as it is likely to be right skewed and require a log transformation. If any of the predictors have a non-linear pattern, a transformation should be considered for that variable as well. The bottom of the matrix plot will also give correlation values which can give an overview if any are significant or non-significant relationships between variables and in what direction..*
+*Step 3 Perform Regression & Step 4 Identify Significant Predictors: Next, we would want to fit the actual regression model. Because there is a good amount of variables (19) it is best to use best subsets regression. We would want to decide which standard we are using to choose the best model: AIC, BIC, CP, or adjusted R squared. If each standard shows different best models, you will likely want to select model that all predictors are significant for the pre-specified alpha. If the same model is determine "best" by multiple standards (ex: model with 9 predictors has best AIC, r-squared and BIC), you can then fit a linear regression using all predictors included in that model and examine the output. You'll want to examine the coefficient of each predictor - how large they are, how variable they are from each other, and what direction they go in (positive vs negative). You will also want to note the degrees of freedom and how many observations had missingness.*
+*Step 5 Check Model Assumptions: You will then want to check model assumptions using a QQ plot of hte studentized residuals, fit vs studentized residuals, and cooks distance. If any assumptions are violated (the qq plot is not normal, ther eis hetroskedasticity, or large influential or outlier points), you would want to start over at step 2 and repeat the process. If the assumptions are met, you can interpret significant coefficients in context and prepare a report of what the model means for the Environmental Protections Department, including what models contribute to better (positive coefficients) or worse (negative coefficients) and what this may suggest about how they should tackle cleanup.*
 
