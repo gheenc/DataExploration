@@ -167,7 +167,7 @@ corrplot.mixed(cor(crime[, 10:23], use = "pairwise.complete.obs"), lower.col = "
 
 2.3)  Comment on the overall level of correlations among the considered questions.  Which pair of questions had the highest sample correlation?  Are you surprised? (include comments on the actual questions in your answer)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+*The highest level of correlation was between V19 - "provide job training and apprenticeship programs so that all youths will have the opportunity to get good paying jobs as adults" - and V10 - "during the summer, the state government should help provide jobs for inner-city youths from poor families." It makes sense that responses to these questions would be correlated because they are getting at similar sentiments of helping low income youth get jobs. Overall, about half of the questions are significantly correlated. Another strongly correlated question was V14 and V20 (which we can tell because it is a similar dark blue to V10 and V19) both surveying sentiment on crime sentencing. Most were positively correlated. An example of a negatively correlated question is V16 which asks about using treatment programs instead of arresting people using drugs and V22 which suggests giving the death penalty to criminals convicted of crimes less than murder. *
 
 2.4) Make a scatterplot of values for the two questions that had the highest pairwise correlation.  Make sure your plot has labels for each axis (and not 'V10' - something with meaning).  Include two top titles  - one for the plot as a whole, one which reports the sample correlation to two decimal places.  How helpful is this plot?
 
@@ -345,14 +345,13 @@ abline(h = c(2, -2), lty = 2, lwd = 3, col = "blue4")
 abline(h = c(3, -3), lty = 2, lwd = 3, col = "green4")
 
 
-## CHECK: is this supposed to be studentized residuals
 # normal quantile plot of residuals 
 qqp(rstudent(modfin), pch = 19, 
     main = "Normal Quantile Plot of Studentized Residuals")
 ```
 
 
-*The plot looks like a 6 fingered beast because both questions are on a 6 point Likert scale, meaning they are more categorical than continuous. This is also why it does not indicate we've met the assumptioms of our regression model.*
+*The plot looks like a 6 fingered beast because both questions are on a 6 point Likert scale, meaning they are more categorical than continuous. This is also why it does not indicate we've met the assumptioms of our regression model. The QQ plot of studentized residuals is mostly normal, although there is some deviation at the end of both tails.*
 
 2.13)  Run the code below.  Describe what this does in not more than two sentences.
 
@@ -385,8 +384,8 @@ summary(modfin)$r.squared # 0.2264285
 *  Comment on R-squared
 *  Comment on direction and interpretation of each of the predictors included in the final model.   Are you surprised in any instance?
 
-*The R-squared for this model is 0.2264, meaning there is a slight positive correlation. All predictors are between -.3 and .3, with V72 and V10 being the only negative predictors. This indicates that . Overall, all predictors are very significant, esentially 0, excite V22 which is not statistically significant at 0.001 alpha.*
-*look back at questions; are there any surprises*
+*The R-squared for this model is 0.2264 about 23% of variation in question V45 ("punishing criminals is the only way to stop them from engaging in crimes in the future") can be explained by how people answered V10 ("During the summer, the state government should help provide jobs for inner-city youths from poor families"), V17 ("Build more prisions so that longer sentences could be given to criminals"), V20 ("Pass a law requiring mandatory life imprisionment for anyone convicted of a violent crime for the third time"), V22 ("Give the death penalty to criminals convicted of some serious crimes other than murder") V72 ("What is the last year of education you completed"). All coefficient estimates are between -.3 and .3, with V72 and V10 being the only negative predictors. This indicates that those who have lower levels of education and disagree with providing job opportunities to low income youths also tend to highly agree that punishing criminals is the only way to stop future crimes. This also means that for the other predictors, V20, V22, V17, those who agree more with those questions, also tend to agree with V45. Thinking about the sentiments of these questions, the directions of each of these correlations does not surprise me. Overall, all predictors are very significant, essentially 0, except V22 which is not statistically significant at 0.001 alpha but is at a 0.001 alpha.*
+
 
 3)  Pseudocode
 
@@ -398,4 +397,5 @@ You’ve been hired by the Connecticut Department of Environmental Protection to
 *Step 2 check relationship: This can  be done by making a matrix plot. Within the matrix plot we will want to examine the relationship among the predictors to ensure none are correlated. And we will examine the relationship between the response variable and each predictor on the top row and ensure non are non-linear (predictable curve, for example) and that the spread is constant. Also, look for variables that have strong outliers or influential points in any scatterplot.The matrix plot will also give the histogram showing a frequency of answers which can be used to consider if any of the predictors should be transformed. Also, check the frequency of phosphorus concentration as it is likely to be right skewed and require a log transformation. If any of the predictors have a non-linear pattern, a transformation should be considered for that variable as well. The bottom of the matrix plot will also give correlation values which can give an overview if any are significant or non-significant relationships between variables and in what direction..*
 *Step 3 Perform Regression & Step 4 Identify Significant Predictors: Next, we would want to fit the actual regression model. Because there is a good amount of variables (19) it is best to use best subsets regression. We would want to decide which standard we are using to choose the best model: AIC, BIC, CP, or adjusted R squared. If each standard shows different best models, you will likely want to select model that all predictors are significant for the pre-specified alpha. If the same model is determine "best" by multiple standards (ex: model with 9 predictors has best AIC, r-squared and BIC), you can then fit a linear regression using all predictors included in that model and examine the output. You'll want to examine the coefficient of each predictor - how large they are, how variable they are from each other, and what direction they go in (positive vs negative). You will also want to note the degrees of freedom and how many observations had missingness.*
 *Step 5 Check Model Assumptions: You will then want to check model assumptions using a QQ plot of hte studentized residuals, fit vs studentized residuals, and cooks distance. If any assumptions are violated (the qq plot is not normal, ther eis hetroskedasticity, or large influential or outlier points), you would want to start over at step 2 and repeat the process. If the assumptions are met, you can interpret significant coefficients in context and prepare a report of what the model means for the Environmental Protections Department, including what models contribute to better (positive coefficients) or worse (negative coefficients) and what this may suggest about how they should tackle cleanup.*
+*ensure all variables are continuous*
 
