@@ -1,0 +1,230 @@
+---
+title: "Homework 08 One Way ANOVA"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+subtitle: Due by 11:59pm, Tuesday, 4.14.26
+author: S&DS 2300/5300/ENV 757
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Submission Details
+
+This homework assignment contains 2 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
+
+For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
+
+**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!**
+
+The CSV file `HindiFilm.csv` which you can get [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/HindiFilm.csv) contains the 1698 Hindi language movies that released in India across a 13 year period (2005-2017)  (thanks to Premkumar, Prashant (2020), “Bollywood Movies data”, Mendeley Data, V1, doi: 10.17632/3c57btcxy9.1).  Here are the variables:
+
+* Name
+* Period (normal or holiday)
+* Remake (Yes/No)
+* Franchise (Yes/No)
+* Genre
+* New_Actor (Yes/No)
+* New_Director (Yes/No)
+* New_Musician (Yes/No - i.e. new music director)
+* Lead (Lead actor name)
+* Director (Name)
+* Musician (Music Director name)
+* Screens (how many screens was it shown on)
+* Revenue (Indian Rupees)
+* Budget (Indian Rupees - usual shorthand is INR)
+
+
+
+**1)  One Way ANOVA of percent return for movies.** *(75 pts - 6 pts each except part 1.12 which is 9 pts)*
+
+1.1)  Read the data into an object called `movie` (do NOT use the option `as.is = TRUE`).   Update this object so that is only contains the columns `Budget`, `Revenue`, `Genre`, and `Name`.  In addition, retain only rows that have complete data for these four columns.
+
+Next, create a new column called `pctReturn` that calculates the percentage return (have this be a percentage, NOT a fraction).
+
+Make a table of `Genre` and sort this from high to low.  Show these results.
+
+Update `movie` so that it only contains movies in the following genres : "masala", "drama", "fantasy", "love_story", "action".
+
+As per usual, look at the first few rows of the data, get the dimension of the final dataset.
+
+```{r}
+# read data in
+movie <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/HindiFilm.csv")
+
+# only include budget, revenue, genre, and name; only complete data
+
+# create column pctResturn; percentage return as percent
+
+# table of genre sorted from high to low
+
+# movie genres only masala, drama, fantasy, love_story, action
+
+# examine data and get dimensions
+```
+
+
+1.2)  Make a boxplot of `pctReturn` by `Genre`.   Superimpose a red dot at the mean percent return for each Genre; also print this mean rounded to the nearest percent. In addition, add a horizontal dotted blue line at 100 (this represents the place where revenue = budget).  Discuss what you observe.
+
+```{r}
+# boxplot of pctReturn by genre with red dot at mean percent return for each genre and horizontal bluye dotted line at 100
+boxplot(pctReturn ~ genre, data = "movies")
+```
+
+
+*Discuss what you observe*
+
+1.3)  Make a new variable on 'movie' called `log10pct` that is log base 10 of percent return (the function you want is `log10()`).  Repeat part 1.2, but modify the horizontal line so that it is at the correct value (when rounding mean log10(pct return), round to 1 decimal place).  Discuss what you observe.
+
+```{r}
+# make log10pct column that is log base 10 of percent return 
+
+# repeat part 2 with horizontal line at correct mean value
+
+```
+
+
+*Discuss what you observe*
+
+1.4)  Make a `stripplot` of log10pct by Genre.   Which plot do you find more instructive - the boxplot or the strip plot (no right answer here, but give a one sentence reason for your opinion)?
+
+```{r}
+# make stripplot of log10pct by genre
+```
+
+
+*Which plot do you find more instructive - the boxplot or the strip plot (no right answer here, but give a one sentence reason for your opinion)*
+
+1.5)  Just using the visual information provided by the boxplot of log10pct, do you think that the distribution of observations inside each Genre is approximately normal?   Do you think the standard deviation is approximately the same in each Genre?  (Remember that ANOVA assumes we have a normal distribution inside each Genre and that the standard deviation is the same across groups.)
+
+*do you think that the distribution of observations inside each Genre is approximately normal?*
+*Do you think the standard deviation is approximately the same in each Genre?  (Remember that ANOVA assumes we have a normal distribution inside each Genre and that the standard deviation is the same across groups.)*
+
+1.6)  Calculate the sample standard deviation of log10pct for each Genre   Calculate the ratio of largest to smallest sample standard deviation.   Is it reasonable to assume that the variances are the same across Genres?
+
+```{r}
+# sample standard deviation of log10pct for each genre
+
+# calculate ratio of largest to smallest sample sd
+```
+
+
+*Is it reasonable to assume that the variances are the same across Genres?*
+
+1.7)  Use the `aov()` function to compare mean log10pct between Genres.  Save your results to an object called `aov1`.  Get summary information for `aov1`.  Is the mean log10pct return statistically significantly different between Genres?  In addition, confirm that the degrees of freedom reported by the test are what you expect (and write a sentence about this).
+
+```{r}
+# use aov() function to compare mean log10pct between genres in aov1
+
+# summary of aov1
+
+```
+
+
+*Is the mean log10pct return statistically significantly different between Genres?*
+*In addition, confirm that the degrees of freedom reported by the test are what you expect (and write a sentence about this)*
+
+1.8)  Fit log10pct return based on Genre as a regression model WITHOUT an intercept.  Save the results to an object called `mod1`.  Following the example code provided in class, calculated confidence intervals for the mean percent return for each Genre and report results to two decimal places.  Then make a plot of the resulting confidence intervals using the `plotCI()` function in the `plotrix` library.
+
+You'll notice that some intervals overlap while others do not.   What should you conclude from this?
+
+```{r}
+# fit log10pct return based on genre as a regression model without intercept in mod1
+
+# calculate confidence interval for mean percent return for each genre to two decimal places
+
+# plot of resulting ci using plotCI() in plotrix
+```
+
+
+*What should you conclude from this?*
+
+1.9)  Use the `pairwise.t.test()` function to calculate Holm's correction for comparing pairs of means.  Which pairs of Genres have statistically significantly different percent returns (use alpha = 0.05)?
+
+```{r}
+# use pairwise.t.test() to calculate Holms's correction
+```
+
+
+*Which pairs of Genres have statistically significantly different percent returns (use alpha = 0.05)?*
+
+
+1.10)  Calculate Tukey simultaneous 95% confidence intervals for differences in mean percent return using the `TukeyHSD()` function.  Plot the resulting confidence intervals.  Do you reach the same conclusions as when using the Holm correction?
+
+```{r}
+# Tukey simultaneous 95% CI for differences in mean percent return
+
+# plot resulting CI
+```
+
+
+*Do you reach the same conclusions as when using the Holm correction*
+
+
+1.11)  Create residual plots appropriate for `aov1`.  Does it appear that the residuals have an approximately normal distribution?  Is this good or bad?  Comment in a sentence or two about the plot of fits versus residuals.
+
+```{r}
+# residual plot for aov1
+```
+
+
+*Does it appear that the residuals have an approximately normal distribution?  Is this good or bad?  Comment in a sentence or two about the plot of fits versus residuals.*
+
+
+1.12)  Just to see what would have happened if we didn't use a log10 transformation, repeat parts 1.7 through 1.11 on the original percent return data (i.e. not log10).  Just use one block of code (literally, just copy your code, replace `log10pct` with `pctReturn`). 
+
+Write about three sentences commenting on the fit of this model vs. the fit of the previous model.  Specifically, comment on whether any pairs of groups changed significance, the overall model significance, and the residual plots.
+
+```{r}
+# repeat 1.7 - 1.11 on original percent return data 
+```
+
+
+*Write about three sentences commenting on the fit of this model vs. the fit of the previous model.  Specifically, comment on whether any pairs of groups changed significance, the overall model significance, and the residual plots.*
+
+
+**2)  Non-parametric tests.** *(25 pts - 5pts each)*
+
+
+2.1)  Perform a Bartlett test to see whether variances of percent return are the same across Genres.  Then, repeat for `log10pct`.  Write one sentence about what you conclude.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+2.2)  Perform a Levene test to see whether variances of percent return are the same across Genres.  Then, repeat for `transpct`.  Write one sentence about what you observe (be sure to review the characteristics of Levene's test).
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+2.3)  Perform Welch's ANOVA on the original data which you will recall assumes unequal variances but which assumes normal distributions in each group  (i.e. compare `pctReturn` by `Genre`).  Compare results to regular one-way ANOVA.  Is Welch's ANOVA a good choice here?  
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+
+2.4)  Perform a non-parametric Kruskal Wallis test which recall makes NO assumptions about equal variances or about normality.  Compare results to regular one-way ANOVA.  Is Kruskal Wallis a good choice here?  
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+2.5)  Repeat 2.3) and 2.4) on the log10 scale.  Discuss your results and compare results to regular ANOVA.
+
+*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+3)  Pseudocode
+You are working with a dataset of average daily tourism spending for five different types of visitor experiences in Connecticut: coastal, city/cultural, outdoor recreation, culinary, and family-oriented. Each observation represents a week’s worth of spending data collected over the past three years. The dataset also includes information on total visitors, number of local events, and whether the data week included a holiday period. Your task is to determine whether average spending per visitor differs among experience types and to check whether assumptions of equal variances and normality of residuals are met.
+
+*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
