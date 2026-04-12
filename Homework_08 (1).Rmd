@@ -13,15 +13,6 @@ author: S&DS 2300/5300/ENV 757
 knitr::opts_chunk$set(echo = TRUE)
 
 ```
-
-## Submission Details
-
-This homework assignment contains 2 problems. Edit this `.Rmd` file and insert your responses under the appropriate problems. Submit the knitted output of this file as a .pdf to Gradescope. Be sure to match pages in your submitted PDF to the requested subquestions on Gradescope.
-
-For full credit, your document should look nicely formatted, with R code, plots, and text descriptions nicely integrated. 
-
-**DELETE ALL LINES FROM HERE UP THROUGH 'Submission Details' BEFORE KNITTING AND SUBMITTING!**
-
 The CSV file `HindiFilm.csv` which you can get [HERE](https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/HindiFilm.csv) contains the 1698 Hindi language movies that released in India across a 13 year period (2005-2017)  (thanks to Premkumar, Prashant (2020), “Bollywood Movies data”, Mendeley Data, V1, doi: 10.17632/3c57btcxy9.1).  Here are the variables:
 
 * Name
@@ -58,14 +49,21 @@ As per usual, look at the first few rows of the data, get the dimension of the f
 movie <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/heads/main/HindiFilm.csv")
 
 # only include budget, revenue, genre, and name; only complete data
+movie <- na.omit(movie[ , c("Budget", "Revenue", "Genre", "Name")])
 
 # create column pctResturn; percentage return as percent
+movie$pctReturn <- ((movie$Revenue - movie$Budget)/movie$Budget)*100
+range(movie$pctReturn)
 
 # table of genre sorted from high to low
+sort(table(movie$Genre), decreasing = TRUE)
 
 # movie genres only masala, drama, fantasy, love_story, action
+movie <- movie[movie$Genre %in% c("masala", "drama", "fantasy", "love_story", "action"), ]
 
 # examine data and get dimensions
+head(movie)
+dim(movie)
 ```
 
 
@@ -73,7 +71,18 @@ movie <- read.csv("https://raw.githubusercontent.com/jreuning/sds230_data/refs/h
 
 ```{r}
 # boxplot of pctReturn by genre with red dot at mean percent return for each genre and horizontal bluye dotted line at 100
-boxplot(pctReturn ~ genre, data = "movies")
+boxplot(movie$pctReturn ~ movie$Genre,
+        col = "steelblue",
+        ylab = "", 
+        xlab = "Genre Type",
+        cex.axis = .8,
+        ylim = c(range(movie$pctReturn)[1] - 20000, range(movie$pctReturn)[2]),
+        las = 1,
+        main = "Boxplot of Percent Returned by Genre")
+means <- tapply(movie$pctReturn, movie$Genre, mean)
+points(means, col = "red3", pch = 18)
+text(x = c(1:5), y = means - 10500, labels = paste(round(means, 2), "%"), cex = .8)
+abline(h = 100, col = "blue3", lty = 3, lwd = 2)
 ```
 
 
@@ -82,7 +91,7 @@ boxplot(pctReturn ~ genre, data = "movies")
 1.3)  Make a new variable on 'movie' called `log10pct` that is log base 10 of percent return (the function you want is `log10()`).  Repeat part 1.2, but modify the horizontal line so that it is at the correct value (when rounding mean log10(pct return), round to 1 decimal place).  Discuss what you observe.
 
 ```{r}
-# make log10pct column that is log base 10 of percent return 
+
 
 # repeat part 2 with horizontal line at correct mean value
 
