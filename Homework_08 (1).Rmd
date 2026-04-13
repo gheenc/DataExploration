@@ -275,7 +275,7 @@ myResPlots(aov1, "Percent Return")
 ```
 
 
-*Write about three sentences commenting on the fit of this model vs. the fit of the previous model.  Specifically, comment on whether any pairs of groups changed significance, the overall model significance, and the residual plots.*
+*Using the raw values, no interactions are signficant and the data appears to be veryyyy right skewed.*
 
 
 **2)  Non-parametric tests.** *(25 pts - 5pts each)*
@@ -291,21 +291,24 @@ bartlett.test(movie$pctReturn, movie$Genre)
 bartlett.test(movie$log10pct, movie$Genre)
 ```
 
-*Both p-values are nearly zero, so we can reject the null hypothesis and conclude that the variances are different between groups.*
+*For the raw values, the p-value is nearly zero, so we can reject the null hypothesis and conclude that the variances are different between groups. For the log values however, there is a high p-value so we assume the variance is the same between the groups - this indicates we would rather use the log variable. Bartlett assumes normal distribution which is more aligned with the log data distribution.*
 
 
 2.2)  Perform a Levene test to see whether variances of percent return are the same across Genres.  Then, repeat for `transpct`.  Write one sentence about what you observe (be sure to review the characteristics of Levene's test).
 
-```{r}
-# Levene test of varianes of percent return are same across genre
+```{r, warning = FALSE}
+# Levene test of variances of percent return are same across genre
 library(car)
 leveneTest(movie$pctReturn, movie$Genre)
 
 # repeat for transpct
+# CHECK: is this log10pct
+leveneTest(movie$log10pct, movie$Genre)
+
 ```
 
 
-*Write one sentence about what you observe (be sure to review the characteristics of Levene's test)*
+*Both p values are not statistically significant therefore we retain the null hypothesis that the variances are the same between groups for both the raw variables and the log variables. The Levene's test does not assume the observations are from a normal distribution so it can be applied to the raw values, but it is less powerful which is how we conclude the variations are the same for all groups within both variables altough we know it is not true for the raw values.*
 
 2.3)  Perform Welch's ANOVA on the original data which you will recall assumes unequal variances but which assumes normal distributions in each group  (i.e. compare `pctReturn` by `Genre`).  Compare results to regular one-way ANOVA.  Is Welch's ANOVA a good choice here?  
 
@@ -317,8 +320,8 @@ oneway.test(pctReturn ~ Genre, data = movie)
 summary.aov(aov(pctReturn ~ Genre, data = movie))
 ```
 
-
-*Compare results to regular one-way ANOVA.  Is Welch's ANOVA a good choice here?  *
+# CHECK should I be looking at F or p
+*In the regular one-way ANOVA, the p value is not significant at an alpha of 0.05 meaning the groups are not different. In the Welch's test, the p-value is very close to 0 indicating the groups are different, but it assumes a normal distribution which we know a not true and thus would not be a good choice here.*
 
 
 2.4)  Perform a non-parametric Kruskal Wallis test which recall makes NO assumptions about equal variances or about normality.  Compare results to regular one-way ANOVA.  Is Kruskal Wallis a good choice here?  
@@ -326,6 +329,9 @@ summary.aov(aov(pctReturn ~ Genre, data = movie))
 ```{r}
 # non-parametric Kruskal Wallis test 
 kruskal.test(pctReturn ~ Genre, data = movie)
+
+# One Way ANOVA
+summary.aov(aov(pctReturn ~ Genre, data = movie))
 ```
 
 
@@ -336,12 +342,18 @@ kruskal.test(pctReturn ~ Genre, data = movie)
 
 ```{r}
 # repeat 2.3 run Welch's test on log10 scale
+oneway.test(log10pct ~ Genre, data = movie)
 
 # repeat 2.4 run Kruskal Wallis test on log10scale
+kruskal.test(log10pct ~ Genre, data = movie)
+
+# compare to regular ANOVA
+summary.aov(aov(log10pct ~ Genre, data = movie))
+
 ```
 
 
-*Discuss your results and compare results to regular ANOVA.*
+*Using log 10, all tests return significant at essentially any alpha level. This would indicate that the groups means are not the same, which is also what we see in our regular one-way ANOVA.*
 
 3)  Pseudocode
 You are working with a dataset of average daily tourism spending for five different types of visitor experiences in Connecticut: coastal, city/cultural, outdoor recreation, culinary, and family-oriented. Each observation represents a week’s worth of spending data collected over the past three years. The dataset also includes information on total visitors, number of local events, and whether the data week included a holiday period. Your task is to determine whether average spending per visitor differs among experience types and to check whether assumptions of equal variances and normality of residuals are met.
