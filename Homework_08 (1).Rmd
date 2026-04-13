@@ -71,6 +71,7 @@ range(movie$pctReturn)
 
 ```{r}
 # boxplot of pctReturn by genre with red dot at mean percent return for each genre and horizontal bluye dotted line at 100
+# CHECK: is this plot right?
 boxplot(movie$pctReturn ~ movie$Genre,
         col = "steelblue",
         ylab = "", 
@@ -81,19 +82,20 @@ boxplot(movie$pctReturn ~ movie$Genre,
         main = "Boxplot of Percent Returned by Genre")
 means <- tapply(movie$pctReturn, movie$Genre, mean)
 points(means, col = "red3", pch = 18)
-text(x = c(1:5), y = means - 10500, labels = paste(round(means, 2), "%"), cex = .8)
+text(x = c(1:5), y = means - 10500, labels = paste(round(means, 2), "%"), cex = .8, font = 1)
 abline(h = 100, col = "blue3", lty = 3, lwd = 2)
 ```
 
 
-*Discuss what you observe*
+*The IQR and whiskers (so essentially the whole box plot) is very squished making it practically unreadable. We are able the appreciate the outliers and how far away some points are, meaning they generated a lot of revenue relative to their budget. From the means, we see most films are lucrative and making more money on average then took to produce with fantasty, drama and love story especially make high revenue margins. Masala movie on average los money; althought meanness is easily pulled by outliers, which we see are very evident here and to varying degress across genres (meaning we should assume their variances will be different), so it's not a great measure to examine in this case.*
 
 1.3)  Make a new variable on 'movie' called `log10pct` that is log base 10 of percent return (the function you want is `log10()`).  Repeat part 1.2, but modify the horizontal line so that it is at the correct value (when rounding mean log10(pct return), round to 1 decimal place).  Discuss what you observe.
 
-```{r}
+```{r, warning=FALSE}
 # range includes 0s add noise to all to have no 0 value 
 # CHECK: why are we not doing logit here
-movie$log10pct <- movie$pctReturn + 0.05
+# CHECK: Is it okay if there are NANs
+movie$log10pct <- log10(movie$pctReturn + 0.05)
 
 # repeat part 2 with horizontal line at correct mean value
 boxplot(movie$log10pct ~ movie$Genre,
@@ -101,17 +103,16 @@ boxplot(movie$log10pct ~ movie$Genre,
         ylab = "", 
         xlab = "Genre Type",
         cex.axis = .8,
-        ylim = c(range(movie$pctReturn)[1] - 20000, range(movie$pctReturn)[2]),
         las = 1,
         main = "Boxplot of Percent Returned by Genre")
-means <- tapply(movie$log10pct, movie$Genre, mean)
+means <- tapply(movie$log10pct, movie$Genre, mean, na.rm = TRUE)
 points(means, col = "red3", pch = 18)
-text(x = c(1:5), y = means - 10500, labels = paste(round(means, 2), "%"), cex = .8)
-abline(h = 100, col = "blue3", lty = 3, lwd = 2)
+text(x = c(1:5), y = means + .3, labels = paste(round(means, 2), "%"), cex = .8, font =2)
+abline(h = round(mean(means), 1), col = "blue3", lty = 3, lwd = 2)
 ```
 
 
-*Discuss what you observe*
+*Using the log values, we can appreciate the box plots a lot better. Here, we can see most genres hover around the break even line, especially action, and masala actually is completely below it. There are lots of outliers to the negative side in drama and the variances look a little more similar for the first 4 genres.*
 
 1.4)  Make a `stripplot` of log10pct by Genre.   Which plot do you find more instructive - the boxplot or the strip plot (no right answer here, but give a one sentence reason for your opinion)?
 
@@ -127,40 +128,43 @@ stripplot(movie$log10pct ~ movie$Genre,
 ```
 
 
-*For this data, I actually prefer the stripplot because the box plot is so condensed, the IQR box and whiskers aren't adding any additional information,*
+*Typically, I like a box plot because of the extra information it provides, but for this data, I actually prefer the stripplot. The IQR box and whiskers aren't adding much additional information, and I appreicate that with the stripplot the range is very evident and appreciatable.*
 
 1.5)  Just using the visual information provided by the boxplot of log10pct, do you think that the distribution of observations inside each Genre is approximately normal?   Do you think the standard deviation is approximately the same in each Genre?  (Remember that ANOVA assumes we have a normal distribution inside each Genre and that the standard deviation is the same across groups.)
 
-*No, I do not think the distribution of observations inside each Genre is normal.*
-*No, I do not think the standard deviation is approximately the same in each Genre.*
+*I do  think the distribution of observations inside each Genre is normal because the whiskers and IQR are relatively equal.*
+*No, I do not think the standard deviation is approximately the same in each Genre - their ranges are very inconsistent, some are long and some are short. This is especially appreciatable in the strippplot.*
 
 1.6)  Calculate the sample standard deviation of log10pct for each Genre   Calculate the ratio of largest to smallest sample standard deviation.   Is it reasonable to assume that the variances are the same across Genres?
 
 ```{r}
 # sample standard deviation of log10pct for each genre
-sds <- tapply(movie$log10pct, movie$Genre, sd)
+(sds <- tapply(movie$log10pct, movie$Genre, sd, na.rm = TRUE))
 
 # calculate ratio of largest to smallest sample sd
 round(max(sds)/min(sds), 1)
 ```
 
 
-*No, this ratio is well over 2, so we cannot assume variance is same across Genre.*
+*Yes, it is reasonable to assume the variance is the same across genres, because the ratio is less than 2.*
 
 1.7)  Use the `aov()` function to compare mean log10pct between Genres.  Save your results to an object called `aov1`.  Get summary information for `aov1`.  Is the mean log10pct return statistically significantly different between Genres?  In addition, confirm that the degrees of freedom reported by the test are what you expect (and write a sentence about this).
 
 ```{r}
 # use aov() function to compare mean log10pct between genres in aov1
-aov1 <- aov(movie$log10pct ~ movie$Genre)
+aov1 <- aov(log10pct ~ Genre, data = movie)
 
 # summary of aov1
 summary(aov1)
 
+# number of observations without na
+length(aov1$fitted.values)
+
 ```
 
 
-*Is the mean log10pct return statistically significantly different between Genres?*
-*In addition, confirm that the degrees of freedom reported by the test are what you expect (and write a sentence about this)*
+*Yes, the p-value is essentially 0, so it is statistically significant, meaning the means between genres is different.*
+*Genre degree of freedom (5 genres - 1 = 4) makes sense; residual df (692 - 5 = 687) makes sense*
 
 1.8)  Fit log10pct return based on Genre as a regression model WITHOUT an intercept.  Save the results to an object called `mod1`.  Following the example code provided in class, calculated confidence intervals for the mean percent return for each Genre and report results to two decimal places.  Then make a plot of the resulting confidence intervals using the `plotCI()` function in the `plotrix` library.
 
@@ -171,35 +175,46 @@ You'll notice that some intervals overlap while others do not.   What should you
 mod1 <- lm(movie$log10pct ~ movie$Genre -1)
 
 # calculate confidence interval for mean percent return for each genre to two decimal places
+CIs <- confint(mod1)
+coefs <- coef(mod1)
 
 # plot of resulting ci using plotCI() in plotrix
 #install.packages('plotrix')
 library(plotrix)
+par(mar = c(5, 8, 4, 2))
+plotCI(coefs, 1:(length(coefs)), ui = CIs[,2], li = CIs[,1], axes = FALSE, err = "x", ylab = "", xlab = "Mean log(Percent Revenue) and 95% CI", main = "Mean and CI's of Percent Revenue in log", lwd = 2, col = "blue")
+axis(side=1)
+axis(side = 2, at = 1:(length(coefs)), label = levels(as.factor(movie$Genre)), las = 2)
 ```
 
 
-*What should you conclude from this?*
+*We cannot compare between groups with this plot. But, we can conclude that some intervals pass 0 while others do not. For love story, fantasy, drama, and action there is evidence that they are different. CHECK*
 
 1.9)  Use the `pairwise.t.test()` function to calculate Holm's correction for comparing pairs of means.  Which pairs of Genres have statistically significantly different percent returns (use alpha = 0.05)?
 
 ```{r}
 # use pairwise.t.test() to calculate Holms's correction
+pairwise.t.test(movie$log10pct, movie$Genre)
 ```
 
 
-*Which pairs of Genres have statistically significantly different percent returns (use alpha = 0.05)?*
+*drama - action; love story - action; masala - action; masala - drama; masala - fantasy; masala - love story*
 
 
 1.10)  Calculate Tukey simultaneous 95% confidence intervals for differences in mean percent return using the `TukeyHSD()` function.  Plot the resulting confidence intervals.  Do you reach the same conclusions as when using the Holm correction?
 
 ```{r}
 # Tukey simultaneous 95% CI for differences in mean percent return
+TukeyHSD(aov1)
 
 # plot resulting CI
+par(mar=c(5, 8, 4, 2))
+plot(TukeyHSD(aov1), 
+     las = 1)
 ```
 
 
-*Do you reach the same conclusions as when using the Holm correction*
+*drama - action; love story - action; masala - action; masala - drama; masala - fantasy; masala - love story. Yes you do reach the same conclusino as using the Holm correcton.*
 
 
 1.11)  Create residual plots appropriate for `aov1`.  Does it appear that the residuals have an approximately normal distribution?  Is this good or bad?  Comment in a sentence or two about the plot of fits versus residuals.
@@ -212,7 +227,7 @@ myResPlots(aov1, "Log Percent Return")
 ```
 
 
-*Does it appear that the residuals have an approximately normal distribution?  Is this good or bad?  Comment in a sentence or two about the plot of fits versus residuals.*
+*They almost have a normal distribution except a long left tail. A normal distribution is good because ANOVA assumes the data is normal. The plot of fitted vs residuals does have some heteroskedasticity. Because the predicted values are categorical, we expect them to be in vertical lines like they are, but we would want their lengths to be more similar to each other.*
 
 
 1.12)  Just to see what would have happened if we didn't use a log10 transformation, repeat parts 1.7 through 1.11 on the original percent return data (i.e. not log10).  Just use one block of code (literally, just copy your code, replace `log10pct` with `pctReturn`). 
@@ -220,7 +235,43 @@ myResPlots(aov1, "Log Percent Return")
 Write about three sentences commenting on the fit of this model vs. the fit of the previous model.  Specifically, comment on whether any pairs of groups changed significance, the overall model significance, and the residual plots.
 
 ```{r}
-# repeat 1.7 - 1.11 on original percent return data 
+# repeat 1.7
+#use aov() function to compare mean log10pct between genres in aov1
+aov1 <- aov(pctReturn ~ Genre, data = movie)
+# summary of aov1
+summary(aov1)
+# number of observations without na
+length(aov1$fitted.values)
+
+# 1.8
+# fit percent return based on genre as a regression model without intercept in mod1
+mod1 <- lm(movie$pctReturn ~ movie$Genre -1)
+# calculate confidence interval for mean percent return for each genre to two decimal places
+CIs <- confint(mod1)
+coefs <- coef(mod1)
+# plot of resulting ci using plotCI() in plotrix
+#install.packages('plotrix')
+library(plotrix)
+par(mar = c(5, 8, 4, 2))
+plotCI(coefs, 1:(length(coefs)), ui = CIs[,2], li = CIs[,1], axes = FALSE, err = "x", ylab = "", xlab = "Mean Percent Revenue and 95% CI", main = "Mean and CI's of Percent Revenue", lwd = 2, col = "blue")
+axis(side=1)
+axis(side = 2, at = 1:(length(coefs)), label = levels(as.factor(movie$Genre)), las = 2)
+
+# 1.9
+# use pairwise.t.test() to calculate Holms's correction
+pairwise.t.test(movie$pctReturn, movie$Genre)
+
+# 1.10
+# Tukey simultaneous 95% CI for differences in mean percent return
+TukeyHSD(aov1)
+
+# plot resulting CI
+par(mar=c(5, 8, 4, 2))
+plot(TukeyHSD(aov1), 
+     las = 1)
+
+# 1.11
+myResPlots(aov1, "Percent Return")
 ```
 
 
