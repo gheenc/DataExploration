@@ -53,7 +53,6 @@ movie <- na.omit(movie[ , c("Budget", "Revenue", "Genre", "Name")])
 
 # create column pctResturn; percentage return as percent
 movie$pctReturn <- ((movie$Revenue - movie$Budget)/movie$Budget)*100
-range(movie$pctReturn)
 
 # table of genre sorted from high to low
 sort(table(movie$Genre), decreasing = TRUE)
@@ -64,6 +63,7 @@ movie <- movie[movie$Genre %in% c("masala", "drama", "fantasy", "love_story", "a
 # examine data and get dimensions
 head(movie)
 dim(movie)
+range(movie$pctReturn)
 ```
 
 
@@ -91,10 +91,23 @@ abline(h = 100, col = "blue3", lty = 3, lwd = 2)
 1.3)  Make a new variable on 'movie' called `log10pct` that is log base 10 of percent return (the function you want is `log10()`).  Repeat part 1.2, but modify the horizontal line so that it is at the correct value (when rounding mean log10(pct return), round to 1 decimal place).  Discuss what you observe.
 
 ```{r}
-
+# range includes 0s add noise to all to have no 0 value 
+# CHECK: why are we not doing logit here
+movie$log10pct <- movie$pctReturn + 0.05
 
 # repeat part 2 with horizontal line at correct mean value
-
+boxplot(movie$log10pct ~ movie$Genre,
+        col = "steelblue",
+        ylab = "", 
+        xlab = "Genre Type",
+        cex.axis = .8,
+        ylim = c(range(movie$pctReturn)[1] - 20000, range(movie$pctReturn)[2]),
+        las = 1,
+        main = "Boxplot of Percent Returned by Genre")
+means <- tapply(movie$log10pct, movie$Genre, mean)
+points(means, col = "red3", pch = 18)
+text(x = c(1:5), y = means - 10500, labels = paste(round(means, 2), "%"), cex = .8)
+abline(h = 100, col = "blue3", lty = 3, lwd = 2)
 ```
 
 
@@ -104,33 +117,44 @@ abline(h = 100, col = "blue3", lty = 3, lwd = 2)
 
 ```{r}
 # make stripplot of log10pct by genre
+#install.packages('lattice')
+library(lattice)
+stripplot(movie$log10pct ~ movie$Genre,
+          col = "forestgreen",
+          ylab = "",
+          xlab = "Genre Type",
+          main = "Percent Returned on Log Scale by Genre Type")
 ```
 
 
-*Which plot do you find more instructive - the boxplot or the strip plot (no right answer here, but give a one sentence reason for your opinion)*
+*For this data, I actually prefer the stripplot because the box plot is so condensed, the IQR box and whiskers aren't adding any additional information,*
 
 1.5)  Just using the visual information provided by the boxplot of log10pct, do you think that the distribution of observations inside each Genre is approximately normal?   Do you think the standard deviation is approximately the same in each Genre?  (Remember that ANOVA assumes we have a normal distribution inside each Genre and that the standard deviation is the same across groups.)
 
-*do you think that the distribution of observations inside each Genre is approximately normal?*
-*Do you think the standard deviation is approximately the same in each Genre?  (Remember that ANOVA assumes we have a normal distribution inside each Genre and that the standard deviation is the same across groups.)*
+*No, I do not think the distribution of observations inside each Genre is normal.*
+*No, I do not think the standard deviation is approximately the same in each Genre.*
 
 1.6)  Calculate the sample standard deviation of log10pct for each Genre   Calculate the ratio of largest to smallest sample standard deviation.   Is it reasonable to assume that the variances are the same across Genres?
 
 ```{r}
 # sample standard deviation of log10pct for each genre
+sds <- tapply(movie$log10pct, movie$Genre, sd)
 
 # calculate ratio of largest to smallest sample sd
+round(max(sds)/min(sds), 1)
 ```
 
 
-*Is it reasonable to assume that the variances are the same across Genres?*
+*No, this ratio is well over 2, so we cannot assume variance is same across Genre.*
 
 1.7)  Use the `aov()` function to compare mean log10pct between Genres.  Save your results to an object called `aov1`.  Get summary information for `aov1`.  Is the mean log10pct return statistically significantly different between Genres?  In addition, confirm that the degrees of freedom reported by the test are what you expect (and write a sentence about this).
 
 ```{r}
 # use aov() function to compare mean log10pct between genres in aov1
+aov1 <- aov(movie$log10pct ~ movie$Genre)
 
 # summary of aov1
+summary(aov1)
 
 ```
 
@@ -144,10 +168,13 @@ You'll notice that some intervals overlap while others do not.   What should you
 
 ```{r}
 # fit log10pct return based on genre as a regression model without intercept in mod1
+mod1 <- lm(movie$log10pct ~ movie$Genre -1)
 
 # calculate confidence interval for mean percent return for each genre to two decimal places
 
 # plot of resulting ci using plotCI() in plotrix
+#install.packages('plotrix')
+library(plotrix)
 ```
 
 
@@ -179,6 +206,9 @@ You'll notice that some intervals overlap while others do not.   What should you
 
 ```{r}
 # residual plot for aov1
+#Get a function for doing matrix plots and also for regression residuals - from lecture 19
+source("https://raw.githubusercontent.com/jreuning/sds230_files/refs/heads/main/regJDRS.txt")
+myResPlots(aov1, "Log Percent Return")
 ```
 
 
@@ -202,35 +232,65 @@ Write about three sentences commenting on the fit of this model vs. the fit of t
 
 2.1)  Perform a Bartlett test to see whether variances of percent return are the same across Genres.  Then, repeat for `log10pct`.  Write one sentence about what you conclude.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# Bartlett test if variances of percent return are same across genre
+bartlett.test(movie$pctReturn, movie$Genre)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# repeat Bartlett test for log10pct
+bartlett.test(movie$log10pct, movie$Genre)
+```
+
+*Both p-values are nearly zero, so we can reject the null hypothesis and conclude that the variances are different between groups.*
 
 
 2.2)  Perform a Levene test to see whether variances of percent return are the same across Genres.  Then, repeat for `transpct`.  Write one sentence about what you observe (be sure to review the characteristics of Levene's test).
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# Levene test of varianes of percent return are same across genre
+library(car)
+leveneTest(movie$pctReturn, movie$Genre)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# repeat for transpct
+```
+
+
+*Write one sentence about what you observe (be sure to review the characteristics of Levene's test)*
 
 2.3)  Perform Welch's ANOVA on the original data which you will recall assumes unequal variances but which assumes normal distributions in each group  (i.e. compare `pctReturn` by `Genre`).  Compare results to regular one-way ANOVA.  Is Welch's ANOVA a good choice here?  
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# Welch's ANOVA on original data (percent return by genre)
+oneway.test(pctReturn ~ Genre, data = movie)
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# One Way ANOVA
+summary.aov(aov(pctReturn ~ Genre, data = movie))
+```
+
+
+*Compare results to regular one-way ANOVA.  Is Welch's ANOVA a good choice here?  *
 
 
 2.4)  Perform a non-parametric Kruskal Wallis test which recall makes NO assumptions about equal variances or about normality.  Compare results to regular one-way ANOVA.  Is Kruskal Wallis a good choice here?  
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# non-parametric Kruskal Wallis test 
+kruskal.test(pctReturn ~ Genre, data = movie)
+```
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+
+*Compare results to regular one-way ANOVA.*  
+*Is Kruskal Wallis a good choice here?  *
 
 2.5)  Repeat 2.3) and 2.4) on the log10 scale.  Discuss your results and compare results to regular ANOVA.
 
-*REPLACE THIS TEXT WITH YOUR R-chunk Code*
+```{r}
+# repeat 2.3 run Welch's test on log10 scale
 
-*REPLACE THIS TEXT WITH YOUR Answer - make sure it's in italics*
+# repeat 2.4 run Kruskal Wallis test on log10scale
+```
+
+
+*Discuss your results and compare results to regular ANOVA.*
 
 3)  Pseudocode
 You are working with a dataset of average daily tourism spending for five different types of visitor experiences in Connecticut: coastal, city/cultural, outdoor recreation, culinary, and family-oriented. Each observation represents a week’s worth of spending data collected over the past three years. The dataset also includes information on total visitors, number of local events, and whether the data week included a holiday period. Your task is to determine whether average spending per visitor differs among experience types and to check whether assumptions of equal variances and normality of residuals are met.
