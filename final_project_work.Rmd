@@ -1,0 +1,110 @@
+---
+title: "Final Project Work"
+author: "Caroline Gheen"
+date: "2026-04-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load initial data
+data <- read.csv("AHA Data - Query 2.csv")
+dim(data)
+names(data)
+```
+
+```{r}
+# change names to be more human readable
+names(data)[names(data) == "piemro"] <- "primary_emr_other"
+names(data)[names(data) == "mcntrl"] <- "ownership"
+names(data)[names(data) == "piemr"] <- "primary_emr"
+names(data)[names(data) == "rhio_lvl1"] <- "q10_HIE_partic"
+names(data)[names(data) == "othnet_desc"] <- "q11_other_HIE"
+names(data)[names(data) == "cwha"] <- "q11_commonwell"
+names(data)[names(data) == "hlthxch"] <- "q11_ehealth"
+names(data)[names(data) == "netdnk"] <- "q11_dnk_othernat"
+names(data)[names(data) == "netno"] <- "q11_no_nat"
+names(data)[names(data) == "othnet"] <- "q11_other_nat"
+names(data)[names(data) == "shiec"] <- "q11_civitas"
+names(data)[names(data) == "spcareq"] <- "q11_carequality"
+names(data)[names(data) == "vennet"] <- "q11_ehrbased"
+names(data)[names(data) == "ssrstrdt"] <- "q15_syndromic"
+names(data)[names(data) == "irrstrdt"] <- "q15_immune"
+names(data)[names(data) == "ecrstrdt"] <- "q15_electronic"
+names(data)[names(data) == "phrstrdt"] <- "q15_phreg"
+names(data)[names(data) == "cdrstrdt"] <- "q15_clinicreg"
+names(data)[names(data) == "erlstrdt"] <- "q15_elab"
+names(data)[names(data) == "hcustrdt"] <- "q15_hospcap"
+names(data)[names(data) == "ssrhie"] <- "q14_syndromic_hie"
+names(data)[names(data) == "iirhie"] <- "q14_immune_hie"
+names(data)[names(data) == "ecrhie"] <- "q14_electronic_hie"
+names(data)[names(data) == "phrhie"] <- "q14_phreg_hie"
+names(data)[names(data) == "cdrhie"] <- "q14_clinicreg_hie"
+names(data)[names(data) == "erlhie"] <- "q14_elab_hie"
+names(data)[names(data) == "hcuhie"] <- "q14_hospcap_hie"
+names(data)[names(data) == "amichie"] <- "q14_amr_hie"
+names(data)[names(data) == "aitraj"] <- "q19_ai_traj"
+names(data)[names(data) == "airfol"] <- "q19_ai_risk_fu"
+names(data)[names(data) == "aimhea"] <- "q19_ai_monitor"
+names(data)[names(data) == "airect"] <- "q19_ai_rec"
+names(data)[names(data) == "aibill"] <- "q19_ai_bill"
+names(data)[names(data) == "aische"] <- "q19_ai_schedule"
+names(data)[names(data) == "aipoth"] <- "q19_ai_process"
+names(data)[names(data) == "aipoth_desc"] <- "q19_ai_process_desc"
+names(data)[names(data) == "aicloth"] <- "q19_ai_clinic"
+names(data)[names(data) == "aicloth_desc"] <- "q19_ai_clinic_desc"
+names(data)[names(data) == "ainota"] <- "q19_ai_none"
+names(data)[names(data) == "aidnk"] <- "q19_ai_dnk"
+names(data)[names(data) == "aurstrdt"] <- "q15_amr"
+names(data)[names(data) == "predml"] <- "q18_ml"
+names(data)[names(data) == "predoth"] <- "q18_otherml"
+data$othpad_desc <- NULL
+names(data)
+```
+Explore data within each column for missingness
+```{r}
+# make df so easily see for each column how many missing, complete and % complete 
+na_summary <- data.frame(
+  n_data = colSums(!is.na(data)),
+  n_na = colSums(is.na(data)),
+  pct_comp = round(colSums(!is.na(data)) / nrow(data) * 100, 1)
+)
+na_summary
+# there is lots of really good data - not a lot of missingness for rows
+# I wonder if the missingness to the rows are coming from the same organizations ie some were really thorough in filling out the survey and some were not
+
+# look at rows- if same organizations are NA for all, will drop them
+row_na_summary <- data.frame(
+  id = data$id,
+  n_data = rowSums(!is.na(data)),
+  n_na = rowSums(is.na(data)),
+  pct_comp = round(rowSums(!is.na(data)) / ncol(data) * 100, 1)
+)
+row_na_summary
+
+# just looking a the first few row entries, a lot of organizations have 100% complete, some have 90-100%, even less have 60-90%, and some have around 20%. I definitely want to drop the ones that only have 20% of data complete, but how harsh can I be?
+# what is my nrow difference (ie how many institutions I retain) if I make a harsh boundary of only keep those who completed 90%+ vs those who completed 60%+. Or even if I only kept those who answered all questions
+data2 <- row_na_summary[row_na_summary$pct_comp > 61, ]
+data3 <- row_na_summary[row_na_summary$pct_comp > 90, ]
+data4 <- row_na_summary[row_na_summary$pct_comp == 100.0, ]
+
+
+nrow(data2) # 2485
+nrow(data3) # 2098
+nrow(data4) # 1515
+sum(is.na(data4)) # sanity check - 0
+```
+Only keeping institutions that answered all my questions of interest I still retain 1513 institutions. Because this is still a high number, I am going to institute this harsh boundary and only analyze those who completed all questions. 
+
+Now to explore data. 
+Some questions have No keyed as 0 and some have no keyed as 2...
+Would like to recode so it is consistant throughout entire data 
+```{r}
+# 
+```
+
+
+Make composite variable for HIE participation 

@@ -1,0 +1,247 @@
+---
+title: "Final Project - Data Exploration"
+author: "Caroline Gheen"
+date: "2026-04-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Project Requirements
+1) Data Cleaning – demonstrate use of find/replace, data cleaning, dealing with missing 
+values, text character replacement, matching.  It’s ok if your data didn’t require much of 
+this. 
+2) Graphics – somewhere in your analysis, show appropriate use of at least ONE of each of 
+the following – boxplot, scatterplot (can be matrix plot), normal quantile plot (can be 
+part of residuals discussion) histogram. 
+3) Basic tests - t-test, correlation, AND ability to create bootstrap confidence interval for 
+either a t-test or a correlation. 
+4) Permutation Test – include at least one. 
+5) Multiple Regression – use either backwards stepwise regression or some form of best 
+subsets regression.  Should include residual plots.  A GLM with a mix of continuous and 
+categorical predictors is fine here.  This includes a clear discussion of the interpretation 
+of the results of your model. 
+6) ONE OF THE FOLLOWING TECHNIQUES – ANOVA (with some form of multiple comparisons and preferably with a non-parametric analogue for comparison or Welch’s ANOVA – include discussion of interaction plots and interaction terms if two-way), ANCOVA, Binary Logistic Regression, Multinomial Logistic Regression. 
+
+## Plan of Attack
+*FROM 2024*
+*ID*AHA ID Number
+*MNAME*Name 
+*BDTOT*Variables: bed total (continuous) 
+*MSTATE*state(categorical)
+
+*MCNTRL*ownership (categorical- *Government, nonfederal*:12 = State; 13 = County; 14 = City; 15 = City-county; 16 = Hospital district or authority. *Nongovernment, not-for-profit*: 21 = Church operated; 23 = Other. *Investor-owned, for-profit*: 31 = Individual; 32 = Partnership; 33 = Corporation. *Government, federal*: 40 = Department of Defense; 44 = Public Health Service other than 47; 45 = Veterans Affairs; 46 = Federal other than 41-45, 47-48; 47 = Public Health Service Indian Service; 48 = Department of Justice) 
+
+*Q1 - PIEMR*primary inpatient EHR (categorical - 1 = Allscripts; 2 = Cerner/Oracle Health; 3 = eClinical works; 4 = Eclipsys ;5 = Epic; 6 = GE; 7 = McKesson; 8 = MED3000; 9 = Meditech; 10 = NextGen; 11 = Harris Healthcare/QuadraMed;; 12 = Sage; 13 = Siemens; 14 = Self-developed; 15 = Other (specify)
+*Q2- PIERMO**Other described*: 16 = Would prefer not to disclose; 17 = CPSI/Evident; 18 = HMS; 19 = Healthland; 20 = Vitera/Greenway; 21 = Evident; 22 = MEDHOST; 24 = Prognosis; 25 = Athenahealth; 26 = MedWorx; 27 = Health Care System; 28 = Azalea Health/Prognosis; 29 = Altera Digital Health; 30 = We do not use an EMR/EHR system
+);
+Primary provider of inpatient EHR		Q1	PIEMR
+Primary provider of inpatient EHR - other description		Q1_OTH	PIEMRO
+
+*Q10 - RHIO_LVL1*level of participation in HIE (categorical - 1 = HIE/HIO is operational in my area and we are participating and actively exchanging data in at least one HIE/HIO; 2 = HIE/HIO is operational in my area but we are not participating; 3 = HIE/HIO is not operational in my area; 4 = Do not know); 
+Level of HIE or HIO participation		Q10	RHIO_LVL1
+
+*Q11 - CWHA; HLTHXCH; SHIEC; SPCAREQ; VENNET; OTHNET; OTHNET_DESC; NETNO; NETDNK*which HIE acteively participate in (categorical/binary - 1 = Yes; 0 = No)
+a. CommonWell Health Alliance		Q11_A	CWHA
+b. e-Health Exchange		Q11_B	HLTHXCH
+c. Civitas (formerly SHIEC)/Patient Centered Data Home (PCDH)		Q11_C	SHIEC 
+d. Carequality (network-to-network trust/governance framework		Q11_D	SPCAREQ
+e. EHR vendor-based-network that enables record location and exchange within the EHR vendor's network of users (e.g., Epic's Care Everywhere)		Q11_E	VENNET
+f. Other national health information exchange network		Q11_F	OTHNET
+Other national health information exchange network description		Q11_F_OTH	OTHNET_DESC
+g. Do not participate in any national health information exchange networks (either via vendor or directly)		Q11_G	NETNO
+h. Do not know (national health information exchange network)		Q11_H	NETDNK
+Key			
+1 = Yes			
+0 = No			
+
+*Q14 only added those to do with HIE- SSREHR; SSRHIE; SSRPS; SSRFF; SSRNES; SSRDK; IIREHR; IIRHIE; IIRPS; IIRFF; IIRNES; IIRDK; ECREHR; ECRHIE; ECRPS; ECRFF; ECRNES; ECRDK; PHREHR; PHRHIE; PHRPS; PHRFF; PHRNES; PHRDK; CDREHR; CDRHIE; CDRPS; CDRFF; CDRNES; CDRDK; ERLEHR; ERLHIE; ERLPS; ERLFF; ERLNES; ERLDK; AMICEHR; AMICHIE; AMICPS; AMICFF; AMICNES; AMICDK; HCUEHR; HCUHIE; HCUPS; HCUFF; HCUNES; HCUDK* How does hospital submit data to PH reporting for each activity (binary - 1 = Yes; 0 = No)
+a. Syndromic surveillance reporting - Directly from Electronic health record		Q14a_1	SSREHR
+a. Syndromic surveillance reporting - Health information exchange		Q14a_2	# SSRHIE #
+a. Syndromic surveillance reporting - Portal submission		Q14a_3	SSRPS
+a. Syndromic surveillance reporting - Flat files 		Q14a_4	SSRFF
+a. Syndromic surveillance reporting - Not electronically submitting		Q14a_5	SSRNES
+a. Syndromic surveillance reporting - Do not know		Q14a_6	SSRDK
+b. Immunization registry reporting - Directly from Electronic health record		Q14b_1	IIREHR
+b. Immunization registry reporting - Health information exchange		Q14b_2	# IIRHIE #
+b. Immunization registry reporting - Portal submission		Q14b_3	IIRPS
+b. Immunization registry reporting - Flat files		Q14b_4	IIRFF
+b. Immunization registry reporting  - Not electronically submitting		Q14b_5	IIRNES
+b. Immunization registry reporting - Do not know		Q14b_6	IIRDK
+c. Electronic case reporting - Directly from Electronic health record		Q14c_1	ECREHR
+c. Electronic case reporting - Health information exchange		Q14c_2	# ECRHIE #
+c. Electronic case reporting - Portal submission		Q14c_3	ECRPS
+c. Electronic case reporting - Flat files		Q14c_4	ECRFF
+c. Electronic case reporting - Not electronically submitting		Q14c_5	ECRNES
+c. Electronic case reporting - Do not know		Q14c_6	ECRDK
+d. Public health registry reporting - Directly from Electronic health record		Q14d_1	PHREHR
+d. Public health registry reporting - Health information exchange		Q14d_2	# PHRHIE #
+d. Public health registry reporting - Portal submission		Q14d_3	PHRPS
+d. Public health registry reporting - Flat files		Q14d_4	PHRFF
+d. Public health registry reporting - Not electronically submitting		Q14d_5	PHRNES
+d. Public health registry reporting - Do not know		Q14d_6	PHRDK
+e. Clinical data registry reporting - Directly from Electronic health record		Q14e_1	CDREHR
+e. Clinical data registry reporting - Health information exchange		Q14e_2	# CDRHIE #
+e. Clinical data registry reporting - Portal submission		Q14e_3	CDRPS
+e. Clinical data registry reporting - Flat files		Q14e_4	CDRFF
+e. Clinical data registry reporting - Not electronically submitting		Q14e_5	CDRNES
+e. Clinical data registry reporting - Do not know		Q14e_6	CDRDK
+f. Electronic reportable laboratory result reporting - Directly from Electronic health record		Q14f_1	ERLEHR
+f. Electronic reportable laboratory result reporting - Health information exchange		Q14f_2	# ERLHIE #
+f. Electronic reportable laboratory result reporting - Portal submission		Q14f_3	ERLPS
+f. Electronic reportable laboratory result reporting - Flat files		Q14f_4	ERLFF
+f. Electronic reportable laboratory result reporting - Not electronically submitting		Q14f_5	ERLNES
+f. Electronic reportable laboratory result reporting - Do not know		Q14f_6	ERLDK
+g. Antimicrobial use and resistance (AUR) - Directly from Electronic health record		Q14g_1	AMICEHR
+g. Antimicrobial use and resistance (AUR) - Health information exchange		Q14g_2	# AMICHIE #
+g. Antimicrobial use and resistance (AUR) - Portal submission		Q14g_3	AMICPS
+g. Antimicrobial use and resistance (AUR) - Flat files		Q14g_4	AMICFF
+g. Antimicrobial use and resistance (AUR) - Not electronically submitting		Q14g_5	AMICNES
+g. Antimicrobial use and resistance (AUR) - Do not know		Q14g_6	AMICDK
+h. Hospital capacity and utilization of medical supplies - Directly from Electronic health record		Q14h_1	HCUEHR
+h. Hospital capacity and utilization of medical supplies - Health information exchange		Q14h_2	# HCUHIE #
+h. Hospital capacity and utilization of medical supplies - Portal submission		Q14h_3	HCUPS
+h. Hospital capacity and utilization of medical supplies - Flat files		Q14h_4	HCUFF
+h. Hospital capacity and utilization of medical supplies - Not electronically submitting		Q14h_5	HCUNES
+h. Hospital capacity and utilization of medical supplies - Do not know		Q14h_6	HCUDK
+
+
+*Q15 - SSRSTRDT; IRRSTRDT; ECRSTRDT; PHRSTRDT; CDRSTRDT; ERLSTRDT; AURSTRDT; HCUSTRDT*?For each type of reporting does hospital use automated, manual or mix (binaryish; 1 = fully or primarily automated; 2 = mix or automated and manual process; 3 = fully or primarily manual; 4 = do not know)
+a. Syndromic surveillance reporting - Public Health Reporting Type		Q15_A	SSRSTRDT
+b. Immunization registry reporting- Public Health Reporting Type		Q15_B	IRRSTRDT
+c. Electronic case reporting - Public Health Reporting Type		Q15_C	ECRSTRDT
+d. Public health registry reporting - Public Health Reporting Type		Q15_D	PHRSTRDT
+e. Clinical data registry reporting - Public Health Reporting Type		Q15_E	CDRSTRDT
+f. Electronic reportable laboratory result reporting - Public Health Reporting Type		Q15_F	ERLSTRDT
+g. Antimicrobial use and resistance (AUR) - Public Health Reporting Type		Q15_G	AURSTRDT
+h. Hospital capacity and utilization of medical supplies - Public Health Reporting Type		Q15_H	HCUSTRDT
+
+
+*Q16 - lots of variable - re-download if want to use*?What challenges has hospital experienced in past year when sending information electronically to PH? (categorical broken down by type of report)
+
+*Q18 - PREDML; PREDOTH*Do you use predictive models/ML (categorical/binary - 1 = Yes; 2 = No; 3 = Do Not Know)
+a. Machine Learning		Q18_a	PREDML
+b. Other non-machine learning predictive models (e.g. APACHE IV)		Q18_b	PREDOTH
+
+
+*Q19 - AITRAJ; AIRFOL; AIMHEA; AIRECT; AIBILL; AISCHE; AIPOTH; AIPOTH_DESC; AICLOTH; AICLOTH_DESC; AINOTA; AIDNK* For which do you applied ML or predictive (categorical - 1 = Yes; 0 = No)
+a. Predicting health trajectories or risks for inpatients		Q19_A	AITRAJ
+b. Identify high risk outpatients to inform follow-up care		Q19_B	AIRFOL
+c. Monitor health		Q19_C	AIMHEA
+d. Recommend treatments		Q19_D	AIRECT
+e. Simplify or automate billing procedures		Q19_E	AIBILL
+f. Facilitate scheduling 		Q19_F	AISCHE
+g. Other (operational process optimization)		Q19_G	AIPOTH
+Other description (operational process optimization)		Q19_G_OTH	AIPOTH_DESC
+h. Other (clinical use cases)		Q19_H	AICLOTH
+Other description (other clinical use cases)		Q19_H_OTH	AICLOTH_DESC
+I. None of the above (machine learning application)		Q19_I	AINOTA
+j. Do not know (machine learning application)		Q19_J	AIDNK
+
+
+# Required
+Question: What hopsital characteristics (state, bed size, type, EHR vendor, ML use, PHH challenges?) predict active HIE participation? 
+In 2024, what hospital characteristics are associated with higher levels of national HIE network participation?
+Does HIE participation predict more automated PH reporting?
+Does HIE participation predict more PH reporting?
+Does HIE participation predict more AI use?
+Does more AI use predict more automated PH reporting? Does it interact with HIE paticipation
+
+Scatterplot: participation 
+Boxplot: participation in HIE by state; participation in state by type of ownerhsip
+Quantile: multiple regression
+Histogram: multiple regression
+T-test: 
+Correlation: bed total vs HIE participation? As hospitals are bigger are they more likely to participate in HIE; Sum types of ML doing, does ML use increase at bigger hospital - is there an interaction with those who participate in HIE?
+Bootstrap of T-test or correlation:
+Permutation:
+Multiple Regression:
+ANCOVA:
+Binary Logistic Regression: can you predict if a hospital is or is not part of HIE
+Interaction plot:
+
+
+```{r}
+data <- read.csv("AHA - Query.csv")
+dim(data) # 25899, 28
+names(data) 
+head(data)
+```
+
+```{r}
+sum(is.na(data$bdtot)) # 26 - bed total
+
+sum(is.na(data$mcntrl)) # 2 - control/ownership
+
+sum(is.na(data$piemro)) # 0 - all values present - primary inpatient EHR vendor
+
+sum(is.na(data$nm1oth)) # 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name1 Other
+
+sum(is.na(data$rhio_lvl1)) # 878 missing  Level of HIE or HIO participation
+
+sum(is.na(data$hie_noex)) # - Do not exhange (HIE Vendor)
+nrow(data) - sum(is.na(data$hie_noex)) # 356 values included
+
+sum(is.na(data$hie_nodis)) # (hie_nodis) Prefer not to disclose (HIE Vendor
+nrow(data) - sum(is.na(data$hie_nodis)) # 98 values included
+# can we assume those who did not say prefer not to disclose or do not exchange have a HIE?
+# maybe I include all answers and them manually bunch all together - do only for one year
+
+sum(is.na(data$emoreg)) #  Regional, state, or local health information exchange organization (HIE/HIO). Not local, proprietary, enterprise network)
+nrow(data) - sum(is.na(data$emoreg)) # 11687 values included
+
+sum(is.na(data$nmref1)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 1
+nrow(data) - sum(is.na(data$nmref1)) # 5620 values included 
+
+sum(is.na(data$year1)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 1
+nrow(data) - sum(is.na(data$year1)) # 5606 values included
+
+sum(is.na(data$nmref2))#  Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 2
+nrow(data) - sum(is.na(data$nmref2)) #1681 values included
+
+sum(is.na(data$year2)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 2
+nrow(data) - sum(is.na(data$year2)) # 2046 values included
+
+sum(is.na(data$nm2oth))# 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name2 Other
+
+sum(is.na(data$nmref3)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 3
+nrow(data) - sum(is.na(data$nmref3)) # 832 values included
+
+sum(is.na(data$year3)) #Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 3
+nrow(data) - sum(is.na(data$year3)) #1160 values included 
+
+sum(is.na(data$nm3oth)) # 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name3 Other
+
+sum(is.na(data$ssrshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Syndromic surveillance reporting
+nrow(data) - sum(is.na(data$ssrshie)) # 2060 values included 
+sum(is.na(data$irrshie)) #  If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Immunization registry reporting
+nrow(data) - sum(is.na(data$irrshie)) # 2037 values included
+
+sum(is.na(data$ecrshie)) # f you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Electronic case reporting
+nrow(data) - sum(is.na(data$ecrshie)) #2006 values included
+
+sum(is.na(data$phrshie)) #  If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Public health registry reporting
+nrow(data) - sum(is.na(data$phrshie)) # 2005 values included 
+sum(is.na(data$cdrshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Clinical data registry reporting
+nrow(data) - sum(is.na(data$cdrshie)) # 2003 values included 
+sum(is.na(data$erlshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Electronic reportable laboratory result reporting
+nrow(data) - sum(is.na(data$erlshie)) # 2043 values included
+
+sum(is.na(data$hcushie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Hospital capacity and utilization of medical supplies
+nrow(data) - sum(is.na(data$hcushie)) # 1970 values included
+
+sum(is.na(data$hiechrge)) # HIE charges your hospital additionally to submit data for public health reporting activities.
+nrow(data) - sum(is.na(data$hiechrge)) # 2643 values included 
+
+```
+
+
+```{r}
+data <- read.csv("AHA Data - Query 2.csv")
+dim(data)
+names(data)
+```
+
