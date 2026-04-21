@@ -1,0 +1,162 @@
+---
+title: "Final Project - Data Exploration"
+author: "Caroline Gheen"
+date: "2026-04-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Project Requirements
+1) Data Cleaning – demonstrate use of find/replace, data cleaning, dealing with missing 
+values, text character replacement, matching.  It’s ok if your data didn’t require much of 
+this. 
+2) Graphics – somewhere in your analysis, show appropriate use of at least ONE of each of 
+the following – boxplot, scatterplot (can be matrix plot), normal quantile plot (can be 
+part of residuals discussion) histogram. 
+3) Basic tests - t-test, correlation, AND ability to create bootstrap confidence interval for 
+either a t-test or a correlation. 
+4) Permutation Test – include at least one. 
+5) Multiple Regression – use either backwards stepwise regression or some form of best 
+subsets regression.  Should include residual plots.  A GLM with a mix of continuous and 
+categorical predictors is fine here.  This includes a clear discussion of the interpretation 
+of the results of your model. 
+6) ONE OF THE FOLLOWING TECHNIQUES – ANOVA (with some form of multiple comparisons and preferably with a non-parametric analogue for comparison or Welch’s 
+ANOVA – include discussion of interaction plots and interaction terms if two-way), 
+ANCOVA, Binary Logistic Regression, Multinomial Logistic Regression. 
+
+## Plan of Attack
+*FROM 2024*
+AHA ID Number
+Variables: bed total (continuous) 
+state(categorical)
+
+ownership (categorical- *Government, nonfederal*:12 = State; 13 = County; 14 = City; 15 = City-county; 16 = Hospital district or authority. *Nongovernment, not-for-profit*: 21 = Church operated; 23 = Other. *Investor-owned, for-profit*: 31 = Individual; 32 = Partnership; 33 = Corporation. *Government, federal*: 40 = Department of Defense; 44 = Public Health Service other than 47; 45 = Veterans Affairs; 46 = Federal other than 41-45, 47-48; 47 = Public Health Service Indian Service; 48 = Department of Justice) 
+
+primary inpatient EHR (categorical - 1 = Allscripts; 2 = Cerner/Oracle Health; 3 = eClinical works; 4 = Eclipsys ;5 = Epic; 6 = GE; 7 = McKesson; 8 = MED3000; 9 = Meditech; 10 = NextGen; 11 = Harris Healthcare/QuadraMed;; 12 = Sage; 13 = Siemens; 14 = Self-developed; 15 = Other (specify)
+*Other described*: 16 = Would prefer not to disclose; 17 = CPSI/Evident; 18 = HMS; 19 = Healthland; 20 = Vitera/Greenway; 21 = Evident; 22 = MEDHOST; 24 = Prognosis; 25 = Athenahealth; 26 = MedWorx; 27 = Health Care System; 28 = Azalea Health/Prognosis; 29 = Altera Digital Health; 30 = We do not use an EMR/EHR system
+);
+
+?Do you collect SDOH
+?How collect SDOH - HIE is an option
+
+level of participation in HIE (categorical - 1 = HIE/HIO is operational in my area and we are participating and actively exchanging data in at least one HIE/HIO; 2 = HIE/HIO is operational in my area but we are not participating; 3 = HIE/HIO is not operational in my area; 4 = Do not know); 
+
+which HIE acteively participate in (categorical)
+a. CommonWell Health Alliance		Q11_A	CWHA
+b. e-Health Exchange		Q11_B	HLTHXCH
+c. Civitas (formerly SHIEC)/Patient Centered Data Home (PCDH)		Q11_C	SHIEC 
+d. Carequality (network-to-network trust/governance framework		Q11_D	SPCAREQ
+e. EHR vendor-based-network that enables record location and exchange within the EHR vendor's network of users (e.g., Epic's Care Everywhere)		Q11_E	VENNET
+f. Other national health information exchange network		Q11_F	OTHNET
+Other national health information exchange network description		Q11_F_OTH	OTHNET_DESC
+g. Do not participate in any national health information exchange networks (either via vendor or directly)		Q11_G	NETNO
+h. Do not know (national health information exchange network)		Q11_H	NETDNK
+			
+Key			
+1 = Yes			
+0 = No			
+
+?How does hospital submit data to PH reporting for each activity (HIE option)
+?For each type of reporting does hospital use automated, manual or mix (binaryish)
+?What challenges has hospital experienced in past year when sending information electronically to PH? (categorical broken down by type of report)
+
+?Do you use predictive models/ML (categorical - yes/no)
+?For which do you applied ML or predictive (categorical)
+
+*Would have to use non 2024 for longitudinal data
+
+# Required
+Question: What hopsital characteristics (state, bed size, type, EHR vendor, ML use, PHH challenges?) predict active HIE participation? 
+In 2024, what hospital characteristics are associated with higher levels of national HIE network participation?
+
+Scatterplot: participation 
+Boxplot: participation in HIE by state; participation in state by type of ownerhsip
+Quantile: multiple regression
+Histogram: multiple regression
+T-test: 
+Correlation: bed total vs HIE participation? As hospitals are bigger are they more likely to participate in HIE; Sum types of ML doing, does ML use increase at bigger hospital - is there an interaction with those who participate in HIE?
+Bootstrap of T-test or correlation:
+Permutation:
+Multiple Regression:
+ANCOVA:
+Interaction plot:
+
+
+```{r}
+data <- read.csv("AHA - Query.csv")
+dim(data) # 25899, 28
+names(data) 
+head(data)
+```
+
+```{r}
+sum(is.na(data$bdtot)) # 26 - bed total
+
+sum(is.na(data$mcntrl)) # 2 - control/ownership
+
+sum(is.na(data$piemro)) # 0 - all values present - primary inpatient EHR vendor
+
+sum(is.na(data$nm1oth)) # 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name1 Other
+
+sum(is.na(data$rhio_lvl1)) # 878 missing  Level of HIE or HIO participation
+
+sum(is.na(data$hie_noex)) # - Do not exhange (HIE Vendor)
+nrow(data) - sum(is.na(data$hie_noex)) # 356 values included
+
+sum(is.na(data$hie_nodis)) # (hie_nodis) Prefer not to disclose (HIE Vendor
+nrow(data) - sum(is.na(data$hie_nodis)) # 98 values included
+# can we assume those who did not say prefer not to disclose or do not exchange have a HIE?
+# maybe I include all answers and them manually bunch all together - do only for one year
+
+sum(is.na(data$emoreg)) #  Regional, state, or local health information exchange organization (HIE/HIO). Not local, proprietary, enterprise network)
+nrow(data) - sum(is.na(data$emoreg)) # 11687 values included
+
+sum(is.na(data$nmref1)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 1
+nrow(data) - sum(is.na(data$nmref1)) # 5620 values included 
+
+sum(is.na(data$year1)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 1
+nrow(data) - sum(is.na(data$year1)) # 5606 values included
+
+sum(is.na(data$nmref2))#  Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 2
+nrow(data) - sum(is.na(data$nmref2)) #1681 values included
+
+sum(is.na(data$year2)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 2
+nrow(data) - sum(is.na(data$year2)) # 2046 values included
+
+sum(is.na(data$nm2oth))# 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name2 Other
+
+sum(is.na(data$nmref3)) # Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name/reference number 3
+nrow(data) - sum(is.na(data$nmref3)) # 832 values included
+
+sum(is.na(data$year3)) #Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO.-First year your hospital participated 3
+nrow(data) - sum(is.na(data$year3)) #1160 values included 
+
+sum(is.na(data$nm3oth)) # 0 - all values present - Please indicate which state, regional and/or local HIE/HIO(s) with whom your hospital participates and actively exchanges data as well as the first year that your hospitals actively participated in this HIE/HIO. - Name3 Other
+
+sum(is.na(data$ssrshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Syndromic surveillance reporting
+nrow(data) - sum(is.na(data$ssrshie)) # 2060 values included 
+sum(is.na(data$irrshie)) #  If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Immunization registry reporting
+nrow(data) - sum(is.na(data$irrshie)) # 2037 values included
+
+sum(is.na(data$ecrshie)) # f you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Electronic case reporting
+nrow(data) - sum(is.na(data$ecrshie)) #2006 values included
+
+sum(is.na(data$phrshie)) #  If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Public health registry reporting
+nrow(data) - sum(is.na(data$phrshie)) # 2005 values included 
+sum(is.na(data$cdrshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Clinical data registry reporting
+nrow(data) - sum(is.na(data$cdrshie)) # 2003 values included 
+sum(is.na(data$erlshie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Electronic reportable laboratory result reporting
+nrow(data) - sum(is.na(data$erlshie)) # 2043 values included
+
+sum(is.na(data$hcushie)) # If you use an HIE to submit data for public health reporting activities, does the HIE perform value added services during submission? Hospital capacity and utilization of medical supplies
+nrow(data) - sum(is.na(data$hcushie)) # 1970 values included
+
+sum(is.na(data$hiechrge)) # HIE charges your hospital additionally to submit data for public health reporting activities.
+nrow(data) - sum(is.na(data$hiechrge)) # 2643 values included 
+
+```
+
