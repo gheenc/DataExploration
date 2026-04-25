@@ -9,13 +9,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, warning = FALSE}
+# load packages
+library(dplyr) # for piping
+library(car) # for recoding
+
+```
+
+Load Initial data - qureried from AHA IT Supplemental Survey 2024. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by institutions' CIO. 
 ```{r}
 # load initial data
 data <- read.csv("AHA Data - Query 2.csv")
-dim(data)
+dim(data) # 2641 institutions responded, only loaded 48 variables; in total 27 questions are asked
 names(data)
 ```
 
+Change names to be more human readable and track question number to understand which go together
+Many questions are the same question by binary indicators of which feature the institution does as part of that question. 
 ```{r}
 # change names to be more human readable
 names(data)[names(data) == "piemro"] <- "primary_emr_other"
@@ -64,6 +74,7 @@ names(data)[names(data) == "predoth"] <- "q18_otherml"
 data$othpad_desc <- NULL
 names(data)
 ```
+
 Explore data within each column for missingness
 ```{r}
 # make df so easily see for each column how many missing, complete and % complete 
@@ -87,24 +98,150 @@ row_na_summary
 
 # just looking a the first few row entries, a lot of organizations have 100% complete, some have 90-100%, even less have 60-90%, and some have around 20%. I definitely want to drop the ones that only have 20% of data complete, but how harsh can I be?
 # what is my nrow difference (ie how many institutions I retain) if I make a harsh boundary of only keep those who completed 90%+ vs those who completed 60%+. Or even if I only kept those who answered all questions
-data2 <- row_na_summary[row_na_summary$pct_comp > 61, ]
-data3 <- row_na_summary[row_na_summary$pct_comp > 90, ]
-data4 <- row_na_summary[row_na_summary$pct_comp == 100.0, ]
+nrow(row_na_summary[row_na_summary$pct_comp > 61, ]) # 2485
+nrow(row_na_summary[row_na_summary$pct_comp > 90, ]) # 2098
+nrow(row_na_summary[row_na_summary$pct_comp == 100.0, ]) # 1513
 
+# select selects that are full as best
+best_rows <-(row_na_summary[row_na_summary$pct_comp == 100.0, ])
 
-nrow(data2) # 2485
-nrow(data3) # 2098
-nrow(data4) # 1515
-sum(is.na(data4)) # sanity check - 0
+# keep only data that has all rows full as data2
+data2 <- data %>% filter(id %in% best_rows$id) 
+
+# sanity check that there are no NA - there are empty values but these are meaningful (ie. no primary other emr means they don't use other primary emr)
+sum(is.na(data2)) # sanity check - 0
 ```
-Only keeping institutions that answered all my questions of interest I still retain 1513 institutions. Because this is still a high number, I am going to institute this harsh boundary and only analyze those who completed all questions. 
+Only keeping institutions that answered all my questions of interest I still retain 1513 institutions. Because this is still a high number, I am going to institute this harsh boundary and only analyze those who completed all questions. This means moving forward I will use data4 and retain data as the original, ground truth dataset in case of any errors. 
 
 Now to explore data. 
-Some questions have No keyed as 0 and some have no keyed as 2...
-Would like to recode so it is consistant throughout entire data 
 ```{r}
-# 
+str(data2)
+```
+
+Some questions have No keyed as 0 and some have no keyed as 2...
+Would like to recode so it is consistant throughout entire data and I can make cumulative variables. I will recode everything so that 0=No, 1 = Yes...
+This only matters for Q11 (already 0=No), Q14 (already 0=No), Q18 (currently 1=yes, 2=no, 3=do not know), Q19 (already 0=No), 
+These need to be recoded. code as 0=no, 1=yes, 2=do not know. that means current 2 becomes 0, 1 stays 1, current 3 becomes 2
+"q18_ml"              "q18_otherml" 
+```{r}
+# recode question 14
+data2$q18_ml <- recode(data2$q18_ml, "2 = 0; 3 = 2" )
+
+data2$q18_otherml <- recode(data2$q18_otherml, "2 = 0; 3 = 2" )
+
+unique(data2$q18_ml)
+```
+
+Make composite variable for HIE participation 
+Group together similar variables or create others (ie Epic, Cerner, Other)
+Primary EHR other, HIE other, and desc variables have free text in them
+In explore look at free variable entries, if all states are represented, spread of ownership, spread of bed total (may have to take a log transformation)
+
+First, let's explore the data a little more
+```{r}
+str(data2)
+# structure seems good for all. my coding made them numeric instead of integer - this is probably fine. will likely need to make these factor to do categorical things. can come back and do this once I decide
+```
+
+Lets look at if all states are represented
+```{r}
+length(unique(data2$mstate)) # 52 states - PR and MP in addition to all 50 states
+
+# I have no idea what MP is...
+data2[data2$mstate == "MP",]
+# googling the name of the health center and MP I discover it is in Mariana Islands for Navy members stationed there
+
+# okay so we know all 50 state plus some are represented - how many hospitals are in each
+table(data2$mstate)
+# make this into a df so it is plottable
+state_counts <- as.data.frame(table(data$mstate))
+colnames(state_counts) <- c("state", "n")
+
+barplot(state_counts$n)
+hist(state_counts$n) # this is right skewed as is expected
+# it would be cool to come back and do some sort of frequency plot that makes the state name bigger the more hospitals it has
+```
+
+Let's look at the type of primary EHRs that are used 
+```{r}
+table(data2$primary_emr)
+# lots at Cerner/Oracle(2) and Epic (5) and Meditech(9) as expected. Also lots ie 50+ at Other(91 - these are in the other variable), CPSI/Evident(17). Majority 
+
+as.data.frame(table(data2$primary_emr_other))
+# Wellsky has a lot of responses (32)
+# MyAvatar that is also NetSmart has lots of responses but they aren't going together based on different spelling and capitalization - I don't think it will addd together high enough to become it's onw category so i don't think i'll spend the time to standardize
+
+length(unique(data2$primary_emr_other)) # only 37 specified the other system they used but 91 said they use another system...
+```
+
+I'm going to explore the rest of the description/free answer
+ q11_other_HIE
+ q19_ai_process_desc
+ q19_ai_clinic_desc
+```{r}
+as.data.frame(table(data2$q11_other_HIE))
+length(unique(data2$q11_other_HIE))
+sort(unique(data2$q11_other_HIE))
+
+as.data.frame(table(data2$q19_ai_process_desc))
+length(unique(data2$q19_ai_process_desc))
+
+as.data.frame(table(data2$q19_ai_clinic_desc))
+```
+
+All the other answers include the occurances of answerees leaving it empty. We need to drop these so they don't affect the frequency. We can replace all instances of no answer ("") with NA. 
+```{r}
+data2$q11_other_HIE[data2$q11_other_HIE == ""] <- NA
+data2$q19_ai_clinic_desc[data2$q19_ai_clinic_desc == ""] <- NA
+data2$q19_ai_process_desc[data2$q19_ai_process_desc == ""] <- NA
+
+# recheck unique
+unique(data2$q11_other_HIE)
+unique(data2$q19_ai_clinic_desc)
+unique(data2$q19_ai_process_desc)
+# all "" changed to NA successfully
 ```
 
 
-Make composite variable for HIE participation 
+Explore Other HIE answers 
+See if any of the occurrences in the free text are actually options
+```{r}
+# other HIE
+as.data.frame(table(sort(data2$q11_other_HIE)))
+# 1 for Commonwell (CommonWell through Healthix) - add to CommonWell; 6 for Epic - add to Epic; 3 for TEFCA - remove; TEFCA is an agreement not a framework; 1 eCQM - remove; eCQM is a CMS quality measure; 1 NIH - NIH does not have an HIE
+
+# not sure if i want to have these i'm removing be added to do not know, do not use, or become NA
+```
+Lots of the other national exchanges are state exchanges that still exist - CA, CO, NJ, CT/MA, KY, IN KA, OH, OK; or other federal exchages lots with the VA; Surescripts and CyncHealth, Direct Trust also large chunk but not enough to challenge other groups to be their own 
+
+Explore AI clinical other uses 
+```{r}
+as.data.frame(table(sort(data2$q19_ai_clinic_desc)))
+```
+
+Explore AI operational process other uses 
+```{r}
+as.data.frame(table(sort(data2$q19_ai_process_desc)))
+```
+
+
+
+Create subvariable for each question and frequency of answers
+(can't do column sum on ones with 2/3 etc)
+```{r}
+HIEdf <- data2[, c("q11_carequality", "q11_commonwell", "q11_ehealth", "q11_dnk_othernat", "q11_no_nat", "q11_other_nat", "q11_civitas", "q11_ehrbased")]
+HIEdf <- as.data.frame(colSums(HIEdf))
+names(HIEdf) <- c("n")
+HIEdf
+barplot(HIEdf$n)
+
+names(data2)
+
+# question 19 - ML/predictive use 
+q19df <- data2[, c("q19_ai_traj","q19_ai_risk_fu", "q19_ai_monitor", "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule", "q19_ai_process", "q19_ai_clinic", "q19_ai_none", "q19_ai_dnk")]
+
+q19_freq <- as.data.frame(colSums(q19df))
+names(q19_freq) <- c("n")
+q19_freq
+```
+
