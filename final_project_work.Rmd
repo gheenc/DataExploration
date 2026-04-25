@@ -131,10 +131,9 @@ data2$q18_otherml <- recode(data2$q18_otherml, "2 = 0; 3 = 2" )
 unique(data2$q18_ml)
 ```
 
-Make composite variable for HIE participation 
+
 Group together similar variables or create others (ie Epic, Cerner, Other)
-Primary EHR other, HIE other, and desc variables have free text in them
-In explore look at free variable entries, if all states are represented, spread of ownership, spread of bed total (may have to take a log transformation)
+
 
 First, let's explore the data a little more
 ```{r}
@@ -164,14 +163,49 @@ hist(state_counts$n) # this is right skewed as is expected
 Let's look at the type of primary EHRs that are used 
 ```{r}
 table(data2$primary_emr)
-# lots at Cerner/Oracle(2) and Epic (5) and Meditech(9) as expected. Also lots ie 50+ at Other(91 - these are in the other variable), CPSI/Evident(17). Majority 
+# lots at Cerner/Oracle(2) and Epic (5) and Meditech(9) as expected. Also lots ie 50+ at Other(91 - these are in the other variable), CPSI/Evident(17).
 
 as.data.frame(table(data2$primary_emr_other))
 # Wellsky has a lot of responses (32)
-# MyAvatar that is also NetSmart has lots of responses but they aren't going together based on different spelling and capitalization - I don't think it will addd together high enough to become it's onw category so i don't think i'll spend the time to standardize
+# MyAvatar that is also NetSmart has lots of responses but they aren't going together based on different spelling and capitalization - I don't think it will add together high enough to become it's onw category so i don't think i'll spend the time to standardize
 
 length(unique(data2$primary_emr_other)) # only 37 specified the other system they used but 91 said they use another system...
 ```
+Cerner/Oracle, Epic, and Meditech have the most users as expected. I am going to do these three and all others will be an other, except 30 which is don't have an EMR and should stay as it's own category.Acutally, nobody answered 30 meaning everyboyd has an EMR
+```{r}
+# condense primary emr answers
+data2$primary_emr[!data2$primary_emr %in% c(2, 5, 9, 30)] <- 0
+
+# check only 2, 5, 9, and 30 are options for emr
+unique(data2$primary_emr)
+
+# new table with condensed options
+table(data2$primary_emr)
+```
+
+Regroup ownership type variable
+```{r}
+# look at ownership as is
+table(data2$ownership)
+table(data$ownership)
+# 12-16 is all types of government-nonfederal; 21 and 23 are non-government/not for profits; 31-33 are for profits; 40-48 are federal goverment types 
+# not sure why an ownership option is the department of justice but none of those appear in this dataset - maybe if they go bankrupt 
+
+# I am going to combine the individual breakdowns into the larger general groups given in the dataset
+# government non-federal = 1; nongov, not for profit = 2; for profit = 3; federal = 4
+data2$ownership[data2$ownership %in% c(12, 13, 14, 15, 16)] <- 1
+
+data2$ownership[data2$ownership %in% c(21, 23)] <- 2
+
+data2$ownership[data2$ownership %in% c(31, 32, 33)] <- 3
+
+data2$ownership[data2$ownership %in% c(40, 44, 45, 46, 47, 48)] <- 4
+
+# check current unique values 
+unique(data2$ownership)
+```
+All types of nonfederal government hospital ownership groups are represented as well as for profit and not for profit. Not for profits are the largest category, altoghout other is larger than church, church alone is larger than some toehr groups. Federal is smaller than expected, there is only 1 owned by the DOD (military hospitals) and 9 VAs... this is not representative of the actual hospital ownership breakdown so this must be due to only keeping entries that answered all our questions. *Would be interesting to compare to owernship type in all of the dataset.*
+
 
 I'm going to explore the rest of the description/free answer
  q11_other_HIE
@@ -227,28 +261,58 @@ Create subvariable for each question and frequency of answers
 (can't do column sum on ones with 2/3 etc, but can create cleaner tables)
 ```{r}
 # quesiton 11 - includes all except other frequency
-HIEdf <- data2[, c("q11_carequality", "q11_commonwell", "q11_ehealth", "q11_dnk_othernat", "q11_no_nat", "q11_other_nat", "q11_civitas", "q11_ehrbased")]
-HIEdf <- as.data.frame(colSums(HIEdf))
-names(HIEdf) <- c("n")
+q11df <- data2[, c("q11_carequality", "q11_commonwell", "q11_ehealth", "q11_dnk_othernat", "q11_no_nat", "q11_other_nat", "q11_civitas", "q11_ehrbased")]
+q11_freq <- as.data.frame(colSums(q11df))
+names(q11_freq) <- c("n")
 # could expand these out to be a percentage - add another column (use dplyr) of n/total hospitals in dataset to create % of hospitals who are in that HIE type
 # not all hospitals that said they use another HIE provided the name (~10, would be size of how many there are in that single variable(not whole column of the df bc that could be people who chose another column and thus left the please specify other column blank))
-data2[data2$q11_other_nat_desc, ]
 
 # question 19 
 q19df <- data2[, c("q19_ai_traj","q19_ai_risk_fu", "q19_ai_monitor", "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule", "q19_ai_process", "q19_ai_clinic", "q19_ai_none", "q19_ai_dnk")]
 q19_freq <- as.data.frame(colSums(q19df))
 names(q19_freq) <- c("n")
-q19_freq
 # could expand these out to be a percentage - add another column (use dplyr) of n/total hospitals in dataset to create % of hospitals who use that tool 
 
 # question 14
 
+q14df <- data2[, c("q14_syndromic_hie", "q14_immune_hie", "q14_electronic_hie", "q14_phreg_hie", "q14_clinicreg_hie", "q14_elab_hie", "q14_hospcap_hie", "q14_amr_hie")]
+q14_freq <- as.data.frame(colSums(q14df))
+names(q14_freq) <- c("n")
+
+names(data2)
 
 # this is all the variables that have binary
 ```
 
-Need to create HIE participant cumulative variable
+Need to create HIE participant cumulative variable. To score hospitals on their HIE participation, they will get +1 for each ph reporting they utilize HIE for, captured in question 14. Because these are already scored as 0 for no and 1 for yes, we can row sum these variables. Then, they will get +1 if they participate in an HIE. This would mean they answered 1 to question 10. Because no/other answers are the higher options for this question, we cannot just sum the answers. 
 ```{r}
+data2$hie_participation <- rowSums(data2[, c("q14_syndromic_hie", "q14_immune_hie", "q14_electronic_hie", "q14_phreg_hie", "q14_clinicreg_hie", "q14_elab_hie", "q14_hospcap_hie", "q14_amr_hie")])
 
+data2$hie_participation <- ifelse(data2$q10_HIE_partic == 1, data2$hie_participation + 1, data2$hie_participation)
+```
+
+Explore HIE participation variable
+```{r}
+# create own variable to cut down on typing
+hie_part <- data2$hie_participation
+range(hie_part) # 0-9 this is good
+table(hie_part)
+
+# create boxplot of hie participation by state
+boxplot(hie_part ~ data2$mstate)
+
+# scatterplot of hie participation by bed total
+# most likely will want to take log transformation of bed total
+hist(data2$bdtot)
+hist(log(data2$bdtot))
+plot(hie_part ~ log(data2$bdtot))
+
+# scatterplot of hie participation by ownership type
+hist(data2$ownership)
+boxplot(hie_part ~ data2$ownership)
+
+# scatterplot of hie participation by primary ehr
+hist(data2$primary_emr)
+boxplot(hie_part ~ data2$primary_emr)
 ```
 

@@ -134,10 +134,12 @@ c. Monitor health		Q19_C	AIMHEA
 d. Recommend treatments		Q19_D	AIRECT
 e. Simplify or automate billing procedures		Q19_E	AIBILL
 f. Facilitate scheduling 		Q19_F	AISCHE
+
 g. Other (operational process optimization)		Q19_G	AIPOTH
 Other description (operational process optimization)		Q19_G_OTH	AIPOTH_DESC
 h. Other (clinical use cases)		Q19_H	AICLOTH
 Other description (other clinical use cases)		Q19_H_OTH	AICLOTH_DESC
+
 I. None of the above (machine learning application)		Q19_I	AINOTA
 j. Do not know (machine learning application)		Q19_J	AIDNK
 
