@@ -9,11 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, warning = FALSE}
+```{r, warnings = FALSE}
 # load packages
 library(dplyr) # for piping
 library(car) # for recoding
-
 ```
 
 Load Initial data - qureried from AHA IT Supplemental Survey 2024. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by institutions' CIO. 
@@ -32,7 +31,7 @@ names(data)[names(data) == "piemro"] <- "primary_emr_other"
 names(data)[names(data) == "mcntrl"] <- "ownership"
 names(data)[names(data) == "piemr"] <- "primary_emr"
 names(data)[names(data) == "rhio_lvl1"] <- "q10_HIE_partic"
-names(data)[names(data) == "othnet_desc"] <- "q11_other_HIE"
+names(data)[names(data) == "othnet_desc"] <- "q11_other_nat_desc"
 names(data)[names(data) == "cwha"] <- "q11_commonwell"
 names(data)[names(data) == "hlthxch"] <- "q11_ehealth"
 names(data)[names(data) == "netdnk"] <- "q11_dnk_othernat"
@@ -179,24 +178,22 @@ I'm going to explore the rest of the description/free answer
  q19_ai_process_desc
  q19_ai_clinic_desc
 ```{r}
-as.data.frame(table(data2$q11_other_HIE))
-length(unique(data2$q11_other_HIE))
-sort(unique(data2$q11_other_HIE))
+# 3 free text variables
+as.data.frame(table(data2$q11_other_nat_desc)
 
 as.data.frame(table(data2$q19_ai_process_desc))
-length(unique(data2$q19_ai_process_desc))
 
 as.data.frame(table(data2$q19_ai_clinic_desc))
 ```
 
 All the other answers include the occurances of answerees leaving it empty. We need to drop these so they don't affect the frequency. We can replace all instances of no answer ("") with NA. 
 ```{r}
-data2$q11_other_HIE[data2$q11_other_HIE == ""] <- NA
+data2$q11_other_nat_desc[data2$q11_other_nat_desc == ""] <- NA
 data2$q19_ai_clinic_desc[data2$q19_ai_clinic_desc == ""] <- NA
 data2$q19_ai_process_desc[data2$q19_ai_process_desc == ""] <- NA
 
 # recheck unique
-unique(data2$q11_other_HIE)
+unique(data2$q11_other_nat_desc)
 unique(data2$q19_ai_clinic_desc)
 unique(data2$q19_ai_process_desc)
 # all "" changed to NA successfully
@@ -207,7 +204,7 @@ Explore Other HIE answers
 See if any of the occurrences in the free text are actually options
 ```{r}
 # other HIE
-as.data.frame(table(sort(data2$q11_other_HIE)))
+as.data.frame(table(sort(data2$q11_other_nat_desc)))
 # 1 for Commonwell (CommonWell through Healthix) - add to CommonWell; 6 for Epic - add to Epic; 3 for TEFCA - remove; TEFCA is an agreement not a framework; 1 eCQM - remove; eCQM is a CMS quality measure; 1 NIH - NIH does not have an HIE
 
 # not sure if i want to have these i'm removing be added to do not know, do not use, or become NA
@@ -223,25 +220,35 @@ Explore AI operational process other uses
 ```{r}
 as.data.frame(table(sort(data2$q19_ai_process_desc)))
 ```
-
+Other clinical uses include a lot of predictive and LOS prediction that I think can be assigned out to a or f. Operational includes lots of supply chain which makes sense but also coding and revenue cycles that I think can be assigned out to billing. There doesn't seem to be a good difference of when to report something as other clinical process or other operational process (ie. clinical workflow and citation creation appear in both). Once I reassign out the ones I think I can, I am going to combine the variables to be one other variable for q19. 
 
 
 Create subvariable for each question and frequency of answers
-(can't do column sum on ones with 2/3 etc)
+(can't do column sum on ones with 2/3 etc, but can create cleaner tables)
 ```{r}
+# quesiton 11 - includes all except other frequency
 HIEdf <- data2[, c("q11_carequality", "q11_commonwell", "q11_ehealth", "q11_dnk_othernat", "q11_no_nat", "q11_other_nat", "q11_civitas", "q11_ehrbased")]
 HIEdf <- as.data.frame(colSums(HIEdf))
 names(HIEdf) <- c("n")
-HIEdf
-barplot(HIEdf$n)
+# could expand these out to be a percentage - add another column (use dplyr) of n/total hospitals in dataset to create % of hospitals who are in that HIE type
+# not all hospitals that said they use another HIE provided the name (~10, would be size of how many there are in that single variable(not whole column of the df bc that could be people who chose another column and thus left the please specify other column blank))
+data2[data2$q11_other_nat_desc, ]
 
-names(data2)
-
-# question 19 - ML/predictive use 
+# question 19 
 q19df <- data2[, c("q19_ai_traj","q19_ai_risk_fu", "q19_ai_monitor", "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule", "q19_ai_process", "q19_ai_clinic", "q19_ai_none", "q19_ai_dnk")]
-
 q19_freq <- as.data.frame(colSums(q19df))
 names(q19_freq) <- c("n")
 q19_freq
+# could expand these out to be a percentage - add another column (use dplyr) of n/total hospitals in dataset to create % of hospitals who use that tool 
+
+# question 14
+
+
+# this is all the variables that have binary
+```
+
+Need to create HIE participant cumulative variable
+```{r}
+
 ```
 
