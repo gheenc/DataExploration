@@ -22,6 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # 10. HIE Participation Cumulative Variable
 # 11. T tests
 # 12. Correlation
+# 13. Bootstrapping
+# 14. Permutation Test
 
 
 
@@ -197,6 +199,7 @@ as.data.frame(table(data2$primary_emr_other))
 length(unique(data2$primary_emr_other)) # only 37 specified the other system they used but 91 said they use another system...
 ```
 Cerner/Oracle, Epic, and Meditech have the most users as expected. I am going to do these three and all others will be an other, except 30 which is don't have an EMR and should stay as it's own category. Acutally, nobody answered 30 meaning everybody has an EMR (yay all can receive medicare funding)
+
 ```{r}
 # condense primary emr answers
 data2$primary_emr[!data2$primary_emr %in% c(2, 5, 9, 30)] <- 0
@@ -311,6 +314,7 @@ q11_freq <- as.data.frame(colSums(q11df))
 names(q11_freq) <- c("n")
 pct <- round((q11_freq$n/nrow(data2)*100), 1)
 q11_freq <- cbind(q11_freq, pct)
+#  % of hospitals a part of that hie 
 
 # question 19 
 q19df <- data2[, c("q19_ai_traj","q19_ai_risk_fu", "q19_ai_monitor", "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule", "q19_ai_process", "q19_ai_clinic", "q19_ai_none", "q19_ai_dnk")]
@@ -326,6 +330,7 @@ q14_freq <- as.data.frame(colSums(q14df))
 names(q14_freq) <- c("n")
 pct <- round((q14_freq$n/nrow(data2)*100), 1)
 q14_freq <- cbind(q14_freq, pct)
+#  % of hospitals who use hie for that ph reporting
 
 # this is all the variables that have binary
 ```
@@ -351,7 +356,8 @@ boxplot(hie_part ~ data2$mstate)
 plot(hie_part ~ data2$bdtot)
 hist(data2$bdtot)
 hist(log(data2$bdtot))
-plot(hie_part ~ log(data2$bdtot))
+plot(hie_part ~ log(data2$bdtot)) # just call size rather than increase by one bed; log horitzonal HIE on vertical 
+
 
 # boxplot of hie participation by ownership type
 boxplot(hie_part ~ data2$ownership)
@@ -368,7 +374,7 @@ hie <- table(data2$q10_HIE_partic)
 # are there any similar characteristics of the ones who do not participate 
 hie[1]/nrow(data2) # 85% of hospitals participate in an HIE
 hie[2]/nrow(data2) # 5.5% of hospitals have an active area HIE that they do not participate in 
-hie[3]/nrow(data2) # 4.4% of hospitals do not have an operational HIE in their area (this is probably bigger- you can't select this and another numbers)
+hie[3]/nrow(data2) # 4.4% of hospitals do not have an operational HIE in their area (this is probably bigger- you can't select this and another numbers - CHECK IF YOU CAN SELECT MULTPILE)
 hie[4]/nrow(data2) # 4.2% do not know their HIE participation
 
 ```
@@ -396,10 +402,11 @@ table(data2$q18_ml)
 table(data2$q18_otherml)
 #1090 should be using AI in some way according to question 19 (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trust.
 ```
-Should I make an indicator variable that is (uses AI/does not use AI). According to question 19, 
+Should I make an indicator variable that is (uses AI/does not use AI)??? According to question 19, 1090 should be using AI in some way (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trus - probably question 19 because the 
 
 # Two Way T-Test
 two way T-test
+Do non-profits and for-porift institutions participate in HIE the same on average?
 ```{r}
 groups <- data2[data2$ownership == 2 | data2$ownership == 3, ]
 table(groups$ownership) #1065 are non-profit; 146 are for profit
@@ -413,7 +420,7 @@ table(groups1$ownership) # 289 are state gove; 13 are federal gov
 
 ```
 
-One sample T test-are hospitals doing more than just participating (ie is the HIE participation above 1)
+One sample T test-are hospitals doing more than just participating in one (ie is the HIE participation above 1) - but this could be them just participating in multiple HIE rather than participating AND using it for a public health need
 ```{r}
 t.test(data2$hie_participation, mu = 1)
 ```
@@ -422,13 +429,37 @@ t.test(data2$hie_participation, mu = 1)
 # Correlation
 Are bigger hospitals more likely to participate in HIE? As hospital size increases, does their participation in HIE?
 ```{r}
+plot(data2$hie_participation ,log(data2$bdtot))
 
+# run correlation
+cor.test(data2$hie_participation, log(data2$bdtot))
+
+# add sample correlation value to subheader of graph
+```
+
+Are hospitals who are using more AI, participating in HIE more?
+```{r}
+plot(data2$hie_participation ,data2$ai_score)
+# add jitter or relative frequnecy?
+
+# run correlation
+cor.test(data2$hie_participation, data2$ai_score)
 ```
 
 # Bootstrap
-
+Are bigger hospitals more likely to participate in HIE? As hospital size increases, does their participation in HIE?
+Primary EMR user?
 
 #Permutation Test
 There is a difference in ownership type, so I can shuffle labels and see same result?
+```{r}
+# shuffle labels
+
+# do permutation test 
+```
+Primary EMR user?
 
 # Multiple Regression 
+Does bed amount, ownership type, primary emr used, and AI usage predict HIE participation?
+
+

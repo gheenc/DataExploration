@@ -22,7 +22,7 @@ either a t-test or a correlation.
 4) Permutation Test – include at least one. 
 5) Multiple Regression – use either backwards stepwise regression or some form of best 
 subsets regression.  Should include residual plots.  A GLM with a mix of continuous and 
-categorical predictors is fine here.  This includes a clear discussion of the interpretation 
+categorical predictors is fine here.  This includes a clear discussion of the interpretation
 of the results of your model. 
 6) ONE OF THE FOLLOWING TECHNIQUES – ANOVA (with some form of multiple comparisons and preferably with a non-parametric analogue for comparison or Welch’s ANOVA – include discussion of interaction plots and interaction terms if two-way), ANCOVA, Binary Logistic Regression, Multinomial Logistic Regression. 
 
@@ -169,27 +169,16 @@ Are states with HIE more likley to participate?
 *Boxplot*: participation in HIE by state; participation in state by type of ownerhsip
 *Quantile*: multiple regression
 *Histogram*: multiple regression
-*T-test*: difference in HIE participation between ownership type? difference in HIE participation between ehr (cerner vs epic - epic vs not bc of cosmos); difference in hie based on automated ph use?
-*Correlation*: bed total vs HIE participation? As hospitals are bigger are they more likely to participate in HIE
-*Bootstrap of T-test or correlation*: 
-*Permutation*: Is there a difference in owenship type and hie participation; if not, I can shuffle the tags of ownership and get the same statistic
+*T-test*: difference in HIE participation between ownership type? 
+*Correlation*: bed total vs HIE participation? As hospitals get bigger are they more likely to participate in HIE? ai score vs HIE participation - are hospitals that are using AI more also participating in HIE more?
+*Bootstrap of T-test or correlation*: difference in HIE participation between ehr (not vs epic - epic vs not bc of cosmos)?
+*Permutation*: Can I shuffle the non-profit and for profit and get the same correlation?
 *Multiple Regression*: does bed type, ownership type, primary emr, AI usage level predict HIE participation level
-*ANCOVA*:
-*Binary Logistic Regression*: can you predict if a hospital is or is not part of HIE
+*ANCOVA*: HIE Score by size and emr provider and interaction; effect of size depending based on emr  
+*Two way ANOVA*: EMR by AI or HIE; Ownership by AI or HIE
 *Interaction plot*:
 
 6) ONE OF THE FOLLOWING TECHNIQUES – ANOVA (with some form of multiple comparisons and preferably with a non-parametric analogue for comparison or Welch’s ANOVA – include discussion of interaction plots and interaction terms if two-way), ANCOVA, Binary Logistic Regression, Multinomial Logistic Regression
-
-# Questions to ask office hours
-0. What should i do for 6
-1. Do the groups in t test need to be equal - ie ownership or primary EHR 
-2. does there need to be a normal distribution for categorical (ie Epic leads the emr primary by a lot)
-3. is it okay to do log bed total? do i need to do it?
-5. does it matter that the distribution of hospisals by state is right skewed? One state has 300 hospitals
-4. do you think i should keep all the graphs that I do have? ie boxploy, bargraph, and histogram for state hospital distirbution 
-5. Are we allowed to use JDRSs source for residual plots?
-
-are there any other cool tables or interactiosn you think i should look at
 
 
 
