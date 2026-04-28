@@ -405,31 +405,41 @@ table(data2$q18_otherml)
 Should I make an indicator variable that is (uses AI/does not use AI)??? According to question 19, 1090 should be using AI in some way (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trus - probably question 19 because the 
 
 # Two Way T-Test
-two way T-test
-Do non-profits and for-porift institutions participate in HIE the same on average?
+Do non-profits and for-proift institutions participate in HIE the same on average?
+
+Needed for a T-Test 
+-make barplot 
+-% of values that are that category (potentially on top of barplot)
+-boxplots for each group 
+-summary statistics for each level of the variables. compare to raw mean and median
+-t.test
+
 ```{r}
+# isolate only two groups
 groups <- data2[data2$ownership == 2 | data2$ownership == 3, ]
 table(groups$ownership) #1065 are non-profit; 146 are for profit
+str(groups)
+
+# summary statistics for each level
+by(groups$hie_participation, groups$ownership, summary)
+
+# make boxplot 
+boxplot(groups$hie_participation ~ groups$ownership)
 
 # run the t test
 t.test(groups$hie_participation ~ groups$ownership) # significant! with mean in group 2 being higher ie hospitals who are non-profits are more likely to participate in HIE
-
-# make group for federal vs state government
-groups1 <- data2[data2$ownership == 1 | data2$ownership == 4, ]
-table(groups1$ownership) # 289 are state gove; 13 are federal gov
-
-```
-
-One sample T test-are hospitals doing more than just participating in one (ie is the HIE participation above 1) - but this could be them just participating in multiple HIE rather than participating AND using it for a public health need
-```{r}
-t.test(data2$hie_participation, mu = 1)
 ```
 
 
 # Correlation
 Are bigger hospitals more likely to participate in HIE? As hospital size increases, does their participation in HIE?
+
+Needed for a Correlation
+-scatterplot (with correlation in the subhead) - ensure there is a linear relationship seen in scatterplot 
+-add correlation value to subjeader
 ```{r}
-plot(data2$hie_participation ,log(data2$bdtot))
+# scatterplot
+plot(log(data2$bdtot), data2$hie_participation)
 
 # run correlation
 cor.test(data2$hie_participation, log(data2$bdtot))
@@ -439,19 +449,60 @@ cor.test(data2$hie_participation, log(data2$bdtot))
 
 Are hospitals who are using more AI, participating in HIE more?
 ```{r}
-plot(data2$hie_participation ,data2$ai_score)
-# add jitter or relative frequnecy?
+# scatterplot 
+plot(jitter(data2$hie_participation), jitter(data2$ai_score))
+
+# add jitter
+plot(jitter(data2$hie_participation), jitter(data2$ai_score))
 
 # run correlation
 cor.test(data2$hie_participation, data2$ai_score)
 ```
 
 # Bootstrap
-Are bigger hospitals more likely to participate in HIE? As hospital size increases, does their participation in HIE?
-Primary EMR user?
+difference in HIE participation between ehr (not vs epic - epic vs not bc of cosmos)?
+
+Needed for bootstrap of t-test:
+-make barplot 
+-% of values that are that category (potentially on top of barplot)
+-boxplots for each group 
+-summary statistics for each level of the variables. compare to raw mean and median
+-t.test
+-bootstrapping of mean (or metric measuring)
+-histogram with line of where sample mean was and confidence intervals
+```{r}
+# create binary indicator of epic or not 
+data2$epic <- ifelse(data2$primary_emr == 5, 1, 0)
+range(data2$epic) # check 0-1
+
+# summary statistics for each level
+by(data2$hie_participation, data2$epic, summary)
+
+# boxplot for each level
+boxplot(data2$hie_participation, data2$epic) # first box is has epic, second is does not
+
+# t test
+t.test(data2$hie_participation, data2$epi)
+
+# bootstrap
+n_samp <- 10000 # number of simulations want to run
+diffMeans <- rep(NA, n_samp) # empty vector for sample mean differences
+
+for(i in 1:n_samp){
+  se <- sample(data2$hie_participation[data2$epic == 1], sum(data2$epic == 1), replace = T)
+  so <- sample(data2$hie_participation[data2$epic == 0], sum(data2$epic == 0), replace = T)
+  diffMeans[i] <- mean(se) - mean(so)
+}
+
+hist(diffMeans)
+```
+
 
 #Permutation Test
 There is a difference in ownership type, so I can shuffle labels and see same result?
+
+Needed for permutation test:
+
 ```{r}
 # shuffle labels
 
@@ -461,5 +512,12 @@ Primary EMR user?
 
 # Multiple Regression 
 Does bed amount, ownership type, primary emr used, and AI usage predict HIE participation?
+
+Needed for multiple regression:
+
+# ANCOVA
+HIE score by size and emr provider and interaction; is there an effect of size depending on emr
+
+Needed for ANCOVA
 
 
