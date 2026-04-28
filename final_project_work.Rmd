@@ -494,30 +494,101 @@ for(i in 1:n_samp){
   diffMeans[i] <- mean(se) - mean(so)
 }
 
+# add confidence intervals from original and bootstratpped
+ci <- quantile(diffMeans, c(0.025, 0.975))
+
+# test Ci
+cit <- t.test(data2$hie_participation, data2$epic)$conf.int
+
+# histogram of bootstrapped means
 hist(diffMeans)
+abline(v = ci)
+abline(v = cit)
+
 ```
 
 
 #Permutation Test
-There is a difference in ownership type, so I can shuffle labels and see same result?
-
 Needed for permutation test:
+-get actual mean difference 
+-shuffle labels and recalculate wanted metric
+-histogram of fake sample with line of original test metric value 
 
+
+There is a difference in non-profit v forprofit, so I can shuffle labels and see same result?
 ```{r}
+# what is original means
+by(groups$hie_participation, groups$ownership, mean)
+
 # shuffle labels
 
 # do permutation test 
 ```
-Primary EMR user?
+There is a difference in epic vs not, so I can shuffle labels and see same result?
+```{r}
+# what is original means
+actualdiff <- by(data2$hie_participation, data2$epic, mean)
+# original difference
+actualdiff <- actualdiff[2] - actualdiff[1]
+actualdiff
+
+# do permutation
+n <- 10000
+diffvals <- rep(NA, n)
+
+for (i in 1:n){
+  fakelabel <- sample(data2$epic) # shuffle labels 
+  diffvals[i] <- mean(data2[fakelabel == 1]) - mean(data2[fakelabel == 0])
+}
+```
+
 
 # Multiple Regression 
 Does bed amount, ownership type, primary emr used, and AI usage predict HIE participation?
 
-Needed for multiple regression:
+Needed for multiple regression - Module 15
+-Sissyphys steps
+1. identify predictors and response
+2. check relationships with scatterplots (pairsJDRS() will give good matrix plot)
+3. fit model
+4. best steps? remove insignificant predictors
+5.check model assumptions of LINE (L-linearity; I-independence; N- normality of errors; E-qual variance of errors) with myRes plots
+
+```{r}
+# check relationship with pairsJDRS()
+
+# fit model
+lm <- lm(data2$hie_participation ~ log(data2$bdtot) + data2$primary_emr + data2$ownership + data2$ai_score)
+summary(lm)
+
+# best subsets
+
+# check model assumptios with myRes()
+```
+
 
 # ANCOVA
 HIE score by size and emr provider and interaction; is there an effect of size depending on emr
 
-Needed for ANCOVA
+Needed for ANCOVA - Module 20
+-scattplot of continuous (accomplished above)
+-check myResplots for continuous variables
+-fit linear regression lm(hie ~ bed + emr + bed*emr); get summary
+-run Anova with type 3 errors
+-could do the plot of fitting different lines for different emr providers 
+-best subsets of model
+-check residuals
 
+```{r}
+# myRes for continuous variables
+
+# fit linear regression
+ancova <- lm(data2$hie_participation ~ log(data2$bdtot)*data2$primary_emr)
+summary(lm)
+
+# Anova
+Anova(ancova, type = 3)
+
+# my Resplots 
+```
 
