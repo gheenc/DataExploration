@@ -17,6 +17,7 @@ library(dplyr) # for piping
 library(car) # for recoding
 library(usmap) # for heatmap
 library(ggplot2) # for graphing
+source("https://raw.githubusercontent.com/jreuning/sds230_files/refs/heads/main/regJDRS.txt") # source for pairsJDRS and MyResPlots
 ```
 
 # Load Original Data
@@ -93,11 +94,7 @@ na_summary <- data.frame(
   n_na = colSums(is.na(data)),
   pct_comp = round(colSums(!is.na(data)) / nrow(data) * 100, 1)
 )
-```
 
-```{r}
-## include table
-na_summary
 # there is lots of really good data - not a lot of missingness for columns
 # I wonder if the missingness to the columns  are coming from the same organizations ie some were really thorough in filling out the survey and some were not
 
@@ -108,13 +105,29 @@ row_na_summary <- data.frame(
   n_na = rowSums(is.na(data)),
   pct_comp = round(rowSums(!is.na(data)) / ncol(data) * 100, 1)
 )
-row_na_summary
+```
+
+# COM BACK TO THIS TRY AND GET THEM IN ORDER FOR HEAD AND TAIL
+```{r}
+## include table
+names(na_summary) <- c("Complete Data", "Missing Data", "Percent Complete")
+names(row_na_summary) <- c("ID", "Complete Data", "Missing Data", "Percent Complete")
+
+na_summary <- na_summary %>% arrange('Percent Complete')
+head(na_summary)
+tail(na_summary)
+
+row_na_summary <- row_na_summary %>% arrange('Percent Complete')
+head(row_na_summary)
+tail(row_na_summary)
 ```
 
 ```{r}
 ## include head and tail
+head(na_summary)
+tail(na_summary)
+
 head(row_na_summary)
-tail(row_na_summary)
 ```
 
 ```{r, include = FALSE}
@@ -582,27 +595,28 @@ cor <- round(cor(data2$hie_participation, log(data2$bdtot)), 2)
 
 # plot with correlation in subheader and abline
 plot(hie_part ~ log(data2$bdtot), 
-     main = "HIE Particpation by Bed Size",
      xlab = "(Log) Bed Size",
      ylab = "HIE Participation",
      col = "mistyrose2")
 mtext(paste("Sample Correlation = ", cor), cex = .7, line =0)
+mtext("HIE Participation by Bed Size", line = 1)
 ```
 
 Are hospitals who are using more AI, participating in HIE more?
 ```{r}
-# scatterplot 
-plot(jitter(data2$hie_participation), jitter(data2$ai_score))
-
 # run correlation
 cor.test(data2$hie_participation, data2$ai_score)
 
+# correlation
+cor <- round(cor(data2$hie_participation, data2$ai_score), 2)
+
 # scatterplot of hie particpation by ai score
 plot(jitter(hie_part) ~ jitter(data2$ai_score), 
-     main = "HIE Participation by AI Score",
      xlab = "AI Score",
      ylab = "HIE Participation",
      col = "lightsteelblue")
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0)
+mtext("HIE Participation by AI Score", line = 1)
 ```
 
 # Bootstrap
@@ -616,16 +630,33 @@ Needed for bootstrap of t-test:
 -t.test
 -bootstrapping of mean (or metric measuring)
 -histogram with line of where sample mean was and confidence intervals
-```{r}
+```{r, include = FALSE}
 # create binary indicator of epic or not 
 data2$epic <- ifelse(data2$primary_emr == 5, 1, 0)
 range(data2$epic) # check 0-1
+```
+
+```{r}
+# barplot of each 
+epic <- table(data2$epic)
+pct <- paste0(round(epic/ sum(epic) * 100, 0), "%")
+names(epic) <- c("Not Epic", "Epic")
+barplot(epic[c(2, 1)],
+        main = "Epic vs Not",
+        ylim = c(0, 1000),
+        col = c("red4", "red3"))
+text(c(.75, 1.95), c(950, 820), pct, col = "seashell4", cex = 1)
 
 # summary statistics for each level
 by(data2$hie_participation, data2$epic, summary)
 
 # boxplot for each level
-boxplot(data2$hie_participation, data2$epic) # first box is has epic, second is does not
+boxplot(data2$hie_participation, data2$epic,
+        names = c("Epic", "Not Epic"),
+        col = c("red3", "red4"))
+mtext("Mean with Epic: 4.01; Mean without Epic: 1.95", line = 0, cex = .7)
+mtext("HIE Participation by Epic vs Not", line = 1, font = 2)
+# first box is has epic, second is does not
 
 # t test
 t.test(data2$hie_participation, data2$epi)
@@ -644,13 +675,17 @@ for(i in 1:n_samp){
 ci <- quantile(diffMeans, c(0.025, 0.975))
 
 # test Ci
-cit <- t.test(data2$hie_participation, data2$epic)$conf.int
+cit <- abs(t.test(hie_participation ~ epic, data = data2)$conf.int)
+# because not epic is listed first the CI was coming through negative. doing absolute puts it on the same playing field as the bootstrapped
 
 # histogram of bootstrapped means
-hist(diffMeans)
-abline(v = ci)
-abline(v = cit)
-
+hist(diffMeans,
+     main = "Bootstrapped Sample Means \n Difference Between Epic and Not",
+     col = "red4",
+     xlab = "HIE Participation")
+abline(v = cit, lwd = 3, col = "black")
+abline(v = ci, lwd = 3, col = "green4", lty = 2)
+# we see the ci of the test and the boostrapped overlapping this indicated the the CLT was kicked in and we had enough data in our original sample to get a good idea of the potential true value
 ```
 
 
@@ -660,16 +695,6 @@ Needed for permutation test:
 -shuffle labels and recalculate wanted metric
 -histogram of fake sample with line of original test metric value 
 
-
-There is a difference in non-profit v forprofit, so I can shuffle labels and see same result?
-```{r}
-# what is original means
-by(groups$hie_participation, groups$ownership, mean)
-
-# shuffle labels
-
-# do permutation test 
-```
 There is a difference in epic vs not, so I can shuffle labels and see same result?
 ```{r}
 # what is original means
@@ -684,8 +709,17 @@ diffvals <- rep(NA, n)
 
 for (i in 1:n){
   fakelabel <- sample(data2$epic) # shuffle labels 
-  diffvals[i] <- mean(data2[fakelabel == 1]) - mean(data2[fakelabel == 0])
+  diffvals[i] <- mean(data2$hie_participation[fakelabel == 1]) - mean(data2$hie_participation[fakelabel == 0])
 }
+
+# create histogram with mark of sample value
+hist(diffvals,
+     main = "Permuted Sample Mean Differences \n in HIE Participation by Epic or Not",
+     xlab = "HIE Participation",
+     col = "red4",
+     xlim = c(-.5, 2.5))
+abline(v = actualdiff, lty = 2, lwd = 3)
+text(actualdiff - .1, 800, paste("Actual Diff in Means =", round(actualdiff, 2)), srt = 90, cex = .7)
 ```
 
 
@@ -701,15 +735,35 @@ Needed for multiple regression - Module 15
 5.check model assumptions of LINE (L-linearity; I-independence; N- normality of errors; E-qual variance of errors) with myRes plots
 
 ```{r}
-# check relationship with pairsJDRS()
+# isolate wanted variables into subdata frame
+df <- data2[ , c("hie_participation", "bdtot", "ownership", "primary_emr", "ai_score")]
+df$bdtot <- log(df$bdtot) # make log
+names(df)[names(df) == "bdtot"] <- "logbdtot" # rename column for consistency
 
-# fit model
-lm <- lm(data2$hie_participation ~ log(data2$bdtot) + data2$primary_emr + data2$ownership + data2$ai_score)
+# make categorical variables factors
+df$ownership <- factor(data2$ownership)
+df$primary_emr <- factor(data2$primary_emr)
+
+# check relationship with pairsJDRS()
+pairsJDRS(df)
+# this doesn't work bc i have somee categorical variables... i don't know if it's enough to have the graphs shown above or if i shoudl redo the scatterplot
+
+# fit model (glm)
+lm <- glm(df$hie_participation ~ df$primary_emr + df$ownership + df$ai_score)
 summary(lm)
 
 # best subsets
+# biggest p value is logbdtotal (this feels surprising) - 0.67635
+# reference for the categoricals is emr = 0 which is "other" and ownership 1 = gov, non-federal
+#emr 2 (cerner - 0.00187) and 5 (epic - practically 0) are significant (not 9 - meditech - 0.59033)
+# ownership 3 (for-profit - 0.02790) is significant but not 2 (not-for-profit - 0.33737) or 4 (federal - 0.52347)
+# AI is very significant
+
+Anova(lm)
+# in ANOVA type 3, all are significant by 0.05; emr and AI are significant at 0.001
 
 # check model assumptios with myRes()
+myResPlots(lm, "HIE")
 ```
 
 
