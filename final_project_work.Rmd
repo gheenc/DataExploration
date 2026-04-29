@@ -107,7 +107,7 @@ row_na_summary <- data.frame(
 )
 ```
 
-# COM BACK TO THIS TRY AND GET THEM IN ORDER FOR HEAD AND TAIL
+# COME BACK TO THIS TRY AND GET THEM IN ORDER FOR HEAD AND TAIL
 ```{r}
 ## include table
 names(na_summary) <- c("Complete Data", "Missing Data", "Percent Complete")
@@ -484,7 +484,7 @@ hist(data2$ai_score,
      ylim = c(0, 500))
 ```
 
-Overal HIE Participation
+Overall HIE Participation
 85% of hospitals participate in an HIE
 5.5% of hospitals have an active area HIE that they do not participate in 
 4.4% of hospitals do not have an operational HIE in their area (this is probably bigger- you can't select this and another numbers - CHECK IF YOU CAN SELECT MULTPILE)
@@ -757,13 +757,12 @@ summary(lm)
 # reference for the categoricals is emr = 0 which is "other" and ownership 1 = gov, non-federal
 #emr 2 (cerner - 0.00187) and 5 (epic - practically 0) are significant (not 9 - meditech - 0.59033)
 # ownership 3 (for-profit - 0.02790) is significant but not 2 (not-for-profit - 0.33737) or 4 (federal - 0.52347)
-# AI is very significant
-
-Anova(lm)
-# in ANOVA type 3, all are significant by 0.05; emr and AI are significant at 0.001
+# AI is very significants
 
 # check model assumptios with myRes()
 myResPlots(lm, "HIE")
+# the QQ plot of residuals is not exactly normal and has a long right tail. This is likely because the predictor are basically all categorical (even the continuous one are practically categorical). Additionally, all of the predictors are non-negative, hence we see the strict bottom line in the fit vs studentized residuals. 
+# check the outliers in the boxplots#
 ```
 
 
@@ -771,7 +770,7 @@ myResPlots(lm, "HIE")
 HIE score by size and emr provider and interaction; is there an effect of size depending on emr
 
 Needed for ANCOVA - Module 20
--scattplot of continuous (accomplished above)
+-scatterplot of continuous (accomplished above)
 -check myResplots for continuous variables
 -fit linear regression lm(hie ~ bed + emr + bed*emr); get summary
 -run Anova with type 3 errors
@@ -783,13 +782,52 @@ Needed for ANCOVA - Module 20
 # myRes for continuous variables
 
 # fit linear regression
-ancova <- lm(data2$hie_participation ~ log(data2$bdtot)*data2$primary_emr)
-summary(lm)
+ancova <- lm(df$hie_participation ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
+summary(ancova)
+
+ancova1 <- lm(df$hie_participation ~ df$ai_score + df$ownership + df$ai_score*df$ownership)
+summary(ancova1)
+
+ancova2 <- lm(df$hie_participation ~ df$ai_score + df$primary_emr + df$ai_score*df$primary_emr)
+summary(ancova2)
 
 # Anova
 Anova(ancova, type = 3)
+Anova(ancova1, type = 3)
+Anova(ancova2, type = 3)
+
+# best AIC
+AIC(ancova)
+AIC(ancova1)
+AIC(ancova2)
+
+# as df
+aic_table <- data.frame(
+  model = c("Bed(log) & EMR", "AI & Ownership", "AI & EMR"),
+  AIC = c(AIC(ancova), AIC(ancova1), AIC(ancova2))
+)
+aic_table
+
+# make plot of the best model: HIE by AI and EMR
+coefs <- coef(ancova2)
+line_cols <- c("lightsteelblue", "tomato", "darkolivegreen", "navajowhite")
+plot(df$hie_participation ~ df$ai_score, 
+     col = line_cols[df$primary_emr], 
+     pch = 16, 
+     cex = 0.5, 
+     ylim = c(0, 15),
+     ylab = "HIE participation",
+     xlab = "AI Score",
+     main = "HIE Participation Modeled by \n AI Score and Primary EMR")
+legend("topleft", col = line_cols, legend = c("Other", "Cerner", "Epic", "Meditech"), pch =16, cex = .7, horiz = TRUE)
+abline(a = coefs[1], b = coefs[2], col = "lightsteelblue", lwd = 1)
+for (i in 3:5){
+  abline(a = coefs[1] + coefs[i], b = coefs[2] + coefs[i+3], col  = line_cols[i-1], lwd = 2)
+}
 
 # my Resplots 
+myResPlots(ancova2, "HIE, AI, EMR")
+
 ```
 
 ### Report
