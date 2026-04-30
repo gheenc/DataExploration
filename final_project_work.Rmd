@@ -321,13 +321,13 @@ barplot(ownership,
 text(c(.75, 1.97, 3.15, 4.35), c(400, 1200, 250, 150), tabpct, cex = .8, col = "seashell4")
 ```
 
-Bed Total was retained as a proxy for hospital size. The range is 3 to 2919 so a very wide spread. As is, this variable is heavily right skewed, therefore, I applied a log transformation, which will be used throughout the rest of the analysis. 
+Bed Total was retained as a proxy for hospital size. The range is 3 to 2919 so a very wide spread. As is, this variable is heavily right skewed, therefore, I applied a log transformation, which will be used throughout the rest of the analysis. Because no values were non-zero I did not need to apply a constant first. 
 ```{r, include = FALSE}
 range(data2$bdtot)
 ```
 
 ```{r}
-# scatterplot of hie participation by bed total
+# scatterplot of bed total
 # most likely will want to take log transformation of bed total
 hist(data2$bdtot, 
      main = "Total Number of Beds", 
@@ -337,6 +337,7 @@ hist(log(data2$bdtot),
      main = "Log Total Number of Beds",
      xlab = "Log Number of Beds",
      col = "mistyrose3")
+data2$logbed <- log(data2$bdtot)
 ```
 
 I want to explore the free answer text variables: other HIE, other process use of AI, other clinical use of AI
@@ -486,7 +487,7 @@ hie_part <- data2$hie_participation
 range(hie_part) # 0-13; max would have been 14, so nobody uses everything
 table(hie_part)
 ```
-We see a lot of institutions do not participate in HIE at all, and no institutions use HIE for all possible public health reporting manners. 
+We see a lot of institutions do not participate in HIE at all, and no institutions use HIE for all possible public health reporting manners.
 ```{r}
 ## include 
 summary(hie_part)
@@ -501,6 +502,8 @@ hist(hie_part,
 axis(1, at = 0:14, labels = 0:14, cex.axis = .8)
 
 ```
+We will notice this is right skewed. 
+
 
 Overall HIE Participation:
 ```{r}
@@ -536,7 +539,7 @@ boxplot(hie_part ~ data2$ownership,
         cex.axis = .6,
         col = "peachpuff")
 ```
-Looking at HIE participation across EMR vendor, there is an obvious higher amount of participation for those who use Epic. Epic houses a software called Cosmos that is infomation sharing platform, so this is not a suprise as this counts as an HIE. Cerner has a slightly higher median level of HIE compared to other vendors or Meditech. 
+Looking at HIE participation across EMR vendor, there is an obvious higher amount of participation for those who use Epic (more on why this makes sense later). Cerner has a slightly higher median level of HIE compared to other vendors or Meditech. 
 ```{r}
 # boxplot of hie participation by primary ehr
 boxplot(hie_part ~ data2$primary_emr,
@@ -588,7 +591,9 @@ table(groups$ownership) #1065 are non-profit; 146 are for profit
 summary(groups$hie_participation)
 by(groups$hie_participation, groups$ownership, summary)
 ```
-Analyzing the boxplot, it seems for-profits participate more on average, but the confidence intervals do overlap. The overal mean and median is lcoser to the mean and median for only for-profit. 
+Analyzing the boxplot, it seems not-for-profits participate more on average, but the confidence intervals do overlap. The overall mean and median (mean: 3.235 and median: 3) is closer to the mean and median for only not-for-profit (mean: 3.467, median: 3.000) than for-profits (mean: 1.541, median: 1.000). 
+
+When we run the t test, we get a very small p value close to 0 meaning we can likely reject the null hypothesis that the mean is the same between the groups and conclude the mean HIE participation is not the same between not-for-profits and for-profits. From the confidence intervals, we can conclude that participation is higher in not-for-profits, which is what we expected from the boxplots. There are some high outliers in both groups. The spread both but especially the for-profit seem to be right skewed, although this would be better asessed with a histogram. 
 ```{r}
 # raw summary statistics
 summary(groups$hie_participation)
@@ -610,11 +615,13 @@ t.test(groups$hie_participation ~ groups$ownership) # significant! with mean in 
 
 
 # Correlation
-Are bigger hospitals more likely to participate in HIE? As hospital size increases, does their participation in HIE?
+Are "bigger" hospitals (aka more beds) more likely to participate in HIE? As hospital size increases, does their participation in HIE?
 
 Needed for a Correlation
 -scatterplot (with correlation in the subhead) - ensure there is a linear relationship seen in scatterplot 
 -add correlation value to subjeader
+
+From the correlation test, we can see that there is a slight positive correlation between bed size and institution HIE participation, indicating bigger beds participate in HIE more, but this is not a particularly strong association. There does not seem to be any egregious outliers that are pulling the values, although we do know HIE participation is right skewed and may have some outliers.  
 ```{r}
 # run correlation
 cor.test(data2$hie_participation, log(data2$bdtot))
@@ -623,15 +630,16 @@ cor.test(data2$hie_participation, log(data2$bdtot))
 cor <- round(cor(data2$hie_participation, log(data2$bdtot)), 2)
 
 # plot with correlation in subheader and abline
-plot(hie_part ~ log(data2$bdtot), 
+plot(data2$hie_participation) ~ log(data2$bdtot), 
      xlab = "(Log) Bed Size",
      ylab = "HIE Participation",
-     col = "mistyrose2")
+     col = "mistyrose3",
+     pch = 19)
 mtext(paste("Sample Correlation = ", cor), cex = .7, line =0)
-mtext("HIE Participation by Bed Size", line = 1)
+mtext("HIE Participation by Bed Size", line = 1, font =  2)
 ```
 
-Are hospitals who are using more AI, participating in HIE more?
+I also wanted to looka at if hospitals who are using more AI, are participating in HIE more. Although these are both technically continuous variables, they are scored on a scale, so I added jitter to better appreciate frequency of answers. We see there is a moderate positive, correlation indicating institutions that utilize AI more perhaps utilize their HIE more. There are spots where answers cluster together, like those who use no AI also use HIE very little.   
 ```{r}
 # run correlation
 cor.test(data2$hie_participation, data2$ai_score)
@@ -868,29 +876,5 @@ myResPlots(ancova0, "HIE, AI, EMR")
 
 ```
 
-### Report
-# Introduction
-I utilized the 2024 American Hospital Association's Annual Survey IT supplement as my data source. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by institutions' CIO.
-I am studying Health Informatics at YSPH, so I am very interested in the information systems at hospitals and this is a dataset I have been wanting to explore for a while. I am interested in Health Information Exchange which is how hospitals exchange information to be better stewards of public health and better understand a patient so that their information can be passed to other doctors (look this up). I wanted to see if participation rates have been affected by electronic medical records expanding. 
-
-# Data
-I extracted a few questions from the survey: entry's AHA ID number; name; bed total (continuous range: ); state (categorical; 52 states - Puerto Rico and Marina Island Pacific are included); who owns them (categorical: government-nonfederal, not-for-profit, for-profit, governemnt-federal); what primary electronic health record is used (categorical including other free text entry); HIE 
-
-
-
-Many questions are the same question but binary indicators of which feature the institution does as part of that question, so I included that in the question. 
-1. AI Composite Score (continuous out of 8)
-2. HIE Participation Score (continuous out of 14)
-3. Number of Beds (continuous)
-4. Ownership type (categorical)
-5. Primary EMR (categorical)
-6. State (categorical)
-
-# Data Cleaning Process
-
-# Descriptive Plots
-
-# Analysis 
-
-# Conclucaion and Summary 
+# Conclusion and Summary 
 
