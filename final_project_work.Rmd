@@ -630,7 +630,7 @@ cor.test(data2$hie_participation, log(data2$bdtot))
 cor <- round(cor(data2$hie_participation, log(data2$bdtot)), 2)
 
 # plot with correlation in subheader and abline
-plot(data2$hie_participation) ~ log(data2$bdtot), 
+plot(data2$hie_participation ~ log(data2$bdtot), 
      xlab = "(Log) Bed Size",
      ylab = "HIE Participation",
      col = "mistyrose3",
@@ -657,7 +657,7 @@ mtext("HIE Participation by AI Score", line = 1)
 ```
 
 # Bootstrap
-difference in HIE participation between ehr (not vs epic - epic vs not bc of cosmos)?
+difference in HIE participation between ehr (not vs Epic - Epic vs not bc of cosmos)?
 
 Needed for bootstrap of t-test:
 -make barplot 
@@ -668,66 +668,73 @@ Needed for bootstrap of t-test:
 -bootstrapping of mean (or metric measuring)
 -histogram with line of where sample mean was and confidence intervals
 
-what is the difference in HIE participation between EHR vendors, specifically those who use EPIC versus those who do not. EPIC has an added feature called Cosmos, which shares unidentified data with all institutions who use EPIC and acts as a HIE. We would expect those who participate in EPIC to have higher levels of HIE because of the availability of EPIC to them. 
+What is the difference in HIE participation between EHR vendors, specifically those who use Epic versus those who do not. Epic has an added feature called Cosmos, which shares unidentified data with all institutions who use Epic and acts as a HIE. We would expect those who participate in Epic to have higher levels of HIE because of the availability of Epic to them. 
 
-We see that even aggregating all non-EPIC users together, the majority of the institutions still use EPIC (47% are EPIC users). I want to bootstrap a t-test for this comparison, because looking at the boxplot
+We see that even aggregating all non-Epic users together, the majority of the institutions still use Epic (47% are Epic users). There are 709 users not using Epic and 804 that are, so a good sample size for each. I want to bootstrap a t-test for this comparison, because looking at the boxplot, there are some high outliers in both groups and neither are normally distributed. 
+
+Mean HIE participation for Epic users is higher (mean: 4.009) than non-Epic users (1.948) and closer to the overal average HIE participation scores (3.043). Running the parametric t-test, the pvalue is well small meaning we reject the null and conclude the means for each group are not the same. The We see from the bootstrap that the true difference is means is likely around 2.3 higher in Epic users, which is similar to what we saw in the parametric t-test. We also see that the boostrapped and parametric CIs are practically identical, indicating our original test was a good idea of the true distribution and not highly affected by outliers or skewed distribution. 
 ```{r, include = FALSE}
-# create binary indicator of epic or not 
-data2$epic <- ifelse(data2$primary_emr == 5, 1, 0)
-range(data2$epic) # check 0-1
+# create binary indicator of Epic or not 
+data2$Epic <- ifelse(data2$primary_emr == 5, 1, 0)
+range(data2$Epic) # check 0-1
 ```
 
 ```{r}
 # barplot of each 
-epic <- table(data2$epic)
-pct <- paste0(round(epic/ sum(epic) * 100, 0), "%")
-names(epic) <- c("Not Epic", "Epic")
-barplot(epic,
+Epic <- table(data2$Epic)
+pct <- paste0(round(Epic/ sum(Epic) * 100, 0), "%")
+names(Epic) <- c("Not Epic", "Epic")
+barplot(Epic[c(2, 1)],
         main = "Epic vs Not",
-        ylim = c(0, 1000))
+        ylim = c(0, 1000),
+        names = c("Epic", "Not Epic"),
+        col = c("red2", "red4"))
 text(c(.75, 1.95), c(950, 820), pct, col = "seashell4", cex = 1)
 
 # raw summary statistics
 summary(data2$hie_participation)
 
 # summary statistics for each level
-by(data2$hie_participation, data2$epic, summary)
+by(data2$hie_participation, data2$Epic, summary)
 
 # boxplot for each level
-boxplot(data2$hie_participation, data2$epic,
-        names = c("Epic", "Not Epic"),
-        col = c("red3", "red4"))
+boxplot(data2$hie_participation ~ data2$Epic,
+        names = c("Not Epic", "Epic"),
+        col = c("red4", "red2"))
 mtext("Mean with Epic: 4.01; Mean without Epic: 1.95", line = 0, cex = .7)
 mtext("HIE Participation by Epic vs Not", line = 1, font = 2)
-# first box is has epic, second is does not
+# first box is has Epic, second is does not
 
 # t test
-t.test(data2$hie_participation, data2$epi)
+ttest <- t.test(data2$hie_participation ~ data2$Epic)
 
 # bootstrap
 n_samp <- 10000 # number of simulations want to run
 diffMeans <- rep(NA, n_samp) # empty vector for sample mean differences
 
 for(i in 1:n_samp){
-  se <- sample(data2$hie_participation[data2$epic == 1], sum(data2$epic == 1), replace = T)
-  so <- sample(data2$hie_participation[data2$epic == 0], sum(data2$epic == 0), replace = T)
+  se <- sample(data2$hie_participation[data2$Epic == 1], sum(data2$Epic == 1), replace = T)
+  so <- sample(data2$hie_participation[data2$Epic == 0], sum(data2$Epic == 0), replace = T)
   diffMeans[i] <- mean(se) - mean(so)
 }
 
-# add confidence intervals from original and bootstratpped
+# add confidence intervals bootstratpped
 ci <- quantile(diffMeans, c(0.025, 0.975))
 
-# test Ci
-cit <- abs(t.test(hie_participation ~ epic, data = data2)$conf.int)
-# because not epic is listed first the CI was coming through negative. doing absolute puts it on the same playing field as the bootstrapped
+# confidence intervals from parametric tes
+cit <- abs(ttest$conf.int)
+# because not Epic is listed first the CI was coming through negative. doing absolute puts it on the same playing field as the bootstrapped
 
 # histogram of bootstrapped means
 hist(diffMeans,
      main = "Bootstrapped Sample Means \n Difference Between Epic and Not",
      col = "red4",
-     xlab = "HIE Participation")
+     xlab = "HIE Participation",
+     xlim = c(1.4, 2.4))
 abline(v = cit, lwd = 3, col = "black")
 abline(v = ci, lwd = 3, col = "green4", lty = 2)
+legend("topleft", col = c("black", "green4"), legend = c("Original CI", "Boostrapped CI"), lty = c(1, 2), lwd = 3)
+str(data2$Epic)
 # we see the ci of the test and the boostrapped overlapping this indicated the the CLT was kicked in and we had enough data in our original sample to get a good idea of the potential true value
 ```
 
@@ -738,10 +745,10 @@ Needed for permutation test:
 -shuffle labels and recalculate wanted metric
 -histogram of fake sample with line of original test metric value 
 
-There is a difference in epic vs not, so I can shuffle labels and see same result?
+For parametric test, I wanted to ensure that the conclusion was stable, so I shuffled the labels of being an Epic users or not and recalculated difference in group mean. We can see from the resulting histogram that it is very unlikely to see a difference in group mean this high under the null hypothesis. 
 ```{r}
 # what is original means
-actualdiff <- by(data2$hie_participation, data2$epic, mean)
+actualdiff <- by(data2$hie_participation, data2$Epic, mean)
 # original difference
 actualdiff <- actualdiff[2] - actualdiff[1]
 actualdiff
@@ -751,7 +758,7 @@ n <- 10000
 diffvals <- rep(NA, n)
 
 for (i in 1:n){
-  fakelabel <- sample(data2$epic) # shuffle labels 
+  fakelabel <- sample(data2$Epic) # shuffle labels 
   diffvals[i] <- mean(data2$hie_participation[fakelabel == 1]) - mean(data2$hie_participation[fakelabel == 0])
 }
 
@@ -777,7 +784,16 @@ Needed for multiple regression - Module 15
 4. best steps? remove insignificant predictors
 5.check model assumptions of LINE (L-linearity; I-independence; N- normality of errors; E-qual variance of errors) with myRes plots
 
-```{r}
+I wanted to assess if you could predict HIE participation based on certain variables: bed total(in log), ownership type, primary EMR used, and AI score. I used JDRS 
+
+
+Because my HIE participation score is skewed right, I checked the relationship between all predictors and the outcome and predictor using JDRS matrix plot for the raw HIE participation score and a log HIE participation score. Prior to taking the log of the participation score, I added a constant of 0.5 because there were some zeros in my data where people did not participate in HIE at all. Because this then made them less than 1, there were some negative values. To combat this, I added 1.5 as a constant instead. I checked the relationship for all 3 differnet HIE. Ultimately, the original HIE values did not have high evidence of heteroskedasticity or non-linearity, but it did have the non-normality. Neither of the log transformation changed the scatterplots of predictors vs outcomes a lot and neither introduced heteroskedasticity, non-linear relationships, or outlier, but it did fix the right skewedness. 
+
+Because I did not like how the log transformation made the predictors vs outcome scatterplots look, I went ahead and fit 3 different models each with a different type of HIE participation score (raw, log with constant .5 and log with constant 1.5). Comparing the AIC, the log HIE models have a significantly lower AIC. Between the two, the AIC is identical, so I took a Box Cox transformation to decide which to go with. The model of log with a constant of 1.5 has a lambda very close to 1 while the model of log with a constant .5 has a lambda close to .5. Because of this, I decided to continue forward with the models using log constant of 1.5. 
+
+I rechecked the pairs for this and there is no evidence of heteroskedasticity, large outliers, or a non-linear relationship between the predictors and outcome. There is also no evidence of any of the above between the predictors nor is there evidence of large amounts of high correlation suggesting multicollinearity. 
+
+```{r, warnings = FALSE}
 # isolate wanted variables into subdata frame
 df <- data2[ , c("hie_participation", "bdtot", "ownership", "primary_emr", "ai_score")]
 df$bdtot <- log(df$bdtot) # make log
@@ -787,33 +803,83 @@ names(df)[names(df) == "bdtot"] <- "logbdtot" # rename column for consistency
 df$ownership <- factor(data2$ownership)
 df$primary_emr <- factor(data2$primary_emr)
 
+df <- df[ , c("hie_participation", "logbdtot", "ownership", "primary_emr", "ai_score")]
+
 # check relationship with pairsJDRS()
 pairsJDRS(df)
-# this doesn't work bc i have somee categorical variables... i don't know if it's enough to have the graphs shown above or if i shoudl redo the scatterplot
 
-# fit model (glm)
-lm <- glm(df$hie_participation ~ df$primary_emr + df$ownership + df$ai_score)
-summary(lm)
+# create log variable
+df$pos_hie_participation <- df$hie_participation + .5 
+df$log_hie <- log(df$pos_hie_participation)
+df <- df[c("log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
 
-# best subsets
-# biggest p value is logbdtotal (this feels surprising) - 0.67635
-# reference for the categoricals is emr = 0 which is "other" and ownership 1 = gov, non-federal
-#emr 2 (cerner - 0.00187) and 5 (epic - practically 0) are significant (not 9 - meditech - 0.59033)
-# ownership 3 (for-profit - 0.02790) is significant but not 2 (not-for-profit - 0.33737) or 4 (federal - 0.52347)
-# AI is very significants
+# check relationships again 
+pairsJDRS(df)
 
-# check model assumptios with myRes()
-myResPlots(lm, "HIE")
-# the QQ plot of residuals is not exactly normal and has a long right tail. This is likely because the predictor are basically all categorical (even the continuous one are practically categorical). Additionally, all of the predictors are non-negative, hence we see the strict bottom line in the fit vs studentized residuals. 
-# check the outliers in the boxplots#
+# try adding a higher constant before taking log
+df$pos_hie_participation <- data2$hie_participation + 1.5 
+df$log_hie <- log(df$pos_hie_participation)
+df <- df[c("log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+
+# check relationships again 
+pairsJDRS(df)
+
 ```
 
 
+
+```{r}
+# fit model (glm) with raw hie 
+df$hie_participation <- data2$hie_participation
+df <- df[c("hie_participation", "log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+lm <- glm(df$hie_participation ~ df$primary_emr + df$ownership + df$ai_score + df$logbdtot)
+summary(lm)
+```
+
+```{r}
+# fit positive 1.5 log model 
+lm1 <- glm(df$log_hie ~ df$primary_emr + df$ownership + df$ai_score + df$logbd)
+summary(lm1)
+# remove bed total (p value .9)
+boxCox(lm1)
+```
+
+
+```{r}
+# fit model with .5 log 
+df$log5_hie <- df$hie_participation + .5
+lm2 <- glm(df$log5_hie ~ df$primary_emr + df$ownership + df$ai_score + df$logbd)
+summary(lm2)
+boxCox(lm2)
+```
+
+
+Now, I need to fit the model and determine what predictors are significant. I attempted forward regressiond and fit all predictors to the model. I first removed log bed total as it had the highest p value of .9. This was surprising as I thought originally beginning the question this would be a very good predictor, but we saw in the correlation above that they were not actually that strongly related. 
+After removing log bed count, primary emr 2 - cerner, primary emr 5 - epic, ownership 3 - pro-profi, and ai score were all significant. This means I leave all other predictors in the model. The overall model is significant with a pvalue close to 0 and an adjusted R2 of .3926. This indicates this model can explain almost 40% of the variability in the data. 
+```{r}
+# log constant 1.5 as model forward regression
+lm1 <- lm(df$log_hie ~ df$primary_emr + df$ownership + df$ai_score)
+summary(lm1)
+Anova(lm1, type = 3)
+```
+
+Lastly, I check the residuals of the model. The errors are overall normally distributed although there is some departure at the top right of the tail. This could be due to the continuous predictors being practically categorical and no variables having negative values. I did check the residual plots of the other tested models, and this one has the closest to normal distribution of errors. Additionally, there is no evidence of heterskedasticity on the fits vs studentized residuals plot, but you can see hte harsh bottom line which is typical of variables that do not extend past 0. There are a few leverage points but none to be worried about.
+# DO THE CALCULATION FOR COOKs
+```{r}
+# residuals
+myResPlots(lm1, "HIE")
+```
+
+```{r, include = FALSE}
+# residuals of other models - just to check 
+myResPlots(lm2, "HIE")
+myResPlots(lm, "HIE")
+```
+
 # ANCOVA
-HIE score by size and emr provider and interaction; is there an effect of size depending on emr
+HIE score by size and emr provider and ai score; is there an effect of ai score depending on emr
 
 Needed for ANCOVA - Module 20
--scatterplot of continuous (accomplished above)
 -check myResplots for continuous variables
 -fit linear regression lm(hie ~ bed + emr + bed*emr); get summary
 -run Anova with type 3 errors
@@ -821,65 +887,33 @@ Needed for ANCOVA - Module 20
 -best subsets of model
 -check residuals
 
+Lastly, I did an ANCOVA to see if there is an interaction between emr provider and AI score and how they affect HIE score. 
+
+
 ```{r}
 # myRes for continuous variables
 
-# interaction plot between Primary EMR and OWnership
-interaction.plot(df$primary_emr, df$ownership, df$hie_participation, type = 'b', lwd = 3, col = c("red", "blue", "black"), main = "Interaction Plot Between EMR and Ownership")
-
-
-df$loghie <- log(df$hie_participation + 1)
 # fit linear regression
-ancova0 <- lm(df$loghie ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
-summary(ancova)
-
-ancova <- lm(df$hie_participation + 1 ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
-summary(ancova)
-boxCox(ancova)
-
-ancova1 <- lm(df$hie_participation ~ df$ai_score + df$ownership + df$ai_score*df$ownership)
-summary(ancova1)
-
-ancova2 <- lm(df$hie_participation ~ df$ai_score + df$primary_emr + df$ai_score*df$primary_emr)
-summary(ancova2)
-
-# Anova
-Anova(ancova, type = 3)
-Anova(ancova1, type = 3)
-Anova(ancova2, type = 3)
-
-# best AIC
-AIC(ancova)
-AIC(ancova1)
-AIC(ancova2)
-
-# as df
-aic_table <- data.frame(
-  model = c("Bed(log) & EMR", "AI & Ownership", "AI & EMR"),
-  AIC = c(AIC(ancova), AIC(ancova1), AIC(ancova2))
-)
-aic_table
+ancova1 <- lm(df$log_hie ~ df$ai_score + df$primary_emr + df$ai_score*df$primary_emr) # log hie based on ai and emr
 
 # make plot of the best model: HIE by AI and EMR
-coefs <- coef(ancova2)
+coefs <- coef(ancova1)
 line_cols <- c("lightsteelblue", "darkolivegreen", "tomato", "navajowhite")
-plot(df$hie_participation ~ df$ai_score, 
+plot(df$log_hie ~ df$ai_score, 
      col = line_cols[df$primary_emr], 
      pch = 16, 
-     cex = 0.5, 
-     ylim = c(0, 15),
+     cex = 0.5,
      ylab = "HIE participation",
      xlab = "AI Score",
      main = "HIE Participation Modeled by \n AI Score and Primary EMR")
 legend("topleft", col = line_cols, legend = c("Other", "Cerner", "Epic", "Meditech"), pch =16, cex = .7, horiz = TRUE)
-abline(a = coefs[1], b = coefs[2], col = "lightsteelblue", lwd = 1)
+abline(a = coefs[1], b = coefs[2], col = "lightsteelblue", lwd = 2)
 for (i in 3:5){
   abline(a = coefs[1] + coefs[i], b = coefs[2] + coefs[i+3], col  = line_cols[i-1], lwd = 2)
 }
 
-# my Resplots 
-myResPlots(ancova0, "HIE, AI, EMR")
-
+# my Resplots
+myResPlots(ancova1, "HIE, AI, EMR")
 ```
 
 # Conclusion and Summary 
