@@ -56,7 +56,7 @@ Ownership: government non-federal (state, county, city, city-county, hospital di
 and 4 descriptors: AHA ID number, hospital name, total facility beds set up and staffed, and primary Electronic Medical Record (EMR) used.
 
 Question 11, 14, 18, and 19 are stored as individual variables for each options and thus are similar to binary indicators in that if that option is selected it is a 1 and if it was not, it is a 0. Because of this, for question 14, I only exported the variables that are each type of reporting into the HIE because I am only concerned with if institutions use their HIE for that mandaotry reporting.
-There are 3 'describe other' options which are free text. These are if you use a primary EMR, use of another predictive models, use for ML or predictive that is not listed. 
+There are 4 'describe other' options which are free text. These are if you use an other primary EMR, active in another HIE,use of another predictive models, use for ML or predictive that is not listed. 
 
 I created two composite variables: composite HIE score and AI score. To create composite HIE score, I added 1 if they participate in an HIE (question 10), added 1 for each HIE they participate in (question 11) and added 1 for each public health reporting in which they utilized HIE (question 14).
 For AI score, I added 1 for if they use ML or another predictive model (question 18) and added 1 for each activity they apply AI for (question 19).
@@ -69,7 +69,7 @@ Ultimately these were the variables I was most concerned with:
 5. Primary EMR (categorical)
 6. State (categorical)
 
-# Data Cleaning
+# Data Cleaning and Descriptive Plots
 The first thing I did was change the names of the variable to make them more human readable and help track which question each variable came from. Although I'm concerned with only 5 overall variables, my dataset contained about 48 variables. 
 
 ```{r, include = FALSE}
@@ -196,8 +196,8 @@ str(data2)
 # structure seems good for all. my coding made them numeric instead of integer - this is probably fine. will likely need to make these factor to do categorical things. can come back and do this once I decide
 ```
 
-Next I want to look at if all states are represented. There are 52 unique state entries with all 50 states being represented plus two territories. One territory is PR which is P 
-```{r}
+Next I want to look at if all states are represented. There are 52 unique state entries with all 50 states being represented plus two territories. One territory is PR which is P uerto Rico and one is MP which I am unfamiliar with. By filtering to only this entry and Googling the institution name, I discover it is Mariana Islands in the Pacific. 
+```{r, include = FALSE}
 length(unique(data2$mstate)) # 52 states - PR and MP in addition to all 50 states
 
 # I have no idea what MP is...
@@ -222,7 +222,7 @@ hist(state_counts$n) # this is right skewed as is expected
 # it would be cool to come back and do some sort of frequency plot that makes the state name bigger the more hospitals it has
 ```
 
-
+Overall, the amount of hospitals distributed throughout the states is a big spread. Texas has 266 hospitals while Mariana Pacific only has 1.
 ```{r}
 ## include about states 
 summary(state_counts$n)
@@ -234,9 +234,7 @@ hist(state_counts$n,
      col = "tomato2")
 ```
 
-
-# Condense EHR variables 
-Let's look at the type of primary EHRs that are used 
+Next, looking at the type of primary EMRs that are used. Cerner (owned by Oracle), Epic, and Meditech are the giants in this industry and have the most users as expected.
 ```{r, include = FALSE}
 table(data2$primary_emr)
 # lots at Cerner/Oracle(2) and Epic (5) and Meditech(9) as expected. Also lots ie 50+ at Other(91 - these are in the other variable), CPSI/Evident(17).
@@ -247,8 +245,8 @@ as.data.frame(table(data2$primary_emr_other))
 
 length(unique(data2$primary_emr_other)) # only 37 specified the other system they used but 91 said they use another system...
 ```
-Cerner/Oracle, Epic, and Meditech have the most users as expected. I am going to do these three and all others will be an other, except 30 which is don't have an EMR and should stay as it's own category. Acutally, nobody answered 30 meaning everybody has an EMR (yay all can receive medicare funding)
 
+I am going to condense the options to only be these three and all others will become an other category. (Side note: no institutions reported that they did not have an EMR - this is great and expected as there are large government incentives and penalies for not using an EMR).
 ```{r}
 ## include 
 hist(data2$primary_emr, 
@@ -270,6 +268,7 @@ unique(data2$primary_emr)
 table(data2$primary_emr)
 ```
 
+This barplot shows the new distribution and percentage of institutions using that EMR. We see that Epic is still the runaway leader with almost half of the institutions using their EMR with Meditech, Cerner, and other EMRs being used by a similar number of institutions. 
 ```{r}
 ## include 
 primary_emr <- table(data2$primary_emr)
@@ -281,11 +280,11 @@ barplot(primary_emr,
         xlab = "EMRs",
         col = "skyblue3", 
         ylim = c(0, 1000))
-text(c(.75, 1.97, 3.15, 4.35), c(350, 400, 920, 320), tabpct, cex = .8, col = "seashell4")
+text(c(.75, 1.97, 3.15, 4.35), c(350, 400, 920, 280), tabpct, cex = .8, col = "seashell4")
 ```
 
-# Condense Ownership variables
-Regroup ownership type variable
+Next, the ownership was originally coded as about 45 different options under 4 broad categories: government, non-federal; not-for-profit; for-profit; government, federal. I condensed the options to be the 4 general categories. 
+Not-for-profits are the largest category - this makes sense as it includes the religious institutions and, I believe, the academic medical centers. Federal is smaller than expected; there is only 1 owned by the DOD (this should include military hospitals) and only 9 VAs, which is thought to be the largest healthcare institution, so this is not representative of the actual hospital breakdown and potentially due to only keeping complete responses. 
 ```{r, include = FALSE}
 # look at ownership as is
 table(data2$ownership)
@@ -321,25 +320,26 @@ barplot(ownership,
         col = "peachpuff3")
 text(c(.75, 1.97, 3.15, 4.35), c(400, 1200, 250, 150), tabpct, cex = .8, col = "seashell4")
 ```
-All types of nonfederal government hospital ownership groups are represented as well as for profit and not for profit. Not for profits are the largest category, altoghout other is larger than church, church alone is larger than some other groups. Federal is smaller than expected, there is only 1 owned by the DOD (military hospitals) and 9 VAs... this is not representative of the actual hospital ownership breakdown so this must be due to only keeping entries that answered all our questions.
 
-# Bed Total
-Bed Total. Used as proxy for size
+Bed Total was retained as a proxy for hospital size. The range is 3 to 2919 so a very wide spread. As is, this variable is heavily right skewed, therefore, I applied a log transformation, which will be used throughout the rest of the analysis. 
+```{r, include = FALSE}
+range(data2$bdtot)
+```
+
 ```{r}
 # scatterplot of hie participation by bed total
 # most likely will want to take log transformation of bed total
 hist(data2$bdtot, 
      main = "Total Number of Beds", 
      xlab = "Number of Beds",
-     col = "mistyrose3")
+     col = "mistyrose")
 hist(log(data2$bdtot),
      main = "Log Total Number of Beds",
      xlab = "Log Number of Beds",
-     col = "mistyrose")
+     col = "mistyrose3")
 ```
 
-# Explore Free Text Answer Questions
-I'm going to explore the rest of the description/free answer
+I want to explore the free answer text variables: other HIE, other process use of AI, other clinical use of AI
  q11_other_HIE
  q19_ai_process_desc
  q19_ai_clinic_desc
@@ -352,7 +352,6 @@ as.data.frame(table(data2$q19_ai_process_desc))
 as.data.frame(table(data2$q19_ai_clinic_desc))
 ```
 
-All the other answers include the occurances of answerees leaving it empty. We need to drop these so they don't affect the frequency. We can replace all instances of no answer ("") with NA. 
 ```{r, include = FALSE}
 data2$q11_other_nat_desc[data2$q11_other_nat_desc == ""] <- NA
 data2$q19_ai_clinic_desc[data2$q19_ai_clinic_desc == ""] <- NA
@@ -365,8 +364,7 @@ data2$q19_ai_process_desc[data2$q19_ai_process_desc == ""] <- NA
 # all "" changed to NA successfully
 ```
 
-Explore Other HIE answers 
-See if any of the occurrences in the free text are actually options
+First, I wanted to see if any of the occurrences in the free text are actually options. There were two hospitals who marked they were participating in CommonWell when asked, but also marked they participated in another HIE and specified a subgroup of CommonWell, so their other participation became 0. There were 6 institutions (all from the same larger institution) that marked they participate in an EHR based HIE and specified in Other they participate in Epic, which is an EHR based HIE, so their other participation became 0. 3 reported they participate in TEFCA, which is an agreement, not an exchange so their other became 0. 1 reported they participate in eCQM which is a CMS quality measure not an exchange so their other became 0. And 1 reported they participate in National Research Institute which is the sharing of genomes, but I don't believe it counts as an HIE, so their other became 0. 
 ```{r, include = FALSE}
 # show full entries for any hospital that has an entry in other please specify 
 data2[!is.na(data2$q11_other_nat_desc), ]
@@ -387,24 +385,19 @@ data2$q11_other_nat[which(data2$q11_other_nat_desc == "eCQM")] <- 0
 data2$q11_other_nat[which(data2$q11_other_nat_desc == "National Research Institue")] <- 0
 
 ```
-Lots of the other national exchanges are state exchanges that still exist - CA, CO, NJ, CT/MA, KY, IN KA, OH, OK; or other federal exchages lots with the VA; Surescripts and CyncHealth, Direct Trust also large chunk but not enough to challenge other groups to be their own 
+I also analyzed if it felt there were any other exchanges that could be their own group. Lots of the other national exchanges are state exchanges  still exist - CA, CO, NJ, CT/MA, KY, IN KA, OH, OK; there are some federal exchanges; Surescripts, CyncHealth, and Direct Trust also ahve a  chunk of participants but not enough to challenge other groups to be their own.
 
-Explore AI clinical other uses 
+I explored the AI clinical and operational process uses. I noticed a lot of overlap in responses (ex: some institutions reported ambient scribes that help doctors take notes as clinical use and some report it as process uses), leading me to believe there was not a lot of guidance from the AHA in answering. I attempted to re-categorize the answers into options I felt they could be in, but ultimately to assign an AI score, I gave +1 for an other option the same as if they had marked it in another category. I actually don't feel I have enough domain knowledge to be resoring these differnetly than how the CIO answered them. But, it is worth acknowledging that some institutions report multiple additional uses in the other free text, so they could have a higher AI score than reported here.
 ```{r, include = FALSE}
 as.data.frame(table(sort(data2$q19_ai_clinic_desc)))
 ```
 
-Explore AI operational process other uses 
 ```{r, include = FALSE}
 as.data.frame(table(sort(data2$q19_ai_process_desc)))
 ```
-Other clinical uses include a lot of predictive and LOS prediction that I think can be assigned out to a or f. Operational includes lots of supply chain which makes sense but also coding and revenue cycles that I think can be assigned out to billing. There doesn't seem to be a good difference of when to report something as other clinical process or other operational process (ie. clinical workflow and citation creation appear in both). Once I reassign out the ones I think I can, I am going to combine the variables to be one other variable for q19. 
-I actually don't feel I have enough domain knowledge to be resoring these differnetly than how the CIO answered them. I do think there should perhaps be more guidance from the AHA in what sort of tasks go under what bucket (how long has this question been asked). But because the ultimate varibale being made from this is if you are using AI, one point will be given regardless of if they are using it for an 'other' reason or a directly assigned reason. 
 
-# Create subvariables
-Create subvariable for each question and frequency of answers for tables
-(can't do column sum on ones with 2/3 etc, but can create cleaner tables)
-```{r}
+Looking deeper into the breakdown of the other questions:
+```{r, include = FALSE}
 # quesiton 11 - includes all except other frequency
 q11df <- data2[, c("q11_carequality", "q11_commonwell", "q11_ehealth", "q11_dnk_othernat", "q11_no_nat", "q11_other_nat", "q11_civitas", "q11_ehrbased")]
 q11_freq <- as.data.frame(colSums(q11df))
@@ -429,58 +422,29 @@ pct <- paste0(round((q14_freq$n/nrow(data2)*100), 0), "%")
 q14_freq <- cbind(q14_freq, pct)
 #  % of hospitals who use hie for that ph reporting
 
-# this is all the variables that have binary
 ```
 
 % of hospitals that participate in specific HIE
-```{r, include = FALSE}
+```{r}
 #  % of hospitals that use that hie
 rownames(q11_freq) <- c("CareQuality", "CommonWell", "e-Health Exchange", "Do Not Know", "No HIE", "Other", "Civitas", "EHR-based")
+q11_freq
 ```
 
 % of hospitals who use applied ML or predictive analysis for that task 
-```{r, include = FALSE}
+```{r}
 #  % of hospitals who use that tool 
 rownames(q19_freq) <- c("Predicting Health Trajectors or Risk for Inpatients", "Identify High Risk Outpatients", "Monitor Health", "Recommend Treatments", "Simplify or Automate Billing", "Facilitate Scheduling", "Other Operation Process", "Other Clinical Uses", "No ML Use", "Do Not Know")
-```
-
-```{r, include = FALSE}
-# % oh hospitals who use that hie for ph reporting
-rownames(q14_freq) <- c("Syndromic Surveillance", "Immunization Registry", "Electronic Case Reporting", "Public Health Registry", "Clinical Data Registry Reporting", "Electronic Reportable Lab Reporting", "Hospital Capacity and Utilization of Medical Supplies", "Antimicrobial Use and Resistances")
-```
-
-```{r}
-q11_freq
-q14_freq
 q19_freq
 ```
 
-
-# HIE Participation Cumulative Variable
-Need to create HIE participant cumulative variable. To score hospitals on their HIE participation, they will get +1 for each ph reporting they utilize HIE for, captured in question 14. Because these are already scored as 0 for no and 1 for yes, we can row sum these variables. Then, they will get +1 for each HIE they participate in. This would mean they have a 1 for any question 11, except do not know "q11_dnk_othernat" or "q11_no_nat"
-```{r, include = FALSE}
-data2$hie_participation <- rowSums(data2[, c("q14_syndromic_hie", "q14_immune_hie", "q14_electronic_hie", "q14_phreg_hie", "q14_clinicreg_hie", "q14_elab_hie", "q14_hospcap_hie", "q14_amr_hie", "q11_other_nat", "q11_commonwell", "q11_ehealth", "q11_civitas", "q11_carequality","q11_ehrbased")])
-```
-
-Explore HIE participation variable
-```{r, include = FALSE}
-# create own variable to cut down on typing
-hie_part <- data2$hie_participation
-range(hie_part) # 0-13; max would have been 14, so nobody uses everything
-table(hie_part)
-```
-
 ```{r}
-## include 
-summary(hie_part)
-
-hist(hie_part, 
-     main = "Distribution of HIE Participation",
-     xlab = "HIE Participation",
-     col = "navajowhite")
-
+# % oh hospitals who use that hie for ph reporting
+rownames(q14_freq) <- c("Syndromic Surveillance", "Immunization Registry", "Electronic Case Reporting", "Public Health Registry", "Clinical Data Registry Reporting", "Electronic Reportable Lab Reporting", "Hospital Capacity and Utilization of Medical Supplies", "Antimicrobial Use and Resistances")
+q14_freq
 ```
-# AI Use Composite Score
+
+To build the AI composite score, I +1 for each instance institutions use ML or predictive models and for how many tasks they use it for. 
 ```{r, include = FALSE}
 # create AI variable off questions 18 and 19
 data2$ai_score <- rowSums(
@@ -501,7 +465,7 @@ table(data2$q18_ml)
 table(data2$q18_otherml)
 #1090 should be using AI in some way according to question 19 (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trust.
 ```
-
+The majority of institutions are not using AI, but who are using AI in all possible categories.
 ```{r}
 ## include 
 hist(data2$ai_score, 
@@ -511,12 +475,35 @@ hist(data2$ai_score,
      ylim = c(0, 500))
 ```
 
-Overall HIE Participation
-85% of hospitals participate in an HIE
-5.5% of hospitals have an active area HIE that they do not participate in 
-4.4% of hospitals do not have an operational HIE in their area (this is probably bigger- you can't select this and another numbers - CHECK IF YOU CAN SELECT MULTPILE)
-4.2% do not know their HIE participation
+To score hospitals on their HIE participation and create the HIE participation variable, institutions will get +1 for each public health reporting they utilize HIE for, captured in question 14. Because these are already scored as 0 for no and 1 for yes, we can row sum these variables. Then, they will get +1 for each HIE they participate in. This would mean they have a 1 for any question 11, except do not know "q11_dnk_othernat" or "q11_no_nat"
 ```{r, include = FALSE}
+data2$hie_participation <- rowSums(data2[, c("q14_syndromic_hie", "q14_immune_hie", "q14_electronic_hie", "q14_phreg_hie", "q14_clinicreg_hie", "q14_elab_hie", "q14_hospcap_hie", "q14_amr_hie", "q11_other_nat", "q11_commonwell", "q11_ehealth", "q11_civitas", "q11_carequality","q11_ehrbased")])
+```
+
+```{r, include = FALSE}
+# create own variable to cut down on typing
+hie_part <- data2$hie_participation
+range(hie_part) # 0-13; max would have been 14, so nobody uses everything
+table(hie_part)
+```
+We see a lot of institutions do not participate in HIE at all, and no institutions use HIE for all possible public health reporting manners. 
+```{r}
+## include 
+summary(hie_part)
+
+hist(hie_part, 
+     main = "Distribution of HIE Participation",
+     xlab = "HIE Participation",
+     col = "navajowhite",
+     breaks = 14,
+     xaxt = 'n',
+     ylim = c(0, 500))
+axis(1, at = 0:14, labels = 0:14, cex.axis = .8)
+
+```
+
+Overall HIE Participation:
+```{r}
 hie <- as.data.frame(table(data2$q10_HIE_partic))
 hie$pct <- paste0(round(hie$Freq / sum(hie$Freq) * 100, 0), "%")
 # the majority of hospitals do participate in an HIE
@@ -528,15 +515,18 @@ hie
 
 
 
-# Comparing Variables to Each Other
-HIE Participation by Bed Total, Ownership, Primary EMR, and AI Score
+Now, if we compare the variables to each other,
+Looking at HIE Participation by Bed Total, there does not seem to be any relationship. 
 ```{r}
 plot(hie_part ~ log(data2$bdtot), 
      main = "HIE Participation by Bed Size",
      xlab = "(Log) Bed Size",
      ylab = "HIE Participation",
      col = "mistyrose2") # just call size rather than increase by one bed; log horitzonal HIE on vertical 
+```
+Looking at HIE participation across ownership type, all boxes have overlap with non-for profits participating the most and all others have similar lower values 
 
+```{r}
 # boxplot of hie participation by ownership type
 boxplot(hie_part ~ data2$ownership,
         main = "HIE Participation by Ownership",
@@ -545,7 +535,9 @@ boxplot(hie_part ~ data2$ownership,
         names = c("Gov. non-federal", "Not-for-profit", "For-profit", "Gov. federal"),
         cex.axis = .6,
         col = "peachpuff")
-
+```
+Looking at HIE participation across EMR vendor, there is an obvious higher amount of participation for those who use Epic. Epic houses a software called Cosmos that is infomation sharing platform, so this is not a suprise as this counts as an HIE. Cerner has a slightly higher median level of HIE compared to other vendors or Meditech. 
+```{r}
 # boxplot of hie participation by primary ehr
 boxplot(hie_part ~ data2$primary_emr,
         main = "HIE Participation by Primary EMR",
@@ -553,7 +545,9 @@ boxplot(hie_part ~ data2$primary_emr,
         ylab = "HIE Participation",
         names = c("Other", "Cerner", "Epic", "Meditech"),
         col = "skyblue1")
-
+```
+Now, looking at HIE participation by AI scores (with jitter as they are both slightly categorical although they are continuous). It does seem that those who participate in AI less also participate in HIE less and those who use AI more participate HIE more, so there could be a relationship there. 
+```{r}
 # scatterplot of hie particpation by ai score
 plot(jitter(hie_part) ~ jitter(data2$ai_score), 
      main = "HIE Participation by AI Score",
@@ -562,7 +556,7 @@ plot(jitter(hie_part) ~ jitter(data2$ai_score),
      col = "lightsteelblue")
 ```
 
-Create heat map of US States that darker states utilize an HIE more 
+As a slight aside, I want to create a heat map of US States with darker states utilizing HIE more. HIE are historically regional, so this is very informative of what frameworks are still utilized. There is high participation in Michigan and Michigan and it seems to be darker on the East rather than the West. This could be reflective of more HIE structures or, because the average is being calculated, it could be because the Western states are larger and they have more hospitals whose data is being taken into account. 
 ```{r}
 state_hie <- data2 %>%
   group_by(mstate) %>%
@@ -574,8 +568,10 @@ plot_usmap(data = state_hie, values = "avg_hie", regions = "states") +
   theme(legend.position = "right")
 ```
 
-# Two Way T-Test
-Do non-profits and for-proift institutions participate in HIE the same on average?
+# Analysis 
+
+*Two Way T-Test*
+I wanted to answer if non-profits and for-proift institutions participate in HIE the same on average?
 
 Needed for a T-Test 
 -make boxplot 
@@ -584,13 +580,19 @@ Needed for a T-Test
 -summary statistics for each level of the variables. compare to raw mean and median
 -t.test
 
+There are 1065 non-profit organizations and 146 for-profit. 
 ```{r, include = FALSE}
 # isolate only two groups
 groups <- data2[data2$ownership == 2 | data2$ownership == 3, ]
 table(groups$ownership) #1065 are non-profit; 146 are for profit
+summary(groups$hie_participation)
+by(groups$hie_participation, groups$ownership, summary)
 ```
-
+Analyzing the boxplot, it seems for-profits participate more on average, but the confidence intervals do overlap. The overal mean and median is lcoser to the mean and median for only for-profit. 
 ```{r}
+# raw summary statistics
+summary(groups$hie_participation)
+
 # summary statistics for each level
 by(groups$hie_participation, groups$ownership, summary)
 
