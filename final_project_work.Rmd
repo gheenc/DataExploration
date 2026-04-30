@@ -667,6 +667,10 @@ Needed for bootstrap of t-test:
 -t.test
 -bootstrapping of mean (or metric measuring)
 -histogram with line of where sample mean was and confidence intervals
+
+what is the difference in HIE participation between EHR vendors, specifically those who use EPIC versus those who do not. EPIC has an added feature called Cosmos, which shares unidentified data with all institutions who use EPIC and acts as a HIE. We would expect those who participate in EPIC to have higher levels of HIE because of the availability of EPIC to them. 
+
+We see that even aggregating all non-EPIC users together, the majority of the institutions still use EPIC (47% are EPIC users). I want to bootstrap a t-test for this comparison, because looking at the boxplot
 ```{r, include = FALSE}
 # create binary indicator of epic or not 
 data2$epic <- ifelse(data2$primary_emr == 5, 1, 0)
@@ -678,11 +682,13 @@ range(data2$epic) # check 0-1
 epic <- table(data2$epic)
 pct <- paste0(round(epic/ sum(epic) * 100, 0), "%")
 names(epic) <- c("Not Epic", "Epic")
-barplot(epic[c(2, 1)],
+barplot(epic,
         main = "Epic vs Not",
-        ylim = c(0, 1000),
-        col = c("red4", "red3"))
+        ylim = c(0, 1000))
 text(c(.75, 1.95), c(950, 820), pct, col = "seashell4", cex = 1)
+
+# raw summary statistics
+summary(data2$hie_participation)
 
 # summary statistics for each level
 by(data2$hie_participation, data2$epic, summary)
