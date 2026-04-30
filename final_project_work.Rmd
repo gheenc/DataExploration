@@ -2,16 +2,17 @@
 title: "Final Project Work"
 author: "Caroline Gheen"
 date: "2026-04-21"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#### ALL CODE
-# Load Packages
-```{r, warning = FALSE}
+
+```{r, warning = FALSE, include = FALSE}
 # load packages
 library(dplyr) # for piping
 library(car) # for recoding
@@ -20,8 +21,10 @@ library(ggplot2) # for graphing
 source("https://raw.githubusercontent.com/jreuning/sds230_files/refs/heads/main/regJDRS.txt") # source for pairsJDRS and MyResPlots
 ```
 
-# Load Original Data
-Load Initial data - qureried from AHA IT Supplemental Survey 2024. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by institutions' CIO. 
+# Introduction
+I utilized the American Hospital Association's Annual Survey IT supplement as my data source, specifically the 2024 answers. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by an institutions' CIO.
+I am studying Health Informatics at YSPH, so I am very interested in the information systems at hospitals and this is a dataset I have been wanting to explore. My analysis mostly hinges on Health Information Exchanges (HIE) which are networks in which hospitals participate to share information with each other, mainly to improve public health or patient care. 
+
 ```{r, include = FALSE}
 # load initial data
 data <- read.csv("AHA Data - Query 2.csv")
@@ -30,9 +33,45 @@ names(data)
 str(data)
 ```
 
-# Change Column Names
-Change names to be more human readable and track question number to understand which go together
-Many questions are the same question but binary indicators of which feature the institution does as part of that question, so I included that in the question. I did export some questions that were not ultimately used in a final analyses, but they were retained nonetheless for future use if wanted. 
+# DATA 
+
+I isolated 4 questions: 
+"Q-10: Indicate level of participation in state, regional, and/or local health information exchange (HIE) or health information organization (HIE),"
+Options: HIE/HIO is operational in my area and we are participating and actively exchanging data in at least one HIE, HIE/HIO is operational in my area but we are not participating, HIE/HIO is not operational in my area, do not know
+
+"Q-11: Which of the following national health information exchange networks and/or frameworks does your hospital currently participate in,"
+Options: CommonWell Health Alliance, e-Health Exchange, Civitas, EHR vendor network, Other national HIE and describe, do not participate in, do not know
+
+"Q-14: How does your hospital submit data for public health reporting related to activities below," 
+Options: Syndromic surveillance reporting, Immunization registry reporting, Electronic case reporting, public health registry reporting, clinical data registry reporting, electronic reportable laboratory result reporting, antimicrobial use and resistance, hospital capavity and utilization of medical records
+
+"Q-18: Does your hospital use any machine learning or other predictive models that display output or recommendations"
+Options: Yes or No to machine learning, other and describe 
+
+"Q-19: To which of the following uses has your hospitals applied machine learning or other predictive models"
+Options: Yes or No to predicting health trajectories or risk for inpatients, identify high risk options for follow up, monitor health, recommend treatments, simplify or automate billing, faciliate scheduling, other and describe (operational process optimization), other and describe (clinical use cases)
+
+Ownership: government non-federal (state, county, city, city-county, hospital district or authority), non-government/not-for-profit (church operated, other), investor owned/for-profit (individual, partnership, corporation), government/federal (Department of Defense, public health service, Veterans Affairs, federal other, Indian service, Department of Justice)
+
+and 4 descriptors: AHA ID number, hospital name, total facility beds set up and staffed, and primary Electronic Medical Record (EMR) used.
+
+Question 11, 14, 18, and 19 are stored as individual variables for each options and thus are similar to binary indicators in that if that option is selected it is a 1 and if it was not, it is a 0. Because of this, for question 14, I only exported the variables that are each type of reporting into the HIE because I am only concerned with if institutions use their HIE for that mandaotry reporting.
+There are 3 'describe other' options which are free text. These are if you use a primary EMR, use of another predictive models, use for ML or predictive that is not listed. 
+
+I created two composite variables: composite HIE score and AI score. To create composite HIE score, I added 1 if they participate in an HIE (question 10), added 1 for each HIE they participate in (question 11) and added 1 for each public health reporting in which they utilized HIE (question 14).
+For AI score, I added 1 for if they use ML or another predictive model (question 18) and added 1 for each activity they apply AI for (question 19).
+
+Ultimately these were the variables I was most concerned with:
+1. HIE Participation Score (continuous out of 14)
+2. AI Composite Score (continuous out of 10)
+3. Number of Beds (continuous)
+4. Ownership type (categorical)
+5. Primary EMR (categorical)
+6. State (categorical)
+
+# Data Cleaning
+The first thing I did was change the names of the variable to make them more human readable and help track which question each variable came from. Although I'm concerned with only 5 overall variables, my dataset contained about 48 variables. 
+
 ```{r, include = FALSE}
 # change names to be more human readable
 names(data)[names(data) == "piemro"] <- "primary_emr_other"
@@ -85,8 +124,8 @@ data$othpad_desc <- NULL
 names(data)
 ```
 
-# Explore Missingness
-Explore data within each column for missingness
+The first thing I did was explore missingness. To do this, I made a dataframe that was each variable, the amount of data present, amount missing, and the percent complete. Overall there was low missingness, so I questioned if a lot of the missingness was potentially coming from the same institutions just not turning in thorough surveys. To do this, I made another dataframe that was each instiutions ID, the amount of data present, amount of missing, and percent complete. 
+
 ```{r, include = FALSE}
 # make df so easily see for each column how many missing, complete and % complete 
 na_summary <- data.frame(
@@ -107,60 +146,42 @@ row_na_summary <- data.frame(
 )
 ```
 
-# COME BACK TO THIS TRY AND GET THEM IN ORDER FOR HEAD AND TAIL
 ```{r}
 ## include table
-names(na_summary) <- c("Complete Data", "Missing Data", "Percent Complete")
-names(row_na_summary) <- c("ID", "Complete Data", "Missing Data", "Percent Complete")
+names(na_summary) <- c("Complete_Data", "Missing_Data", "Percent_Complete")
+names(row_na_summary) <- c("ID", "Complete_Data", "Missing_Data", "Percent_Complete")
 
-na_summary <- na_summary %>% arrange('Percent Complete')
-head(na_summary)
-tail(na_summary)
-
-row_na_summary <- row_na_summary %>% arrange('Percent Complete')
-head(row_na_summary)
-tail(row_na_summary)
-```
-
-```{r}
-## include head and tail
 head(na_summary)
 tail(na_summary)
 
 head(row_na_summary)
 ```
 
+Looking a the first few row entries, a lot of organizations have 100% complete, some have 90-100%, even less have 60-90%, and some have around 20%. I definitely want to drop the ones that only have 20% of data complete, but I wanted to explore how "harsh" can I be while still retaining a meaningful number of entries. To do this, I did three subsets of keeping all entries that have a percent complete over 61%, over 90%, and 100% complete. With 100% complete, this drops 1128 institutions but retains 1513 institutions. I am happy with this sample size and it gives me fully complete data, so I made this data2 that becomes the official dataset used throughout the rest of the project. 
 ```{r, include = FALSE}
 # just looking a the first few row entries, a lot of organizations have 100% complete, some have 90-100%, even less have 60-90%, and some have around 20%. I definitely want to drop the ones that only have 20% of data complete, but how harsh can I be while still retaining a meaningful number of entries?
 # what is my nrow difference (ie how many institutions I retain) if I make a harsh boundary of only keep those who completed 90%+ vs those who completed 60%+. Or even if I only kept those who answered all questions
-nrow(row_na_summary[row_na_summary$pct_comp > 61, ]) # 2485
-nrow(row_na_summary[row_na_summary$pct_comp > 90, ]) # 2098
-nrow(row_na_summary[row_na_summary$pct_comp == 100.0, ]) # 1513
+nrow(row_na_summary[row_na_summary$Percent_Complete > 61, ]) # 2485
+nrow(row_na_summary[row_na_summary$Percent_Complete > 90, ]) # 2098
+nrow(row_na_summary[row_na_summary$Percent_Complete == 100.0, ]) # 1513
 
 # select selects that are full as best
-best_rows <-(row_na_summary[row_na_summary$pct_comp == 100.0, ])
+best_rows <-(row_na_summary[row_na_summary$Percent_Complete == 100.0, ])
 
 # keep only data that has all rows full as data2
-data2 <- data %>% filter(id %in% best_rows$id) 
+data2 <- data %>% filter(id %in% best_rows$ID) 
 
 # sanity check that there are no NA - there are empty values but these are meaningful (ie. no primary other emr means they don't use other primary emr)
 sum(is.na(data2)) # sanity check - 0
 ```
 
 ```{r}
-# we dropped 1128 institutions off of missingness. This means we  can do full comparisons (don't have to use pairwise comparisons, for example)
-nrow(data) - nrow(data2)
+# we dropped 1128 institutions off of missingness. This means we  can do full comparisons (don't have to use pairwise comparisons, for example). We retained 1513 institutions
+nrow(data) - nrow(data2) #1128
+nrow(data2) #1513
 ```
-Only keeping institutions that answered all my questions of interest I still retain 1513 institutions. Because this is still a high number, I am going to institute this harsh boundary and only analyze those who completed all questions. This means moving forward I will use data4 and retain data as the original, ground truth dataset in case of any errors. 
 
-Now to explore data. 
-
-# Recode all No Answers to be 0
-Some questions have No keyed as 0 and some have no keyed as 2...
-Would like to recode so it is consistant throughout entire data and I can make cumulative variables. I will recode everything so that 0=No, 1 = Yes...
-This only matters for Q11 (already 0=No), Q14 (already 0=No), Q18 (currently 1=yes, 2=no, 3=do not know), Q19 (already 0=No), 
-These need to be recoded. code as 0=no, 1=yes, 2=do not know. that means current 2 becomes 0, 1 stays 1, current 3 becomes 2
-"q18_ml"              "q18_otherml" 
+Next, all questions have No keyed as 0 except question 18 has No keyed as 2. So, I would like to recode so No is consistantly 0 throughout the entire data.
 ```{r, include = FALSE}
 # recode question 14
 data2$q18_ml <- recode(data2$q18_ml, "2 = 0; 3 = 2" )
@@ -170,15 +191,12 @@ data2$q18_otherml <- recode(data2$q18_otherml, "2 = 0; 3 = 2" )
 unique(data2$q18_ml)
 ```
 
-
-First, let's explore the data a little more
 ```{r, include = FALSE}
 str(data2)
 # structure seems good for all. my coding made them numeric instead of integer - this is probably fine. will likely need to make these factor to do categorical things. can come back and do this once I decide
 ```
 
-# State Exploration
-Lets look at if all states are represented
+Next I want to look at if all states are represented. There are 52 unique state entries with all 50 states being represented plus two territories. One territory is PR which is P 
 ```{r}
 length(unique(data2$mstate)) # 52 states - PR and MP in addition to all 50 states
 
@@ -464,8 +482,18 @@ hist(hie_part,
 ```
 # AI Use Composite Score
 ```{r, include = FALSE}
-data2$ai_score <- rowSums(data2[, c("q19_ai_traj", "q19_ai_risk_fu", "q19_ai_monitor", "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule", "q19_ai_process", "q19_ai_clinic")])
-range(data2$ai_score) # someone uses AI for all
+# create AI variable off questions 18 and 19
+data2$ai_score <- rowSums(
+  cbind(
+    data2[, c("q19_ai_traj", "q19_ai_risk_fu", "q19_ai_monitor",
+              "q19_ai_rec", "q19_ai_bill", "q19_ai_schedule",
+              "q19_ai_process", "q19_ai_clinic")],
+    ifelse(data2$q18_ml %in% c(0,1), data2$q18_ml, 0),
+    ifelse(data2$q18_otherml %in% c(0,1), data2$q18_otherml, 0)
+  )
+)
+
+range(data2$ai_score) # someone uses AI for all: 0-10
 table(data2$ai_score) # a lot of hospitals are still not using AI, but most are integrating multiple uses
 barplot(table(data2$ai_score))
 
@@ -473,10 +501,9 @@ table(data2$q18_ml)
 table(data2$q18_otherml)
 #1090 should be using AI in some way according to question 19 (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trust.
 ```
-Should I make an indicator variable that is (uses AI/does not use AI)??? According to question 19, 1090 should be using AI in some way (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trus - probably question 19 because the 
 
 ```{r}
-# include 
+## include 
 hist(data2$ai_score, 
      main = "Frequency of AI Scores",
      xlab = "AI Scores",
@@ -781,9 +808,18 @@ Needed for ANCOVA - Module 20
 ```{r}
 # myRes for continuous variables
 
+# interaction plot between Primary EMR and OWnership
+interaction.plot(df$primary_emr, df$ownership, df$hie_participation, type = 'b', lwd = 3, col = c("red", "blue", "black"), main = "Interaction Plot Between EMR and Ownership")
+
+
+df$loghie <- log(df$hie_participation + 1)
 # fit linear regression
-ancova <- lm(df$hie_participation ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
+ancova0 <- lm(df$loghie ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
 summary(ancova)
+
+ancova <- lm(df$hie_participation + 1 ~ df$logbdtot + df$primary_emr + df$logbdtot*df$primary_emr)
+summary(ancova)
+boxCox(ancova)
 
 ancova1 <- lm(df$hie_participation ~ df$ai_score + df$ownership + df$ai_score*df$ownership)
 summary(ancova1)
@@ -810,7 +846,7 @@ aic_table
 
 # make plot of the best model: HIE by AI and EMR
 coefs <- coef(ancova2)
-line_cols <- c("lightsteelblue", "tomato", "darkolivegreen", "navajowhite")
+line_cols <- c("lightsteelblue", "darkolivegreen", "tomato", "navajowhite")
 plot(df$hie_participation ~ df$ai_score, 
      col = line_cols[df$primary_emr], 
      pch = 16, 
@@ -826,7 +862,7 @@ for (i in 3:5){
 }
 
 # my Resplots 
-myResPlots(ancova2, "HIE, AI, EMR")
+myResPlots(ancova0, "HIE, AI, EMR")
 
 ```
 
