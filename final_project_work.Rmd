@@ -26,6 +26,28 @@ library(ggplot2) # for graphing
 source("https://raw.githubusercontent.com/jreuning/sds230_files/refs/heads/main/regJDRS.txt") # source for pairsJDRS and MyResPlots
 ```
 
+```{r, include = FALSE}
+# recreate residual so they are next to each other 
+myResPlots2 <- function(model, label){
+  par(mfrow = c(1, 3))
+  
+  #Normal quantile plot of studentized residuals
+  qqp(rstudent(model), pch = 19, main = paste("NQ Plot of Studentized Residuals,", label))
+  
+  #plot of fitted vs. studentized residuals
+  plot(rstudent(model) ~ model$fitted.values, pch = 19, col = 'red', xlab = "Fitted Values", ylab = "Studentized Residuals",
+     main = paste("Fits vs. Studentized Residuals,", label))
+  abline(h = 0, lwd = 3)
+  abline(h = c(2,-2), lty = 2, lwd = 2, col="blue")
+  abline(h = c(3,-3), lty = 2, lwd = 2, col="green")
+  
+  #Plot of Cooks Distances
+  plot(model, which = 4, lwd = 3, col = 'red')
+  abline(h = 6/length(model$residuals), col = 'black', lwd = 3, lty = 2)
+  
+}
+```
+
 # Introduction
 I utilized the American Hospital Association's Annual Survey IT supplement as my data source, specifically the 2024 answers. This is an annual survey sent out to all hospitals that are member of the American Hospital Association and asseses their technology and information technology status. It is required and typically filled out by an institutions' CIO.
 I am studying Health Informatics at YSPH, so I am very interested in the information systems at hospitals and this is a dataset I have been wanting to explore. My analysis mostly hinges on Health Information Exchanges (HIE) which are networks in which hospitals participate to share information with each other, mainly to improve public health or patient care. 
@@ -202,6 +224,7 @@ str(data2)
 ```
 
 Next, I want to look at if all states are represented. There are 52 unique state entries with all 50 states being represented plus two territories. One territory is PR which is Puerto Rico and one is MP which I am unfamiliar with. By filtering to only this entry and Googling the institution name, I discover it is Mariana Islands in the Pacific. 
+
 ```{r, include = FALSE}
 length(unique(data2$mstate)) # 52 states - PR and MP in addition to all 50 states
 
@@ -227,19 +250,22 @@ hist(state_counts$n) # this is right skewed as is expected
 # it would be cool to come back and do some sort of frequency plot that makes the state name bigger the more hospitals it has
 ```
 
-Overall, the amount of hospitals distributed per states varies - Texas has 266 hospitals while Mariana Pacific only has 1.
+Overall, the amount of hospitals distributed per states varies - Texas has the most institutions with 266  while Mariana Pacific only has 1.
 ```{r, echo = FALSE}
 ## include about states 
 summary(state_counts$n)
 
 hist(state_counts$n,
-     main = "Histogram of Hospitals per State",
+     main = "",
      xlab = "Amount of Hospitals per State",
      ylim = c(0, 35),
      col = "tomato2")
+mtext("Histogram of Hospitals per State", line = 1, font = 2)
+mtext("Median: 40.00; Mean: 49.83", line = 0, cex = .7, font = 3)
 ```
 
 Next, looking at the type of primary EMRs that are used. Cerner (owned by Oracle), Epic, and Meditech are the giants in this industry and have the most users as expected. 
+
 ```{r, include = FALSE}
 table(data2$primary_emr)
 # lots at Cerner/Oracle(2) and Epic (5) and Meditech(9) as expected. Also lots ie 50+ at Other(91 - these are in the other variable), CPSI/Evident(17).
@@ -252,17 +278,16 @@ length(unique(data2$primary_emr_other)) # only 37 specified the other system the
 ```
 
 I am going to condense the options to only be these three and all others will become an 'other' category. (Side note: no institutions reported that they did not have an EMR - this is great and expected as there are large government incentives and penalies for not using an EMR).
+
 ```{r, echo = FALSE}
 ## include 
+par(mfrow = c(1, 2))
 hist(data2$primary_emr, 
      main = "What Primary EMRs Are Used",
      xlab = "Coding of Primary EMR",
      ylim = c(0, 1000),
      col = "skyblue1")
-```
 
-
-```{r, include = FALSE}
 # condense primary emr answers
 data2$primary_emr[!data2$primary_emr %in% c(2, 5, 9, 30)] <- 0
 
@@ -271,11 +296,7 @@ unique(data2$primary_emr)
 
 # new table with condensed options
 table(data2$primary_emr)
-```
 
-This barplot shows the new distribution and percentage of institutions using that EMR. We see that Epic is still the runaway leader with almost half of the institutions using their Epic. Meditech, Cerner, and other EMRs are used by a similar number of institutions. 
-
-```{r, echo = FALSE}
 ## include 
 primary_emr <- table(data2$primary_emr)
 tabpct <- paste0(round(primary_emr / sum(primary_emr) * 100, 0), "%")
@@ -286,8 +307,11 @@ barplot(primary_emr,
         xlab = "EMRs",
         col = "skyblue3", 
         ylim = c(0, 1000))
-text(c(.75, 1.97, 3.15, 4.35), c(350, 400, 920, 280), tabpct, cex = .8, col = "seashell4")
+text(c(.75, 1.97, 3.15, 4.35), c(350, 400, 920, 280), tabpct, cex = .9, col = "seashell4", font =2 )
 ```
+
+
+This barplot shows the new distribution and percentage of institutions using that EMR. We see that Epic is still the runaway leader with almost half of the institutions using their Epic. Meditech, Cerner, and other EMRs are used by a similar number of institutions. 
 
 Next, the ownership was originally coded as about 45 different options under 4 broad categories: government, non-federal; not-for-profit; for-profit; government, federal. I condensed the options to be the 4 general categories. 
 Not-for-profits are the largest category - this makes sense as it includes the religious institutions and, I believe, the academic medical centers. Federal is smaller than expected; there is only 1 owned by the DOD (this should include military hospitals) and only 9 VAs, which is thought to be the largest healthcare institution, so this is not representative of the actual hospital breakdown and potentially due to only keeping complete responses. 
@@ -322,24 +346,28 @@ barplot(ownership,
         xlab= "Owners",
         main = "Ownership Types",
         ylim = c(0, 1300),
-        cex.names = .6,
+        cex.names = .8,
         col = "peachpuff3")
-text(c(.75, 1.97, 3.15, 4.35), c(400, 1200, 250, 150), tabpct, cex = .8, col = "seashell4")
+text(c(.75, 1.97, 3.15, 4.35), c(400, 1200, 250, 150), tabpct, cex = .9, col = "seashell4", font = 2)
 ```
 
 Bed Total was retained as a proxy for hospital size. The range is 3 to 2919 so a very wide spread. As is, this variable is heavily right skewed, therefore, I applied a log transformation, which will be used throughout the rest of the analysis. Because no values were non-zero I did not need to apply a constant first. 
 ```{r, include = FALSE}
 range(data2$bdtot)
+summary(data2$bdtot)
 ```
 
 ```{r, echo = FALSE}
 # scatterplot of bed total
 # most likely will want to take log transformation of bed total
-par(mfrow) = c(1, 2)
+par(mfrow = c(1, 2))
 hist(data2$bdtot, 
-     main = "Total Number of Beds", 
+     main = "", 
      xlab = "Number of Beds",
      col = "mistyrose")
+mtext("Total Number of Beds", line = 1, font =2)
+mtext("Median: 103.00, Mean: 189.40", line = 0 , font = 3, cex = .7)
+
 hist(log(data2$bdtot),
      main = "Log Total Number of Beds",
      xlab = "Log Number of Beds",
@@ -430,12 +458,12 @@ q14_freq <- cbind(q14_freq, pct)
 
 ```
 
-% of hospitals that participate in specific HIE
-```{r, echo = FALSE}
+```{r, include = FALSE}
 #  % of hospitals that use that hie
 rownames(q11_freq) <- c("CareQuality", "CommonWell", "e-Health Exchange", "Do Not Know", "No HIE", "Other", "Civitas", "EHR-based")
+
 par(mar = c(5, 8, 4, 4))
-barplot(q11_freq$n,
+barplot(q11_freq$n / nrow(data2) * 100,
         main = "Percent Hospitals that Participate in Each HIE",
         xlab = "HIE Groups",
         names = rownames(q11_freq),
@@ -443,22 +471,30 @@ barplot(q11_freq$n,
         horiz = TRUE,
         las = 1,
         col = "navajowhite",
-        xlim = c(0, 1000))
-text(c(950, 80, 275, 175, 125, 650, 630, 880), c(9, 8, 6.7, 5.5, 4.5, 3.2, 2, .75), rev(q11_freq$pct), cex = .6, col = "seashell4", font = 2)
-q11_freq
+        xlim = c(0, 100))
+text(c(66, 6, 20, 13, 10, 45, 45, 60), c(9, 8, 6.7, 5.5, 4.3, 3.2, 2, .75), rev(q11_freq$pct), cex = .6, col = "seashell4", font = 2)
 ```
 
-% of hospitals who use applied ML or predictive analysis for that task 
-```{r, echo = FALSE}
+```{r, include = FALSE}
 #  % of hospitals who use that tool 
-rownames(q19_freq) <- c("Predicting Health Trajectors or Risk for Inpatients", "Identify High Risk Outpatients", "Monitor Health", "Recommend Treatments", "Simplify or Automate Billing", "Facilitate Scheduling", "Other Operation Process", "Other Clinical Uses", "No ML Use", "Do Not Know")
-q19_freq
+rownames(q19_freq) <- c("Predicting Trajectors", "Identify High Risk", "Monitor Health", "Recommend Treatments", "Simplify or Automate Billing", "Facilitate Scheduling", "Other Operation Process", "Other Clinical Uses", "No ML Use", "Do Not Know")
+
+par(mar = c(5, 8, 8, 4))
+barplot(q19_freq$n / nrow(data2) * 100,
+        main = "Percent Hospitals that Use AI for Task",
+        xlab = "Tasks",
+        names = rownames(q19_freq),
+        cex.names= .7,
+        horiz = TRUE,
+        las = 1,
+        col = "blue4",
+        xlim = c(0, 100))
+text(c(11, 24, 20, 20, 50, 43, 39, 32, 65, 66), c(11.7, 10.4, 9, 8, 6.8, 5.5, 4.3, 3.2, 2, .75), rev(q19_freq$pct), cex = .6, col = "seashell4", font = 2)
 ```
 
-```{r, echo = FALSE}
+```{r, include = FALSE}
 # % oh hospitals who use that hie for ph reporting
-rownames(q14_freq) <- c("Syndromic Surveillance", "Immunization Registry", "Electronic Case Reporting", "Public Health Registry", "Clinical Data Registry Reporting", "Electronic Reportable Lab Reporting", "Hospital Capacity and Utilization of Medical Supplies", "Antimicrobial Use and Resistances")
-q14_freq
+rownames(q14_freq) <- c("Syndromic Surveillance", "Immunization Registry", "Case Reporting", "Public Health Registry", "Clin. Registry Reporting", "Reportable Labs", "Hospital Capacity", "Antimicrobial Resistance")
 ```
 
 To build the AI composite score, I +1 for each instance institutions use ML or predictive models and for how many tasks they use it for. 
@@ -482,14 +518,66 @@ table(data2$q18_ml)
 table(data2$q18_otherml)
 #1090 should be using AI in some way according to question 19 (number of hospitals - those who answered 0 = 1090) but according to question 18, only 800-900 answered yes to those. which do i trust.
 ```
-The majority of institutions are not using AI, but who are using AI in all possible categories.
+
+```{r}
+hie <- as.data.frame(table(data2$q10_HIE_partic))
+hie$pct <- paste0(round(hie$Freq / sum(hie$Freq) * 100, 0), "%")
+# the majority of hospitals do participate in an HIE
+names(hie) <- c("HIE Status", "Frequency", "Percent")
+rownames(hie) <- c("Area HIE is operational and do participate", "Area HIE is operational but do not participation", "Area HIE is not operational", "Do Not Know")
+```
+
 ```{r, echo = FALSE}
+par(mfrow = c(2, 2), mar = c(5, 8, 4, 4))
+
+#par(mar = c(5, 8, 4, 4))
+barplot(q11_freq$n / nrow(data2) * 100,
+        main = "Percent Hospitals \n that Participate in Each HIE",
+        xlab = "HIE Groups",
+        names = rownames(q11_freq),
+        cex.names= .7,
+        horiz = TRUE,
+        las = 1,
+        col = "navajowhite",
+        xlim = c(0, 100))
+text(c(70, 10, 24, 17, 14, 49, 49, 64), c(9, 8, 6.7, 5.5, 4.3, 3.2, 2, .75), rev(q11_freq$pct), cex = .6, col = "seashell4", font = 2)
+
+#par(mar = c(5, 8, 8, 4))
+barplot(q19_freq$n / nrow(data2) * 100,
+        main = "Percent Hospitals \n that Use AI for Task",
+        xlab = "Tasks",
+        names = rownames(q19_freq),
+        cex.names= .7,
+        horiz = TRUE,
+        las = 1,
+        col = "lightsteelblue",
+        xlim = c(0, 100))
+text(c(15, 26, 24, 24, 54, 47, 43, 36, 69, 70), c(11.7, 10.4, 9, 8, 6.8, 5.5, 4.3, 3.2, 2, .75), rev(q19_freq$pct), cex = .6, col = "seashell4", font = 2)
+
+#par(mar = c(5, 8, 8, 4))
+barplot(q14_freq$n / nrow(data2) * 100,
+        main = "Percent Hospitals \n that Use HIE for PH Reporting",
+        xlab = "Tasks",
+        names = rownames(q14_freq),
+        cex.names= .7,
+        horiz = TRUE,
+        las = 1,
+        col = "maroon4",
+        xlim = c(0, 30))
+text(c(7.8, 7.8, 21.7, 9, 13.5, 16, 17.5, 18), c(9.2, 8, 6.8, 5.5, 4.3, 3.2, 2, .75), rev(q14_freq$pct), cex = .6, col = "seashell4", font = 2)
+```
+
+
+The majority of institutions are not using AI, however all levels of AI scores were represented
+```{r, include = FALSE}
 ## include 
 hist(data2$ai_score, 
-     main = "Frequency of AI Scores",
+     main = "",
      xlab = "AI Scores",
      col = "lightsteelblue",
      ylim = c(0, 500))
+mtext("Frequency of AI Scores", line = 1, font = 2)
+mtext("Median: 5.00, Mean: 4.19", line = 0, font = 3, cex = .7)
 ```
 
 To score hospitals on their HIE participation and create the HIE participation variable, institutions will get +1 for each public health reporting they utilize HIE for, captured in question 14. Because these are already scored as 0 for no and 1 for yes, we can row sum these variables. Then, they will get +1 for each HIE they participate in. This would mean they have a 1 for any question 11, except do not know "q11_dnk_othernat" or "q11_no_nat"
@@ -502,50 +590,62 @@ data2$hie_participation <- rowSums(data2[, c("q14_syndromic_hie", "q14_immune_hi
 hie_part <- data2$hie_participation
 range(hie_part) # 0-13; max would have been 14, so nobody uses everything
 table(hie_part)
-```
-We see a lot of institutions do not participate in HIE at all, and no institutions use HIE for all possible public health reporting manners.
-```{r, echo = FALSE}
-## include 
 summary(hie_part)
 
+```
+
+We see a lot of institutions do not participate in HIE at all, and no institutions uses HIE for all possible public health reporting manners.
+```{r, echo = FALSE}
+## include 
+par(mfrow = c(1, 2))
+hist(data2$ai_score, 
+     main = "",
+     xlab = "AI Scores",
+     col = "lightsteelblue",
+     ylim = c(0, 500))
+mtext("Frequency of AI Scores", line = 1, font = 2)
+mtext("Median: 5.00, Mean: 4.19", line = 0, font = 3, cex = .7)
+
 hist(hie_part, 
-     main = "Distribution of HIE Participation",
+     main = "",
      xlab = "HIE Participation",
      col = "navajowhite",
      breaks = 14,
      xaxt = 'n',
      ylim = c(0, 500))
 axis(1, at = 0:14, labels = 0:14, cex.axis = .8)
+mtext("Distribution of HIE Participation", line = 1, font = 2)
+mtext("Median: 3.00, Mean: 3.04", line = 0, font = 3, cex = .7)
 
 ```
+
 We will notice this is right skewed. 
 
 
-Overall HIE Participation:
-```{r, echo = FALSE}
+```{r, include = FALSE}
 hie <- as.data.frame(table(data2$q10_HIE_partic))
 hie$pct <- paste0(round(hie$Freq / sum(hie$Freq) * 100, 0), "%")
 # the majority of hospitals do participate in an HIE
 names(hie) <- c("HIE Status", "Frequency", "Percent")
 rownames(hie) <- c("Area HIE is operational and do participate", "Area HIE is operational but do not participation", "Area HIE is not operational", "Do Not Know")
-
-hie
 ```
-
-
 
 Now, if we compare the variables to each other,
 Looking at HIE Participation by Bed Total, there does not seem to be any relationship. 
+
 ```{r, echo = FALSE}
 plot(hie_part ~ log(data2$bdtot), 
      main = "HIE Participation by Bed Size",
      xlab = "(Log) Bed Size",
      ylab = "HIE Participation",
-     col = "mistyrose2") # just call size rather than increase by one bed; log horitzonal HIE on vertical 
+     col = "mistyrose3",
+     pch = 16) # just call size rather than increase by one bed; log horitzonal HIE on vertical 
 ```
-Looking at HIE participation across ownership type, all boxes have overlap with non-for profits participating the most and all others have similar lower values 
+
+Looking at HIE participation across ownership type, all boxes have overlap with not-for-profits participating the most and all others have similar lower values. There are some high outliers for most of the groups. 
 
 ```{r, echo = FALSE}
+par(mfrow = c(1, 2))
 # boxplot of hie participation by ownership type
 boxplot(hie_part ~ data2$ownership,
         main = "HIE Participation by Ownership",
@@ -553,19 +653,21 @@ boxplot(hie_part ~ data2$ownership,
         ylab = "HIE Participation",
         names = c("Gov. non-federal", "Not-for-profit", "For-profit", "Gov. federal"),
         cex.axis = .6,
-        col = "peachpuff")
-```
-Looking at HIE participation across EMR vendor, there is an obvious higher amount of participation for those who use Epic (more on why this makes sense later). Cerner has a slightly higher median level of HIE compared to other vendors or Meditech. 
-```{r, echo = FALSE}
+        col = "peachpuff3")
+
 # boxplot of hie participation by primary ehr
 boxplot(hie_part ~ data2$primary_emr,
         main = "HIE Participation by Primary EMR",
         xlab = "Primary EMR",
         ylab = "HIE Participation",
         names = c("Other", "Cerner", "Epic", "Meditech"),
-        col = "skyblue1")
+        col = "skyblue3")
 ```
-Now, looking at HIE participation by AI scores (with jitter as they are both slightly categorical although they are continuous). It does seem that those who participate in AI less also participate in HIE less and those who use AI more participate HIE more, so there could be a relationship there. 
+
+Looking at HIE participation across EMR vendor, there is an obvious higher amount of participation for those who use Epic (more on why this makes sense later). Cerner has a slightly higher median level of HIE compared to other vendors or Meditech. There are some high outliers for all groups here as well. 
+
+Now, looking at HIE participation by AI scores (with jitter as they are both slightly categorical although they are technically continuous). It does seem that those who participate in AI less also participate in HIE less and those who use AI more participate HIE more, so there could be a relationship there. 
+
 ```{r, echo = FALSE}
 # scatterplot of hie particpation by ai score
 plot(jitter(hie_part) ~ jitter(data2$ai_score), 
@@ -575,7 +677,7 @@ plot(jitter(hie_part) ~ jitter(data2$ai_score),
      col = "lightsteelblue")
 ```
 
-As a slight aside, I want to create a heat map of US States with darker states utilizing HIE more. HIE are historically regional, so this is very informative of what frameworks are still utilized. There is high participation in Michigan and Michigan and it seems to be darker on the East rather than the West. This could be reflective of more HIE structures or, because the average is being calculated, it could be because the Western states are larger and they have more hospitals whose data is being taken into account. 
+As a slight aside, I want to create a heat map of US States with darker states utilizing HIE more. HIE are historically regional, so this is very informative of what frameworks are still utilized. There is high participation in Michigan and West Virginia and it seems to be darker on the East Coast rather than the West Coast. This could be reflective of more HIE structures in the Eastern state or because it is the average HIE participation per state and the Western states are larger thus they have more hospitals whose data is being taken into account. 
 ```{r, echo = FALSE}
 state_hie <- data2 %>%
   group_by(mstate) %>%
@@ -590,14 +692,8 @@ plot_usmap(data = state_hie, values = "avg_hie", regions = "states") +
 # Analysis 
 
 *Two Way T-Test*
-I wanted to answer if non-profits and for-proift institutions participate in HIE the same on average?
 
-Needed for a T-Test 
--make boxplot 
--% of values that are that category (potentially on top of barplot)
--boxplots for each group 
--summary statistics for each level of the variables. compare to raw mean and median
--t.test
+I wanted to answer if not-for-profits and for-proift institutions participate in HIE the same on average.
 
 There are 1065 non-profit organizations and 146 for-profit. 
 ```{r, include = FALSE}
@@ -607,37 +703,40 @@ table(groups$ownership) #1065 are non-profit; 146 are for profit
 summary(groups$hie_participation)
 by(groups$hie_participation, groups$ownership, summary)
 ```
-Analyzing the boxplot, it seems not-for-profits participate more on average, but the confidence intervals do overlap. The overall mean and median (mean: 3.235 and median: 3) is closer to the mean and median for only not-for-profit (mean: 3.467, median: 3.000) than for-profits (mean: 1.541, median: 1.000). 
+Analyzing the boxplot, it seems not-for-profits participate more on average, but the confidence intervals do overlap. The overall mean and median is closer to the mean and median for only not-for-profit than for-profits.
 
-When we run the t test, we get a very small p value close to 0 meaning we can likely reject the null hypothesis that the mean is the same between the groups and conclude the mean HIE participation is not the same between not-for-profits and for-profits. From the confidence intervals, we can conclude that participation is higher in not-for-profits, which is what we expected from the boxplots. There are some high outliers in both groups. The spread both but especially the for-profit seem to be right skewed, although this would be better asessed with a histogram. 
-```{r, echo = FALSE}
+The t-test produces a p-value close to 0 meaning we can likely reject the null hypothesis that the mean is the same between the groups and conclude the mean HIE participation is not the same for not-for-profits and for-profits. From the confidence intervals, we can conclude that participation is higher in not-for-profits, which is what we expected from the boxplots. There are some high outliers in both groups.  
+```{r, include = FALSE}
 # raw summary statistics
 summary(groups$hie_participation)
 
 # summary statistics for each level
 by(groups$hie_participation, groups$ownership, summary)
+```
 
+```{r, echo = FALSE}
 # make boxplot 
 boxplot(groups$hie_participation ~ groups$ownership,
-        main = "HIE Participation for \n Non-profit and For-profit",
         ylab = "HIE Participation",
         xlab = "Ownership Type",
         names = c("Not-for-profit", "For-profit"),
-        col = "peachpuff")
+        col = "peachpuff3")
+mtext("HIE Participation for \n Not-for-Profits and For-Profits", line = 2, font = 2)
+mtext("Overall Median: 3.00 Mean: 3.24", line = 1, cex = .7, font = 3)
+mtext("Not-for-Profit Median: 3.00, Mean: 3.47; For-Profit Median: 1.00, Mean: 1.54", line = 0, cex = .7, font = 3)
 
 # run the t test
 t.test(groups$hie_participation ~ groups$ownership) # significant! with mean in group 2 being higher ie hospitals who are non-profits are more likely to participate in HIE
 ```
 
 
-# Correlation
+*Correlation*
+
 Are "bigger" hospitals (aka more beds) more likely to participate in HIE? As hospital size increases, does their participation in HIE?
 
-Needed for a Correlation
--scatterplot (with correlation in the subhead) - ensure there is a linear relationship seen in scatterplot 
--add correlation value to subjeader
+From the correlation test, there is a slight positive correlation between bed size and institution HIE participation, indicating bigger beds do participate in HIE more but this is not a particularly strong association. There does not seem to be any egregious outliers that are pulling the values.
 
-From the correlation test, we can see that there is a slight positive correlation between bed size and institution HIE participation, indicating bigger beds participate in HIE more, but this is not a particularly strong association. There does not seem to be any egregious outliers that are pulling the values, although we do know HIE participation is right skewed and may have some outliers.  
+I also wanted to look at if hospitals who are using more AI are participating in HIE more. Although these are both technically continuous variables, they are scored on a scale, so I added jitter to better appreciate frequency of answers.There is a moderate positive, correlation indicating institutions that utilize AI more perhaps utilize their HIE more. There are spots where answers cluster together, like those who use no AI also use HIE very little.   
 ```{r, echo = FALSE}
 # run correlation
 cor.test(data2$hie_participation, log(data2$bdtot))
@@ -651,12 +750,10 @@ plot(data2$hie_participation ~ log(data2$bdtot),
      ylab = "HIE Participation",
      col = "mistyrose3",
      pch = 19)
-mtext(paste("Sample Correlation = ", cor), cex = .7, line =0)
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0, font = 3)
 mtext("HIE Participation by Bed Size", line = 1, font =  2)
-```
 
-I also wanted to looka at if hospitals who are using more AI, are participating in HIE more. Although these are both technically continuous variables, they are scored on a scale, so I added jitter to better appreciate frequency of answers. We see there is a moderate positive, correlation indicating institutions that utilize AI more perhaps utilize their HIE more. There are spots where answers cluster together, like those who use no AI also use HIE very little.   
-```{r, echo = FALSE}
+
 # run correlation
 cor.test(data2$hie_participation, data2$ai_score)
 
@@ -668,31 +765,28 @@ plot(jitter(hie_part) ~ jitter(data2$ai_score),
      xlab = "AI Score",
      ylab = "HIE Participation",
      col = "lightsteelblue")
-mtext(paste("Sample Correlation = ", cor), cex = .7, line =0)
-mtext("HIE Participation by AI Score", line = 1)
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0, font =3)
+mtext("HIE Participation by AI Score", line = 1, font = 2)
 ```
 
-# Bootstrap
-difference in HIE participation between ehr (not vs Epic - Epic vs not bc of cosmos)?
+*Bootstrap*
+What is the difference in HIE participation between EHR vendors, specifically those who use Epic versus those who do not. Epic has an added feature called Cosmos, which shares unidentified data with all institutions who use Epic and acts as a HIE. We would expect those who participate in Epic to have higher levels of HIE because of the availability of Epic to them.To do this, I create binary indicators of if institutions are an Epic user or not.  
 
-Needed for bootstrap of t-test:
--make barplot 
--% of values that are that category (potentially on top of barplot)
--boxplots for each group 
--summary statistics for each level of the variables. compare to raw mean and median
--t.test
--bootstrapping of mean (or metric measuring)
--histogram with line of where sample mean was and confidence intervals
+We see that even aggregating all non-Epic users together, the majority of the institutions still use Epic. There are 709 users not using Epic and 804 that are, so a good sample size for each. I want to bootstrap a t-test for this comparison, because looking at the boxplot, there are some high outliers in both groups and neither are normally distributed. 
 
-What is the difference in HIE participation between EHR vendors, specifically those who use Epic versus those who do not. Epic has an added feature called Cosmos, which shares unidentified data with all institutions who use Epic and acts as a HIE. We would expect those who participate in Epic to have higher levels of HIE because of the availability of Epic to them. 
+Mean HIE participation for Epic users is higher than non-Epic users and closer to the overal average HIE participation scores. From the parametric t-test, the p-value is very small, meaning we reject the null and conclude the means for each group are not the same. Then, from the bootstrap, that the true difference is means is likely around 2.3 higher in Epic users, which is similar to what we saw in the parametric t-test. We also see that the boostrapped and parametric CIs are practically identical, indicating our original test was a good idea of the true distribution and not highly affected by outliers or skewed distribution. 
 
-We see that even aggregating all non-Epic users together, the majority of the institutions still use Epic (47% are Epic users). There are 709 users not using Epic and 804 that are, so a good sample size for each. I want to bootstrap a t-test for this comparison, because looking at the boxplot, there are some high outliers in both groups and neither are normally distributed. 
-
-Mean HIE participation for Epic users is higher (mean: 4.009) than non-Epic users (1.948) and closer to the overal average HIE participation scores (3.043). Running the parametric t-test, the pvalue is well small meaning we reject the null and conclude the means for each group are not the same. The We see from the bootstrap that the true difference is means is likely around 2.3 higher in Epic users, which is similar to what we saw in the parametric t-test. We also see that the boostrapped and parametric CIs are practically identical, indicating our original test was a good idea of the true distribution and not highly affected by outliers or skewed distribution. 
+# we see the ci of the test and the boostrapped overlapping this indicated the the CLT was kicked in and we had enough data in our original sample to get a good idea of the potential true value
 ```{r, include = FALSE}
 # create binary indicator of Epic or not 
 data2$Epic <- ifelse(data2$primary_emr == 5, 1, 0)
 range(data2$Epic) # check 0-1
+
+# raw summary statistics
+summary(data2$hie_participation)
+
+# summary statistics for each level
+by(data2$hie_participation, data2$Epic, summary)
 ```
 
 ```{r, echo = FALSE}
@@ -700,27 +794,28 @@ range(data2$Epic) # check 0-1
 Epic <- table(data2$Epic)
 pct <- paste0(round(Epic/ sum(Epic) * 100, 0), "%")
 names(Epic) <- c("Not Epic", "Epic")
-barplot(Epic[c(2, 1)],
+
+par(mfrow = c(1, 2))
+barplot(Epic,
         main = "Epic vs Not",
         ylim = c(0, 1000),
-        names = c("Epic", "Not Epic"),
-        col = c("red2", "red4"))
-text(c(.75, 1.95), c(950, 820), pct, col = "seashell4", cex = 1)
-
-# raw summary statistics
-summary(data2$hie_participation)
-
-# summary statistics for each level
-by(data2$hie_participation, data2$Epic, summary)
+        names = c("Not Epic", "Epic"),
+        col = c("red4", "red2"))
+text(c(.75, 1.95), c(820, 950), pct, col = "seashell4", cex = 1)
 
 # boxplot for each level
 boxplot(data2$hie_participation ~ data2$Epic,
         names = c("Not Epic", "Epic"),
-        col = c("red4", "red2"))
-mtext("Mean with Epic: 4.01; Mean without Epic: 1.95", line = 0, cex = .7)
-mtext("HIE Participation by Epic vs Not", line = 1, font = 2)
+        col = c("red4", "red2"), 
+        ylab = "HIE Participation",
+        xlab= "")
+mtext("HIE Participation by Epic vs Not", line = 2, font = 2)
+mtext("Overall Median: 3.00, Mean: 3.04", line = 1, cex = .7,  font = 3)
+mtext("Non-Epic Median: 1.00, Mean: 1.95; Epic Median: 3.00, Mean: 4.01", line = 0, cex = .7, font = 3)
 # first box is has Epic, second is does not
+```
 
+```{r}
 # t test
 ttest <- t.test(data2$hie_participation ~ data2$Epic)
 
@@ -741,6 +836,8 @@ ci <- quantile(diffMeans, c(0.025, 0.975))
 cit <- abs(ttest$conf.int)
 # because not Epic is listed first the CI was coming through negative. doing absolute puts it on the same playing field as the bootstrapped
 
+p <- ttest$p.value
+
 # histogram of bootstrapped means
 hist(diffMeans,
      main = "Bootstrapped Sample Means \n Difference Between Epic and Not",
@@ -750,24 +847,22 @@ hist(diffMeans,
 abline(v = cit, lwd = 3, col = "black")
 abline(v = ci, lwd = 3, col = "green4", lty = 2)
 legend("topleft", col = c("black", "green4"), legend = c("Original CI", "Boostrapped CI"), lty = c(1, 2), lwd = 3)
-str(data2$Epic)
+
 # we see the ci of the test and the boostrapped overlapping this indicated the the CLT was kicked in and we had enough data in our original sample to get a good idea of the potential true value
+p <- ttest$p.value
+class(p)
 ```
 
 
-#Permutation Test
-Needed for permutation test:
--get actual mean difference 
--shuffle labels and recalculate wanted metric
--histogram of fake sample with line of original test metric value 
+*Permutation Test*
 
-For parametric test, I wanted to ensure that the conclusion was stable, so I shuffled the labels of being an Epic users or not and recalculated difference in group mean. We can see from the resulting histogram that it is very unlikely to see a difference in group mean this high under the null hypothesis. 
+For permutation test, I wanted to see how likely the results above were so I shuffled the labels of being an Epic users or not and recalculated difference in group mean.
+We can see from the resulting histogram that it is very unlikely to see a difference in group mean this high under the null hypothesis. 
 ```{r, echo = FALSE}
 # what is original means
 actualdiff <- by(data2$hie_participation, data2$Epic, mean)
 # original difference
 actualdiff <- actualdiff[2] - actualdiff[1]
-actualdiff
 
 # do permutation
 n <- 10000
@@ -785,31 +880,19 @@ hist(diffvals,
      col = "red4",
      xlim = c(-.5, 2.5))
 abline(v = actualdiff, lty = 2, lwd = 3)
-text(actualdiff - .1, 800, paste("Actual Diff in Means =", round(actualdiff, 2)), srt = 90, cex = .7)
+text(actualdiff - .1, 800, paste("Actual Diff in Means =", round(actualdiff, 2)), srt = 90, cex = .9)
 ```
 
 
-# Multiple Regression 
-Does bed amount, ownership type, primary emr used, and AI usage predict HIE participation?
+*Multiple Regression* 
 
-Needed for multiple regression - Module 15
--Sissyphys steps
-1. identify predictors and response
-2. check relationships with scatterplots (pairsJDRS() will give good matrix plot)
-3. fit model
-4. best steps? remove insignificant predictors
-5.check model assumptions of LINE (L-linearity; I-independence; N- normality of errors; E-qual variance of errors) with myRes plots
+I wanted to assess if you could predict HIE participation based on certain variables: bed total(in log), ownership type, primary EMR used, and AI score.  
 
-I wanted to assess if you could predict HIE participation based on certain variables: bed total(in log), ownership type, primary EMR used, and AI score. I used JDRS 
+Because my HIE participation score is skewed right, I checked the relationship between all predictors and the outcome and predictor using JDRS matrix plot for the raw HIE participation score and a log HIE participation score. Prior to taking the log of the participation score, I added a constant of 0.5 because there were some zeros in my data where people did not participate in HIE at all. This then created negative values. To combat this, I also tried adding 1.5 as a constant. I checked the relationship for all 3 different HIE. Ultimately, the original HIE values did not have high evidence of heteroskedasticity or non-linearity, but it did have the non-normality. Neither of the log transformation changed the scatterplots of predictors with outcomes, nor did the transformation introduce heteroskedasticity, non-linear relationships, or major outliers. They did fix the right skewedness. Across all three matrix plots, there was no evidence of multicollinearity or large outliers in predictors compared to other predictors.
 
+I was still unsure of which HIE value woudl be best to use, so I fit 3 different models each with a different type of HIE participation score (raw, log with constant .5 and log with constant 1.5). Comparing the AIC, the log HIE models have a significantly lower AIC than using the raw values. Between the two, the AIC is identical, so I took a Box Cox transformation to decide which to go with. The model of log with a constant of 1.5 has a lambda very close to 1 (do nothing) while the model of log with a constant .5 has a lambda close to .5. Because of this, I decided to continue forward with the modeling using log constant of 1.5. 
 
-Because my HIE participation score is skewed right, I checked the relationship between all predictors and the outcome and predictor using JDRS matrix plot for the raw HIE participation score and a log HIE participation score. Prior to taking the log of the participation score, I added a constant of 0.5 because there were some zeros in my data where people did not participate in HIE at all. Because this then made them less than 1, there were some negative values. To combat this, I added 1.5 as a constant instead. I checked the relationship for all 3 differnet HIE. Ultimately, the original HIE values did not have high evidence of heteroskedasticity or non-linearity, but it did have the non-normality. Neither of the log transformation changed the scatterplots of predictors vs outcomes a lot and neither introduced heteroskedasticity, non-linear relationships, or outlier, but it did fix the right skewedness. 
-
-Because I did not like how the log transformation made the predictors vs outcome scatterplots look, I went ahead and fit 3 different models each with a different type of HIE participation score (raw, log with constant .5 and log with constant 1.5). Comparing the AIC, the log HIE models have a significantly lower AIC. Between the two, the AIC is identical, so I took a Box Cox transformation to decide which to go with. The model of log with a constant of 1.5 has a lambda very close to 1 while the model of log with a constant .5 has a lambda close to .5. Because of this, I decided to continue forward with the models using log constant of 1.5. 
-
-I rechecked the pairs for this and there is no evidence of heteroskedasticity, large outliers, or a non-linear relationship between the predictors and outcome. There is also no evidence of any of the above between the predictors nor is there evidence of large amounts of high correlation suggesting multicollinearity. 
-
-```{r, warnings = FALSE}
+```{r, include = FALSE}
 # isolate wanted variables into subdata frame
 df <- data2[ , c("hie_participation", "bdtot", "ownership", "primary_emr", "ai_score")]
 df$bdtot <- log(df$bdtot) # make log
@@ -818,16 +901,18 @@ names(df)[names(df) == "bdtot"] <- "logbdtot" # rename column for consistency
 # make categorical variables factors
 df$ownership <- factor(data2$ownership)
 df$primary_emr <- factor(data2$primary_emr)
+```
 
-df <- df[ , c("hie_participation", "logbdtot", "ownership", "primary_emr", "ai_score")]
 
+
+```{r, include = FALSE, message = FALSE}
 # check relationship with pairsJDRS()
 pairsJDRS(df)
 
 # create log variable
 df$pos_hie_participation <- df$hie_participation + .5 
-df$log_hie <- log(df$pos_hie_participation)
-df <- df[c("log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+df$log5_hie <- log(df$pos_hie_participation)
+df <- df[c("log5_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
 
 # check relationships again 
 pairsJDRS(df)
@@ -837,7 +922,7 @@ df$pos_hie_participation <- data2$hie_participation + 1.5
 df$log_hie <- log(df$pos_hie_participation)
 df <- df[c("log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
 
-# check relationships again 
+# check relationships again - keep this one
 pairsJDRS(df)
 
 ```
@@ -847,7 +932,21 @@ pairsJDRS(df)
 ```{r, include = FALSE}
 # fit model (glm) with raw hie 
 df$hie_participation <- data2$hie_participation
-df <- df[c("hie_participation", "log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+
+# recreate log variable
+df$pos_hie_participation <- df$hie_participation + .5 
+df$log5_hie <- log(df$pos_hie_participation)
+
+# recreate
+df$pos_hie_participation <- data2$hie_participation + 1.5 
+df$log_hie <- log(df$pos_hie_participation)
+
+# make df have all possible predictors
+df <- df[c("hie_participation", "log_hie", "log5_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+```
+
+```{r, include = FALSE}
+# fits model of normal hie
 lm <- glm(df$hie_participation ~ df$primary_emr + df$ownership + df$ai_score + df$logbdtot)
 summary(lm)
 ```
@@ -855,40 +954,101 @@ summary(lm)
 ```{r, include = FALSE}
 # fit positive 1.5 log model 
 lm1 <- glm(df$log_hie ~ df$primary_emr + df$ownership + df$ai_score + df$logbd)
-summary(lm1)
-# remove bed total (p value .9)
-boxCox(lm1)
 ```
 
 
 ```{r, include = FALSE}
 # fit model with .5 log 
-df$log5_hie <- df$hie_participation + .5
 lm2 <- glm(df$log5_hie ~ df$primary_emr + df$ownership + df$ai_score + df$logbd)
-summary(lm2)
-boxCox(lm2)
+```
+
+```{r, include = FALSE}
+# calculate AIC 
+AIC(lm)
+AIC(lm1)
+AIC(lm2)
+```
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+boxCox(lm1)
+df <- df[c("log_hie", "logbdtot", "ownership", "primary_emr", "ai_score")]
+pairsJDRS(df)
+```
+
+```{r, include = FALSE}
+# correlations for scatterplot
+cor.test(df$log_hie, df$ai_score)
+cor <- round(cor(df$log_hie, df$ai_score), 2)
+
+cor.test(df$log_hie, df$logbdtot)
+cor <- round(cor(df$log_hie, df$logbdtot), 2)
+
+# scatterplot of hie particpation by ai score
+plot(jitter(df$log_hie) ~ jitter(df$logbdtot), 
+     xlab = "Log Bed Total",
+     ylab = "Log HIE Participation",
+     col = "mistyrose3")
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0, font =3)
+mtext("Log HIE Participation by Log Bed Total", line = 1, font = 2)
 ```
 
 ```{r, echo = FALSE}
-par(mfrow = c(1, 3))
-boxCox(lm1)
-boxCox(lm2)
+# check individual predictors as well
+par(mfrow = c(2, 2))
+
+cor <- round(cor(df$log_hie, df$ai_score), 2)
+plot(jitter(df$log_hie) ~ jitter(df$ai_score), 
+     xlab = "AI Score",
+     ylab = "Log HIE Participation",
+     col = "lightsteelblue")
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0, font =3)
+mtext("Log HIE Participation by AI Score", line = 1, font =2)
+
+cor <- round(cor(df$log_hie, df$logbdtot), 2)
+# scatterplot of hie particpation by bed score
+plot(jitter(df$log_hie) ~ jitter(df$logbdtot), 
+     xlab = "Log Bed Total",
+     ylab = "Log HIE Participation",
+     col = "mistyrose3")
+mtext(paste("Sample Correlation = ", cor), cex = .7, line =0, font =3)
+mtext("Log HIE Participation by Log Bed Total", line = 1, font =2)
+
+boxplot(df$log_hie ~ df$ownership,
+        main = "Log HIE Participation by Ownership",
+        xlab = "Ownership Type",
+        ylab = "Log HIE Participation",
+        names = c("Gov. non-federal", "Not-for-profit", "For-profit", "Gov. federal"),
+        cex.axis = .6,
+        col = "peachpuff3")
+
+boxplot(df$log_hie ~ df$primary_emr,
+        main = "Log HIE Participation by Primary EMR",
+        xlab = "Primary EMR",
+        ylab = "Log HIE Participation",
+        names = c("Other", "Cerner", "Epic", "Meditech"),
+        cex.axis = .7,
+        col = "skyblue3")
 ```
 
-Now, I need to fit the model and determine what predictors are significant. I attempted forward regressiond and fit all predictors to the model. I first removed log bed total as it had the highest p value of .9. This was surprising as I thought originally beginning the question this would be a very good predictor, but we saw in the correlation above that they were not actually that strongly related. 
-After removing log bed count, primary emr 2 - cerner, primary emr 5 - epic, ownership 3 - pro-profi, and ai score were all significant. This means I leave all other predictors in the model. The overall model is significant with a pvalue close to 0 and an adjusted R2 of .3926. This indicates this model can explain almost 40% of the variability in the data. 
+
+Now, I need to fit the model and determine what predictors are significant. I attempted backwards regression and fit all predictors to the model. I first removed log bed total as it had the highest p value of .9. This was surprising as I originally thought this would be a  good predictor, but it was shown in the correlation above that they were not actually that strongly related. 
+After removing log bed count, primary EMR 2 - Cerner, primary EMR 5 - Epic, ownership 3 - for-profit, and AI score were all significant. All other predictors were left in model. The overall model is significant with a p-value close to 0 and an adjusted R2 of .3926. This indicates this model can explain almost 40% of the variability in the data. 
+Government, non-federal and other EMR were left out as reference.All of the EMR vendors have a positive coefficient indicating the use of a named vendor leads to more HIE participation than an Other Vendor. Not-for-profits and federal government participated more relative to non-federal government while for-profits participated less. All variables were statistically significant at any alpha. 
+
 ```{r, echo = FALSE}
 # log constant 1.5 as model forward regression
 lm1 <- lm(df$log_hie ~ df$primary_emr + df$ownership + df$ai_score)
 summary(lm1)
-Anova(lm1, type = 3)
 ```
 
-Lastly, I check the residuals of the model. The errors are overall normally distributed although there is some departure at the top right of the tail. This could be due to the continuous predictors being practically categorical and no variables having negative values. I did check the residual plots of the other tested models, and this one has the closest to normal distribution of errors. Additionally, there is no evidence of heterskedasticity on the fits vs studentized residuals plot, but you can see hte harsh bottom line which is typical of variables that do not extend past 0. There are a few leverage points but none to be worried about.
-# DO THE CALCULATION FOR COOKs
+
+Lastly, I check the residuals of the model. The errors are overall normally distributed although there is some departure at the top right of the tail. This could be due to the continuous predictors being practically categorical and no variables having negative values. I did check the residual plots of the other tested models, and this one has the closest to normal distribution of errors. Additionally, there is no evidence of heterskedasticity on the fits vs studentized residuals plot, but you can see the harsh bottom line which is typical of variables that do not extend past 0. There are a few leverage points but none to be worried about.
+There are some high points in the Cook's distance plot, but none that are concerning past the threshold. 
+Talk about slight outlier that we are not surprised from from the boxplots, but do not affect the model, overall still heteroskedasticity. 
+
 ```{r, echo = FALSE}
-# residuals
-myResPlots(lm1, "HIE")
+myResPlots2(lm1, "HIE")
 ```
 
 ```{r, include = FALSE}
@@ -897,22 +1057,16 @@ myResPlots(lm2, "HIE")
 myResPlots(lm, "HIE")
 ```
 
-# ANCOVA
-HIE score by size and emr provider and ai score; is there an effect of ai score depending on emr
+*ANCOVA*
 
-Needed for ANCOVA - Module 20
--check myResplots for continuous variables
--fit linear regression lm(hie ~ ai + emr + ai*emr); get summary
--run Anova with type 3 errors
--could do the plot of fitting different lines for different emr providers 
--best subsets of model
--check residuals
+Lastly, I did an ANCOVA to see if there is an interaction between EMR provider and AI score and how they affect HIE score, meaning does the AI score affect the HIE score differently based on EMR provider.
+The matrix plot above shows the assumptions were met enough for the model.
 
-Lastly, I did an ANCOVA to see if there is an interaction between emr provider and AI score and how they affect HIE score. 
+All predictors are significant at 0.01 alpha level. All predictors have a positive slope meaning no matter the EMR vendor, more AI score indicates higher levels of HIE participation. Cerner, Epic, and Meditech all have a higher intercept than other EMR vendors. Meditech and Other vendors increase at a similar rate. Epic and Cerner users have a higher slope indicating those who use Epic and Cerner and have high AI scores participate in HIE more. All slopes are positive, meaning no matter the EMR used, high AI score still predicts high HIE score.
+I then check the residual plots of ANCOVA. There is a larger influence point (1072). I ran the model without this point and while it did change the Cook's distance plot, it did not have a large influence on the model. Therefore, I don't think it's necessary to remove it. 
+Talk about slight outlier that we are not surprised from from the boxplots, but do not affect the model, overall still heteroskedasticity. 
 
 ```{r, echo = FALSE}
-# myRes for continuous variables
-
 # fit linear regression
 ancova1 <- lm(df$log_hie ~ df$ai_score + df$primary_emr + df$ai_score*df$primary_emr) # log hie based on ai and emr
 
@@ -936,8 +1090,9 @@ for (i in 3:5){
 }
 
 # my Resplots
-myResPlots(ancova1, "HIE, AI, EMR")
+myResPlots2(ancova1, "HIE, AI, EMR")
 ```
 
 # Conclusion and Summary 
-
+There are lots of conclusions we can make from the exploration. There is a difference in HIE participation between not-for-profits and for-profits with not-for-profits participating more. We also saw a difference in hospitals who use Epic participating more. We saw there was a correlation with with higher HIE and bed size and higher HIE and higher AI score. 
+We also saw through the multiple regression the bed size, AI score and EMR vendor can be used to predict HIE score with the model accounting for about 39% of the variability in HIE score. We also saw with the ANOVA that there is a positive interaction between EMR vendor and AI score, especially for those using Epic or Cerner meaning they are even more likley to have more participation in HIE the more AI they use. 
